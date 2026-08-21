@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แดชบอร์ด — Chira Continuity Care (Triple C)</title>
+<style>
+  :root{
+    /* Primary - Olive / Military Green */
+    --color-primary-900:#212B1C;
+    --color-primary-800:#2C3A22;
+    --color-primary-700:#3C4D2A;
+    --color-primary-600:#4C5F35;
+    --color-primary-500:#62784A;
+    --color-primary-300:#AAB994;
+    --color-primary-100:#E9EDDF;
+    --color-primary-50:#F5F6EF;
+
+    /* Neutral - Warm Khaki */
+    --color-neutral-900:#22201A;
+    --color-neutral-700:#4A4739;
+    --color-neutral-500:#7C7863;
+    --color-neutral-300:#C9C4AD;
+    --color-neutral-200:#DEDAC6;
+    --color-neutral-100:#F1EEE0;
+    --color-surface:#FFFFFF;
+
+    /* Secondary accent */
+    --color-accent-blue:#3E7CA6;
+    --color-accent-gold:#C9932E;
+
+    /* Semantic */
+    --color-risk:#B23B2C;
+    --color-risk-tint:#F7E7E2;
+    --color-warning:#C2891F;
+    --color-warning-tint:#FBF0DC;
+    --color-success:#3E8E49;
+    --color-success-tint:#E5F2E4;
+
+    /* Spacing */
+    --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px;
+    --space-5:20px; --space-6:24px; --space-8:32px; --space-10:40px;
+    --space-12:48px; --space-16:64px;
+
+    /* Radius / Shadow */
+    --radius-sm:4px; --radius-md:8px; --radius-lg:12px; --radius-pill:999px;
+    --shadow-sm:0 1px 2px rgba(34,32,26,0.06);
+    --shadow-md:0 1px 2px rgba(34,32,26,0.06), 0 4px 14px rgba(34,32,26,0.08);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Sarabun','Noto Sans Thai','Leelawadee UI','Segoe UI',system-ui,sans-serif;
+    background:var(--color-primary-50);
+    color:var(--color-neutral-900);
+    font-size:14px;
+    line-height:22px;
+  }
+  a{color:inherit;text-decoration:none;}
+
+  :focus-visible{
+    outline:2px solid var(--color-primary-700);
+    outline-offset:2px;
+    border-radius:var(--radius-sm);
+  }
+
+  h1,h2,h3{margin:0;}
+  .h1{font-size:24px;line-height:32px;font-weight:700;}
+  .h2{font-size:20px;line-height:28px;font-weight:700;}
+  .h3{font-size:16px;line-height:24px;font-weight:600;}
+  .caption{font-size:11.5px;line-height:16px;font-weight:500;color:var(--color-neutral-500);}
+  .label{font-size:12.5px;line-height:18px;font-weight:600;}
+
+  /* ============ Layout ============ */
+  .app{
+    display:flex;
+    min-height:100vh;
+  }
+
+  /* ============ Sidebar ============ */
+  .sidebar{
+    width:248px;
+    flex-shrink:0;
+    background:linear-gradient(180deg,var(--color-primary-900) 0%,var(--color-primary-800) 100%);
+    color:#EFEEE2;
+    display:flex;
+    flex-direction:column;
+    padding:var(--space-5) var(--space-3);
+    gap:var(--space-6);
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:var(--space-2);
+    padding:0 var(--space-2);
+    margin-bottom:var(--space-2);
+  }
+  .brand-mark{
+    width:34px;height:34px;flex-shrink:0;border-radius:var(--radius-sm);
+    background:#F5F6EF;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .brand-mark svg{width:24px;height:24px;}
+  .brand-text{display:flex;flex-direction:column;line-height:1.15;}
+  .brand-text .full{font-weight:700;font-size:14px;color:#F5F6EF;}
+  .brand-text .sub{font-size:11px;color:var(--color-primary-300);}
+
+  .nav-section{display:flex;flex-direction:column;gap:2px;}
+  .nav-section + .nav-section{margin-top:var(--space-2);}
+  .nav-heading{
+    padding:var(--space-2) var(--space-3) var(--space-1);
+    font-size:11.5px;
+    font-weight:700;
+    letter-spacing:.04em;
+    color:var(--color-primary-300);
+    text-transform:uppercase;
+  }
+  .nav-item{
+    display:flex;
+    align-items:center;
+    gap:var(--space-3);
+    padding:var(--space-3) var(--space-3);
+    border-radius:var(--radius-md);
+    color:#E6E4D4;
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .nav-item svg{width:18px;height:18px;flex-shrink:0;opacity:.9;}
+  .nav-item:hover{background:rgba(60,77,42,0.35);}
+  .nav-item.active{
+    background:rgba(60,77,42,0.55);
+    color:#FFFFFF;
+    box-shadow:inset 3px 0 0 var(--color-accent-gold);
+  }
+  .nav-item.sub{
+    padding-left:var(--space-8);
+    font-weight:500;
+    font-size:13.5px;
+  }
+  .sidebar-footer{
+    margin-top:auto;
+    padding:var(--space-3);
+    font-size:11px;
+    color:var(--color-primary-300);
+  }
+
+  /* ============ Main ============ */
+  .main{
+    flex:1;
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+  }
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:var(--space-4) var(--space-6);
+    background:var(--color-surface);
+    border-bottom:1px solid var(--color-neutral-200);
+    position:sticky;
+    top:0;
+    z-index:10;
+  }
+  .topbar-title{font-size:16px;font-weight:700;color:var(--color-neutral-900);}
+  .user-chip{
+    display:flex;
+    align-items:center;
+    gap:var(--space-2);
+    padding:var(--space-1) var(--space-3);
+    border:1px solid var(--color-neutral-300);
+    border-radius:var(--radius-pill);
+    background:var(--color-neutral-100);
+  }
+  .user-avatar{
+    width:28px;height:28px;border-radius:50%;
+    background:var(--color-primary-700);
+    color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:13px;flex-shrink:0;
+  }
+  .user-chip .who{display:flex;flex-direction:column;line-height:1.2;}
+  .user-chip .who .name{font-weight:600;font-size:13px;color:var(--color-neutral-900);}
+  .role-badge{
+    display:inline-block;
+    margin-top:1px;
+    font-size:11px;
+    font-weight:700;
+    padding:1px var(--space-2);
+    border-radius:var(--radius-pill);
+    background:var(--color-primary-100);
+    color:var(--color-primary-700);
+    width:fit-content;
+  }
+
+  .content{
+    padding:var(--space-6);
+    display:flex;
+    flex-direction:column;
+    gap:var(--space-6);
+    max-width:1280px;
+  }
+  .page-head{display:flex;flex-direction:column;gap:2px;}
+  .page-head .sub{color:var(--color-neutral-700);font-size:14px;}
+
+  /* ============ KPI Tiles ============ */
+  .kpi-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:var(--space-4);
+  }
+  .kpi-tile{
+    background:var(--color-surface);
+    border:1px solid var(--color-neutral-200);
+    border-radius:var(--radius-lg);
+    padding:var(--space-5);
+    box-shadow:var(--shadow-sm);
+    display:flex;
+    flex-direction:column;
+    gap:var(--space-2);
+  }
+  .kpi-tile .caption{color:var(--color-neutral-500);font-weight:600;}
+  .kpi-value{
+    font-size:32px;
+    line-height:40px;
+    font-weight:800;
+    font-variant-numeric:tabular-nums;
+    color:var(--color-neutral-900);
+  }
+  .kpi-value.warning{color:var(--color-warning);}
+  .kpi-value.risk{color:var(--color-risk);}
+  .kpi-tile .hint{font-size:12px;color:var(--color-neutral-500);}
+  .kpi-tile.alert{border-color:var(--color-risk-tint);background:linear-gradient(180deg,#fff 0%, var(--color-risk-tint) 220%);}
+  .kpi-tile.warn{border-color:var(--color-warning-tint);}
+
+  /* ============ Banner ============ */
+  .banner{
+    display:flex;
+    align-items:center;
+    gap:var(--space-4);
+    background:var(--color-primary-100);
+    border:1px solid var(--color-primary-300);
+    border-radius:var(--radius-lg);
+    padding:var(--space-4) var(--space-5);
+  }
+  .banner-icon{
+    width:40px;height:40px;flex-shrink:0;
+    border-radius:50%;
+    background:var(--color-primary-700);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .banner-icon svg{width:20px;height:20px;color:#fff;}
+  .banner-text{flex:1;}
+  .banner-text .h3{color:var(--color-primary-900);}
+  .banner-text p{margin:2px 0 0;color:var(--color-primary-700);font-size:13.5px;}
+
+  /* ============ Buttons ============ */
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    border:none;
+    border-radius:var(--radius-md);
+    padding:var(--space-2) var(--space-4);
+    font-family:inherit;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .btn-primary{background:var(--color-primary-700);color:#fff;}
+  .btn-primary:hover{background:var(--color-primary-600);}
+  .btn-secondary{background:#fff;color:var(--color-neutral-900);border:1px solid var(--color-neutral-300);}
+  .btn-secondary:hover{background:var(--color-neutral-100);}
+  .btn-sm{padding:6px var(--space-3);font-size:13px;}
+
+  /* ============ Card / Section ============ */
+  .card{
+    background:var(--color-surface);
+    border:1px solid var(--color-neutral-200);
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-sm);
+  }
+  .card-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:var(--space-5) var(--space-5) var(--space-3);
+  }
+  .card-head .h2{font-size:18px;}
+  .card-head .sub{color:var(--color-neutral-500);font-size:12.5px;margin-top:2px;}
+
+  /* ============ Chips ============ */
+  .chip{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    font-size:12.5px;
+    font-weight:600;
+    padding:3px var(--space-2);
+    border-radius:var(--radius-pill);
+    white-space:nowrap;
+  }
+  .chip::before{
+    content:"";
+    width:6px;height:6px;
+    border-radius:50%;
+    background:currentColor;
+    flex-shrink:0;
+  }
+  .chip-today{background:var(--color-warning-tint);color:var(--color-warning);}
+  .chip-overdue{background:var(--color-risk-tint);color:var(--color-risk);}
+  .chip-done{background:var(--color-success-tint);color:var(--color-success);}
+  .chip-inzone{background:var(--color-primary-100);color:var(--color-primary-700);}
+  .chip-method{background:var(--color-neutral-100);color:var(--color-neutral-700);}
+  .chip-risk{background:var(--color-risk-tint);color:var(--color-risk);}
+
+  /* ============ Table ============ */
+  table{width:100%;border-collapse:collapse;}
+  thead th{
+    text-align:left;
+    font-size:11.5px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.02em;
+    color:var(--color-neutral-500);
+    padding:var(--space-2) var(--space-3);
+    border-bottom:1px solid var(--color-neutral-200);
+  }
+  tbody td{
+    padding:var(--space-3) var(--space-3);
+    border-bottom:1px solid var(--color-neutral-200);
+    vertical-align:middle;
+    font-size:14px;
+  }
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr.row-overdue{background:rgba(178,59,44,0.04);}
+  .patient-name{font-weight:600;color:var(--color-neutral-900);}
+  .patient-hn{font-size:12px;color:var(--color-neutral-500);font-variant-numeric:tabular-nums;}
+  .due-date{font-variant-numeric:tabular-nums;}
+  .table-wrap{overflow-x:auto;}
+
+  /* ============ Risk list ============ */
+  .risk-list{display:flex;flex-direction:column;padding:0 var(--space-5) var(--space-5);gap:var(--space-3);}
+  .risk-item{
+    display:flex;
+    gap:var(--space-4);
+    align-items:flex-start;
+    padding:var(--space-4);
+    border:1px solid var(--color-risk-tint);
+    background:#FFFBFA;
+    border-radius:var(--radius-md);
+  }
+  .risk-item .info{flex:1;min-width:0;}
+  .risk-item .row1{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;margin-bottom:4px;}
+  .risk-item .name{font-weight:700;font-size:14px;}
+  .risk-item .snippet{color:var(--color-neutral-700);font-size:13px;line-height:19px;}
+  .risk-item .meta{margin-top:6px;font-size:12px;color:var(--color-neutral-500);}
+  .risk-item .actions{flex-shrink:0;}
+
+  footer.credit{padding:0 var(--space-6) var(--space-8);color:var(--color-neutral-500);font-size:12px;}
+
+  /* ============ Responsive ============ */
+  @media (max-width:860px){
+    .app{flex-direction:column;}
+    .sidebar{
+      width:100%;
+      flex-direction:row;
+      align-items:center;
+      overflow-x:auto;
+      padding:var(--space-3);
+      gap:var(--space-3);
+      position:sticky;
+      top:0;
+      z-index:20;
+    }
+    .brand{margin-bottom:0;}
+    .nav-section{flex-direction:row;gap:var(--space-1);}
+    .nav-heading{display:none;}
+    .nav-item.sub{padding-left:var(--space-3);}
+    .sidebar-footer{display:none;}
+    .kpi-grid{grid-template-columns:repeat(2,1fr);}
+    .content{padding:var(--space-4);}
+    .card-head{flex-direction:column;align-items:flex-start;gap:var(--space-2);}
+  }
+  @media (max-width:520px){
+    .kpi-grid{grid-template-columns:1fr;}
+    .table-wrap table{min-width:640px;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ============ Sidebar ============ -->
+  <aside class="sidebar" aria-label="เมนูหลัก">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#3C4D2A" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      </div>
+      <div class="brand-text">
+        <span class="full">Chira Continuity Care</span>
+        <span class="sub">Triple C</span>
+      </div>
+    </div>
+
+    <nav class="nav-section" aria-label="เมนูงานหลัก">
+      <a class="nav-item active" href="dashboard.html" aria-current="page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+        <span>แดชบอร์ด</span>
+      </a>
+      <a class="nav-item" href="referrals-list.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 4h9a1 1 0 0 1 1 1v15l-4-3-4 3-4-3-4 3V8z"/><path d="M12 9h4M12 13h4"/></svg>
+        <span>รายการเคส</span>
+      </a>
+    </nav>
+
+    <div class="nav-section" aria-label="จัดการระบบ">
+      <div class="nav-heading">จัดการระบบ</div>
+      <a class="nav-item sub" href="admin-case-types-list.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.35a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.65 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.65 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.65 1.7 1.7 0 0 0 10.03 3.09V3a2 2 0 1 1 4 0v.09c0 .69.4 1.3 1.03 1.56.61.25 1.32.12 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06c-.46.55-.6 1.26-.34 1.87.25.61.87 1.03 1.56 1.03H21a2 2 0 1 1 0 4h-.09c-.69 0-1.31.4-1.56 1.03z"/></svg>
+        <span>ประเภทเคส</span>
+      </a>
+      <a class="nav-item sub" href="admin-users-list.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1"/><circle cx="9" cy="7" r="3.2"/><path d="M22 21v-1a4 4 0 0 0-3-3.87"/><path d="M16.5 3.3a3.2 3.2 0 0 1 0 6.2"/></svg>
+        <span>ผู้ใช้งาน</span>
+      </a>
+    </div>
+
+    <div class="sidebar-footer">Triple C v1 &middot; รพ.ตัวอย่าง</div>
+  </aside>
+
+  <!-- ============ Main content ============ -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-title">แดชบอร์ดหอผู้ป่วย/ทีมเยี่ยมบ้าน</div>
+      <div class="user-chip">
+        <div class="user-avatar">สจ</div>
+        <div class="who">
+          <span class="name">สมหญิง ใจดี</span>
+          <span class="role-badge">พยาบาลหอผู้ป่วย</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <div class="page-head">
+        <h1 class="h1">ภาพรวมวันนี้</h1>
+        <span class="sub">วันศุกร์ที่ 21 สิงหาคม 2569</span>
+      </div>
+
+      <!-- ============ KPI tiles ============ -->
+      <section class="kpi-grid" aria-label="สรุปตัวเลขสำคัญ">
+        <div class="kpi-tile">
+          <span class="caption">ผู้ป่วยในการดูแลทั้งหมด</span>
+          <span class="kpi-value">42</span>
+          <span class="hint">อยู่ระหว่างติดตามต่อเนื่อง</span>
+        </div>
+        <div class="kpi-tile">
+          <span class="caption">นัดวันนี้</span>
+          <span class="kpi-value">6</span>
+          <span class="hint">ครบกำหนดติดตามภายในวันนี้</span>
+        </div>
+        <div class="kpi-tile warn">
+          <span class="caption">เกินกำหนด</span>
+          <span class="kpi-value warning">3</span>
+          <span class="hint">ต้องติดตามโดยเร็ว</span>
+        </div>
+        <div class="kpi-tile alert">
+          <span class="caption">พบความเสี่ยงยืนยันแล้ว</span>
+          <span class="kpi-value risk">2</span>
+          <span class="hint">พยาบาลยืนยันความเสี่ยงแล้ว</span>
+        </div>
+      </section>
+
+      <!-- ============ AI pending banner ============ -->
+      <section class="banner" role="note" aria-label="แจ้งเตือนเคสรอยืนยันแผนจาก AI">
+        <div class="banner-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+        <div class="banner-text">
+          <div class="h3">มี 4 เคสรอการยืนยันแผนจาก AI</div>
+          <p>ระบบสร้างร่างคู่มือติดตาม/สรุปความเสี่ยงไว้แล้ว — พยาบาลต้องตรวจสอบและกดยืนยันก่อนใช้งานจริงทุกครั้ง</p>
+        </div>
+        <a class="btn btn-primary" href="referrals-list.html">ตรวจสอบเคสรอยืนยัน</a>
+      </section>
+
+      <!-- ============ Today's / overdue follow-ups ============ -->
+      <section class="card" aria-label="รายการติดตามวันนี้และเกินกำหนด">
+        <div class="card-head">
+          <div>
+            <h2 class="h2">รายการติดตามวันนี้ &amp; เกินกำหนด</h2>
+            <div class="sub">เรียงลำดับเคสเกินกำหนดไว้บนสุดตามความสำคัญ</div>
+          </div>
+          <a class="btn btn-secondary btn-sm" href="referrals-list.html">ดูรายการเคสทั้งหมด</a>
+        </div>
+        <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ผู้ป่วย</th>
+              <th>วิธีติดตาม</th>
+              <th>วันครบกำหนด</th>
+              <th>สถานะ</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="row-overdue">
+              <td>
+                <div class="patient-name">นายสมชาย ศรีสุวรรณ</div>
+                <div class="patient-hn">HN-2026-00076</div>
+              </td>
+              <td><span class="chip chip-method">เยี่ยมบ้าน</span></td>
+              <td class="due-date">19/08/2569</td>
+              <td><span class="chip chip-overdue">เกินกำหนด 2 วัน</span></td>
+              <td><a class="btn btn-primary btn-sm" href="followup-guide.html">เริ่มติดตาม</a></td>
+            </tr>
+            <tr class="row-overdue">
+              <td>
+                <div class="patient-name">นางบุญมี แสงจันทร์</div>
+                <div class="patient-hn">HN-2026-00055</div>
+              </td>
+              <td><span class="chip chip-method">โทรติดตาม</span></td>
+              <td class="due-date">17/08/2569</td>
+              <td><span class="chip chip-overdue">เกินกำหนด 4 วัน</span></td>
+              <td><a class="btn btn-primary btn-sm" href="followup-guide.html">เริ่มติดตาม</a></td>
+            </tr>
+            <tr>
+              <td>
+                <div class="patient-name">นายประเสริฐ วงศ์สุข</div>
+                <div class="patient-hn">HN-2026-00114</div>
+              </td>
+              <td><span class="chip chip-method">เยี่ยมบ้าน</span></td>
+              <td class="due-date">21/08/2569</td>
+              <td><span class="chip chip-today">วันนี้</span></td>
+              <td><a class="btn btn-primary btn-sm" href="followup-guide.html">เริ่มติดตาม</a></td>
+            </tr>
+            <tr>
+              <td>
+                <div class="patient-name">นางสาวกัญญา ทองดี</div>
+                <div class="patient-hn">HN-2026-00098</div>
+              </td>
+              <td><span class="chip chip-method">โทรติดตาม</span></td>
+              <td class="due-date">21/08/2569</td>
+              <td><span class="chip chip-today">วันนี้</span></td>
+              <td><a class="btn btn-primary btn-sm" href="followup-guide.html">เริ่มติดตาม</a></td>
+            </tr>
+            <tr>
+              <td>
+                <div class="patient-name">นายวิชัย พูลสวัสดิ์</div>
+                <div class="patient-hn">HN-2026-00133</div>
+              </td>
+              <td><span class="chip chip-method">เยี่ยมบ้าน</span></td>
+              <td class="due-date">21/08/2569</td>
+              <td><span class="chip chip-today">วันนี้</span></td>
+              <td><a class="btn btn-primary btn-sm" href="followup-guide.html">เริ่มติดตาม</a></td>
+            </tr>
+            <tr>
+              <td>
+                <div class="patient-name">นางสาวรัตนา ใจงาม</div>
+                <div class="patient-hn">HN-2026-00141</div>
+              </td>
+              <td><span class="chip chip-method">โทรติดตาม</span></td>
+              <td class="due-date">21/08/2569</td>
+              <td><span class="chip chip-today">วันนี้</span></td>
+              <td><a class="btn btn-primary btn-sm" href="followup-guide.html">เริ่มติดตาม</a></td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+      </section>
+
+      <!-- ============ Confirmed risk signals ============ -->
+      <section class="card" aria-label="สัญญาณความเสี่ยงที่ยืนยันแล้วล่าสุด">
+        <div class="card-head">
+          <div>
+            <h2 class="h2">สัญญาณความเสี่ยงที่ยืนยันแล้วล่าสุด</h2>
+            <div class="sub">พยาบาลยืนยันความเสี่ยงจากการวิเคราะห์ของ AI แล้ว — ต้องพิจารณาดำเนินการต่อ</div>
+          </div>
+        </div>
+        <div class="risk-list">
+          <div class="risk-item">
+            <div class="info">
+              <div class="row1">
+                <span class="name">นายสมชาย ศรีสุวรรณ</span>
+                <span class="patient-hn">HN-2026-00076</span>
+                <span class="chip chip-risk">พบความเสี่ยง</span>
+              </div>
+              <div class="snippet">สรุปจาก AI: ผู้ป่วยมีอาการหอบเหนื่อยเพิ่มขึ้น และ PPS Score ลดลงจาก 60 เป็น 40 ภายใน 7 วัน ควรพิจารณาส่งต่อโรงพยาบาลเพื่อประเมินซ้ำ</div>
+              <div class="meta">ยืนยันความเสี่ยงโดย สมหญิง ใจดี เมื่อ 20/08/2569 09:40</div>
+            </div>
+            <div class="actions">
+              <a class="btn btn-secondary btn-sm" href="review-decide.html">ดูรายละเอียด</a>
+            </div>
+          </div>
+          <div class="risk-item">
+            <div class="info">
+              <div class="row1">
+                <span class="name">นางบุญมี แสงจันทร์</span>
+                <span class="patient-hn">HN-2026-00055</span>
+                <span class="chip chip-risk">พบความเสี่ยง</span>
+              </div>
+              <div class="snippet">สรุปจาก AI: แผลกดทับระดับ 2 ที่ก้นกบมีสัญญาณติดเชื้อ ผู้ดูแลรายงานมีไข้ต่ำๆ ต่อเนื่อง 2 วัน แนะนำให้ทีมเยี่ยมบ้านประเมินแผลซ้ำโดยเร็ว</div>
+              <div class="meta">ยืนยันความเสี่ยงโดย สมหญิง ใจดี เมื่อ 19/08/2569 14:15</div>
+            </div>
+            <div class="actions">
+              <a class="btn btn-secondary btn-sm" href="review-decide.html">ดูรายละเอียด</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="credit">Chira Continuity Care (Triple C) — ต้นแบบใช้งานสำหรับสาธิตเท่านั้น ข้อมูลผู้ป่วยทั้งหมดเป็นข้อมูลจำลอง</footer>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ตรวจสอบและตัดสินใจ — คุณสมชาย ใจบุญ | Chira Continuity Care</title>
+<style>
+  :root{
+    --color-primary-900:#212B1C;
+    --color-primary-800:#2C3A22;
+    --color-primary-700:#3C4D2A;
+    --color-primary-600:#4C5F35;
+    --color-primary-500:#62784A;
+    --color-primary-300:#AAB994;
+    --color-primary-100:#E9EDDF;
+    --color-primary-50:#F5F6EF;
+
+    --color-neutral-900:#22201A;
+    --color-neutral-700:#4A4739;
+    --color-neutral-500:#7C7863;
+    --color-neutral-300:#C9C4AD;
+    --color-neutral-200:#DEDAC6;
+    --color-neutral-100:#F1EEE0;
+    --color-surface:#FFFFFF;
+
+    --color-accent-blue:#3E7CA6;
+    --color-accent-gold:#C9932E;
+
+    --color-risk:#B23B2C;
+    --color-risk-tint:#F7E7E2;
+    --color-warning:#C2891F;
+    --color-warning-tint:#FBF0DC;
+    --color-success:#3E8E49;
+    --color-success-tint:#E5F2E4;
+
+    --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-5:20px;
+    --space-6:24px; --space-8:32px; --space-10:40px; --space-12:48px; --space-16:64px;
+
+    --radius-sm:4px; --radius-md:8px; --radius-lg:12px; --radius-pill:999px;
+
+    --shadow-sm:0 1px 2px rgba(34,32,26,0.06);
+    --shadow-md:0 1px 2px rgba(34,32,26,0.06), 0 4px 14px rgba(34,32,26,0.08);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Sarabun','Noto Sans Thai','Leelawadee UI','Segoe UI',system-ui,sans-serif;
+    background:var(--color-primary-50);
+    color:var(--color-neutral-900);
+    font-size:14px;
+    line-height:22px;
+  }
+  a{color:var(--color-primary-700);}
+  a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, label:focus-visible, [tabindex]:focus-visible {
+    outline:3px solid var(--color-accent-blue);
+    outline-offset:2px;
+  }
+
+  .app{ display:flex; min-height:100vh; }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    width:248px;
+    flex-shrink:0;
+    background:linear-gradient(180deg, var(--color-primary-900), var(--color-primary-800));
+    color:#F1EEE0;
+    display:flex;
+    flex-direction:column;
+    padding:var(--space-5) 0;
+    position:sticky;
+    top:0;
+    height:100vh;
+  }
+  .sidebar .brand{
+    display:flex;
+    align-items:center;
+    gap:var(--space-2);
+    padding:0 var(--space-5) var(--space-5);
+    border-bottom:1px solid rgba(241,238,224,0.12);
+    margin-bottom:var(--space-4);
+  }
+  .sidebar .brand .mark{
+    width:34px;height:34px;border-radius:50%;
+    background:radial-gradient(circle at 30% 30%, var(--color-accent-blue), var(--color-primary-700) 55%, var(--color-accent-gold) 100%);
+    flex-shrink:0;
+    border:2px solid #F5F6EF;
+  }
+  .sidebar .brand .name{ font-weight:700; font-size:15px; line-height:1.2; color:#F5F6EF; }
+  .sidebar .brand .sub{ font-size:11.5px; color:var(--color-primary-300); }
+
+  .nav-group-label{
+    font-size:11.5px;
+    font-weight:600;
+    letter-spacing:.03em;
+    color:var(--color-primary-300);
+    text-transform:uppercase;
+    padding:var(--space-2) var(--space-5);
+    margin-top:var(--space-3);
+  }
+  .nav-item{
+    display:flex;
+    align-items:center;
+    gap:var(--space-3);
+    padding:var(--space-3) var(--space-5);
+    color:#E9EDDF;
+    text-decoration:none;
+    font-size:14px;
+    font-weight:500;
+    border-left:3px solid transparent;
+  }
+  .nav-item .ic{ width:18px; text-align:center; flex-shrink:0; }
+  .nav-item:hover{ background:rgba(60,77,42,0.35); }
+  .nav-item.active{
+    background:rgba(60,77,42,0.55);
+    border-left-color:var(--color-accent-gold);
+    color:#FFFFFF;
+    font-weight:700;
+  }
+  .sidebar .user-box{
+    margin-top:auto;
+    padding:var(--space-4) var(--space-5);
+    border-top:1px solid rgba(241,238,224,0.12);
+    font-size:12.5px;
+    color:var(--color-primary-300);
+  }
+  .sidebar .user-box strong{ display:block; color:#F5F6EF; font-size:13.5px; margin-bottom:2px; }
+
+  /* ---------- Main ---------- */
+  .main{ flex:1; min-width:0; }
+  .topbar{
+    background:var(--color-surface);
+    border-bottom:1px solid var(--color-neutral-200);
+    padding:var(--space-4) var(--space-8);
+    display:flex; align-items:center; justify-content:space-between; gap:var(--space-4);
+    flex-wrap:wrap;
+  }
+  .topbar h1{ font-size:24px; line-height:32px; font-weight:700; margin:0; }
+  .breadcrumb{ font-size:12.5px; color:var(--color-neutral-500); margin-bottom:2px; }
+  .content{ padding:var(--space-6) var(--space-8) var(--space-16); max-width:920px; }
+
+  /* ---------- Patient summary strip ---------- */
+  .patient-strip{
+    background:var(--color-surface);
+    border:1px solid var(--color-neutral-200);
+    border-radius:var(--radius-lg);
+    padding:var(--space-5);
+    box-shadow:var(--shadow-sm);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:var(--space-4);
+    flex-wrap:wrap;
+    margin-bottom:var(--space-6);
+  }
+  .patient-strip .who{ display:flex; align-items:center; gap:var(--space-4); }
+  .avatar{
+    width:48px;height:48px;border-radius:50%;
+    background:var(--color-primary-100);
+    color:var(--color-primary-700);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700; font-size:17px; flex-shrink:0;
+  }
+  .who h2{ margin:0; font-size:20px; line-height:28px; font-weight:700; }
+  .who .meta{ font-size:12.5px; color:var(--color-neutral-500); margin-top:2px; }
+  .patient-strip .tags{ display:flex; gap:var(--space-2); flex-wrap:wrap; }
+
+  .chip{
+    display:inline-flex; align-items:center; gap:6px;
+    padding:4px 10px;
+    border-radius:var(--radius-pill);
+    font-size:11.5px; font-weight:600;
+    white-space:nowrap;
+  }
+  .chip-primary{ background:var(--color-primary-100); color:var(--color-primary-700); }
+  .chip-neutral{ background:var(--color-neutral-100); color:var(--color-neutral-700); }
+  .chip-risk{ background:var(--color-risk-tint); color:var(--color-risk); }
+  .chip-warning{ background:var(--color-warning-tint); color:var(--color-warning); }
+  .chip-success{ background:var(--color-success-tint); color:var(--color-success); }
+  .chip::before{ content:''; width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0; }
+
+  .section-title{
+    font-size:16px; line-height:24px; font-weight:600;
+    margin:0 0 var(--space-3);
+    display:flex; align-items:center; gap:var(--space-2);
+  }
+
+  /* ---------- Read-only summary card ---------- */
+  .card{
+    background:var(--color-surface);
+    border:1px solid var(--color-neutral-200);
+    border-radius:var(--radius-lg);
+    padding:var(--space-5);
+    box-shadow:var(--shadow-sm);
+    margin-bottom:var(--space-6);
+  }
+  .card-label{
+    font-size:11.5px; font-weight:600; letter-spacing:.03em; text-transform:uppercase;
+    color:var(--color-neutral-500);
+    margin-bottom:var(--space-3);
+  }
+  .kv-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:var(--space-4);
+    margin-bottom:var(--space-4);
+  }
+  .kv dt{ font-size:12.5px; font-weight:600; color:var(--color-neutral-700); margin-bottom:2px; }
+  .kv dd{ margin:0; font-size:14px; font-weight:600; color:var(--color-neutral-900); font-variant-numeric:tabular-nums; }
+  .notes-box{
+    background:var(--color-neutral-100);
+    border:1px solid var(--color-neutral-200);
+    border-radius:var(--radius-md);
+    padding:var(--space-4);
+    font-size:14px;
+    line-height:22px;
+    color:var(--color-neutral-900);
+    white-space:pre-line;
+  }
+  .readonly-tag{
+    font-size:11.5px; color:var(--color-neutral-500); font-weight:500;
+    display:inline-flex; align-items:center; gap:4px; margin-top:var(--space-3);
+  }
+  .readonly-tag .lock{ font-size:12px; }
+
+  /* ---------- AI Draft box (3.3) ---------- */
+  .ai-draft{
+    border:2px dashed var(--color-primary-300);
+    background:var(--color-primary-50);
+    border-radius:var(--radius-lg);
+    padding:var(--space-5);
+    margin-bottom:var(--space-6);
+  }
+  .ai-draft-label{
+    display:inline-block;
+    background:var(--color-primary-100);
+    color:var(--color-primary-700);
+    font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.03em;
+    padding:4px 12px;
+    border-radius:var(--radius-pill);
+    margin-bottom:var(--space-4);
+  }
+  .ai-row{ display:flex; align-items:flex-start; gap:var(--space-2); margin-bottom:var(--space-3); flex-wrap:wrap; }
+  .ai-row .field-label{ font-size:12.5px; font-weight:600; color:var(--color-neutral-700); flex-shrink:0; min-width:150px; }
+  .ai-row .field-value{ font-size:14px; line-height:22px; color:var(--color-neutral-900); flex:1; min-width:200px; }
+  .ai-summary-text{
+    font-size:14px; line-height:22px; color:var(--color-neutral-900);
+    background:var(--color-surface);
+    border:1px solid var(--color-primary-300);
+    border-radius:var(--radius-md);
+    padding:var(--space-3) var(--space-4);
+    max-width:70ch;
+  }
+  .ai-recommendation{
+    display:flex; gap:var(--space-2); align-items:flex-start;
+    font-size:14px; line-height:22px;
+    margin-top:var(--space-3);
+  }
+  .ai-recommendation .ic{ color:var(--color-primary-700); flex-shrink:0; }
+  .ai-fallback-note{
+    margin-top:var(--space-4);
+    padding-top:var(--space-3);
+    border-top:1px dashed var(--color-primary-300);
+    font-size:11.5px;
+    line-height:16px;
+    color:var(--color-neutral-500);
+  }
+  .ai-fallback-note strong{ color:var(--color-neutral-700); }
+
+  /* ---------- Nurse decision box (3.4) ---------- */
+  .nurse-decision{
+    border:4px solid var(--color-primary-700);
+    background:var(--color-surface);
+    border-radius:var(--radius-lg);
+    padding:var(--space-6);
+    margin-bottom:var(--space-6);
+  }
+  .nurse-decision-label{
+    display:inline-block;
+    background:var(--color-primary-700);
+    color:#FFFFFF;
+    font-size:12.5px; font-weight:700; text-transform:uppercase; letter-spacing:.03em;
+    padding:5px 14px;
+    border-radius:var(--radius-pill);
+    margin-bottom:var(--space-5);
+  }
+  .nurse-decision.confirmed{
+    border-color:var(--color-primary-700);
+  }
+  .nurse-decision.confirmed .nurse-decision-label{
+    background:var(--color-success-tint);
+    color:var(--color-success);
+  }
+
+  .field-group{ margin-bottom:var(--space-5); }
+  .field-group > .label{
+    display:block;
+    font-size:12.5px; font-weight:600; color:var(--color-neutral-700);
+    margin-bottom:var(--space-3);
+  }
+
+  .radio-cards{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:var(--space-3);
+  }
+  .radio-card{
+    position:relative;
+    border:2px solid var(--color-neutral-300);
+    background:var(--color-neutral-100);
+    border-radius:var(--radius-md);
+    padding:var(--space-4);
+    cursor:pointer;
+    transition:border-color .12s ease, background .12s ease;
+    display:block;
+  }
+  .radio-card input[type="radio"]{
+    position:absolute;
+    top:var(--space-3); right:var(--space-3);
+    width:18px; height:18px;
+    accent-color:var(--color-primary-700);
+    cursor:pointer;
+  }
+  .radio-card .rc-title{
+    font-size:15px; font-weight:700; color:var(--color-neutral-900);
+    margin-bottom:var(--space-1);
+    padding-right:var(--space-6);
+  }
+  .radio-card .rc-desc{
+    font-size:12.5px; line-height:18px; color:var(--color-neutral-700);
+  }
+  .radio-card:hover{ border-color:var(--color-primary-500); }
+  .radio-card.selected{
+    border-color:var(--color-primary-700);
+    background:var(--color-primary-100);
+  }
+  .radio-card.selected .rc-title{ color:var(--color-primary-700); }
+
+  .checkbox-row{
+    display:flex; align-items:flex-start; gap:var(--space-3);
+    background:var(--color-warning-tint);
+    border:1px solid var(--color-warning);
+    border-radius:var(--radius-md);
+    padding:var(--space-4);
+  }
+  .checkbox-row input[type="checkbox"]{
+    width:20px; height:20px; flex-shrink:0; margin-top:2px;
+    accent-color:var(--color-warning);
+    cursor:pointer;
+  }
+  .checkbox-row label{ font-size:14px; line-height:20px; color:var(--color-neutral-900); cursor:pointer; }
+  .checkbox-row .cb-title{ font-weight:700; display:block; margin-bottom:2px; }
+  .checkbox-row .cb-sub{ font-size:12.5px; color:var(--color-neutral-700); }
+
+  textarea, .textarea{
+    width:100%;
+    background:var(--color-neutral-100);
+    border:1px solid var(--color-neutral-300);
+    border-radius:var(--radius-sm);
+    padding:var(--space-3);
+    font-family:inherit;
+    font-size:14px;
+    line-height:22px;
+    color:var(--color-neutral-900);
+    resize:vertical;
+  }
+  textarea:focus{ outline:2px solid var(--color-primary-700); outline-offset:1px; }
+  .hint{ font-size:11.5px; color:var(--color-neutral-500); margin-top:var(--space-1); }
+
+  .btn{
+    display:inline-flex; align-items:center; gap:var(--space-2);
+    font-family:inherit;
+    font-size:14px; font-weight:700;
+    padding:12px 22px;
+    border-radius:var(--radius-md);
+    border:1px solid transparent;
+    cursor:pointer;
+    text-decoration:none;
+    line-height:20px;
+  }
+  .btn-primary{ background:var(--color-primary-700); color:#FFFFFF; }
+  .btn-primary:hover{ background:var(--color-primary-600); }
+  .btn-primary:disabled{ background:var(--color-neutral-300); color:var(--color-neutral-500); cursor:not-allowed; }
+  .btn-secondary{ background:#FFFFFF; border-color:var(--color-neutral-300); color:var(--color-neutral-900); }
+  .btn-secondary:hover{ background:var(--color-neutral-100); }
+
+  .decision-footer{
+    display:flex; align-items:center; gap:var(--space-4); margin-top:var(--space-6); flex-wrap:wrap;
+  }
+
+  .confirmed-banner{
+    display:none;
+    border:2px solid var(--color-success);
+    background:var(--color-success-tint);
+    border-radius:var(--radius-md);
+    padding:var(--space-4);
+    margin-bottom:var(--space-5);
+    font-size:14px;
+    color:var(--color-neutral-900);
+  }
+  .confirmed-banner strong{ color:var(--color-success); }
+
+  /* ---------- What happens next ---------- */
+  .next-note{
+    border:1px solid var(--color-neutral-200);
+    background:var(--color-neutral-100);
+    border-radius:var(--radius-lg);
+    padding:var(--space-5);
+    font-size:14px; line-height:22px;
+    color:var(--color-neutral-700);
+    margin-bottom:var(--space-6);
+  }
+  .next-note .nn-title{
+    font-size:12.5px; font-weight:700; text-transform:uppercase; letter-spacing:.03em;
+    color:var(--color-neutral-500);
+    margin-bottom:var(--space-2);
+  }
+  .back-link{
+    display:inline-flex; align-items:center; gap:6px;
+    margin-top:var(--space-3);
+    font-weight:600;
+    color:var(--color-primary-700);
+    text-decoration:none;
+  }
+  .back-link:hover{ text-decoration:underline; }
+
+  @media (max-width: 860px){
+    .app{ flex-direction:column; }
+    .sidebar{
+      width:100%;
+      height:auto;
+      position:sticky;
+      top:0;
+      flex-direction:row;
+      overflow-x:auto;
+      padding:var(--space-2) 0;
+      align-items:center;
+      z-index:20;
+    }
+    .sidebar .brand{ display:none; }
+    .sidebar .user-box{ display:none; }
+    .nav-group-label{ display:none; }
+    .sidebar nav{ display:flex; }
+    .nav-item{
+      padding:var(--space-3) var(--space-4);
+      border-left:none;
+      border-bottom:3px solid transparent;
+      white-space:nowrap;
+    }
+    .nav-item.active{ border-left-color:transparent; border-bottom-color:var(--color-accent-gold); }
+    .content{ padding:var(--space-4); }
+    .topbar{ padding:var(--space-4); }
+    .radio-cards{ grid-template-columns:1fr; }
+    .kv-grid{ grid-template-columns:1fr 1fr; }
+    .patient-strip{ flex-direction:column; align-items:flex-start; }
+  }
+
+  @media (max-width: 480px){
+    .kv-grid{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="mark"></div>
+      <div>
+        <div class="name">Triple C</div>
+        <div class="sub">Chira Continuity Care</div>
+      </div>
+    </div>
+    <nav>
+      <div class="nav-group-label">ภาพรวม</div>
+      <a class="nav-item" href="dashboard.html"><span class="ic">&#9635;</span> Dashboard</a>
+
+      <div class="nav-group-label">งานส่งต่อ</div>
+      <a class="nav-item" href="referrals-list.html"><span class="ic">&#9776;</span> ใบส่งต่อ</a>
+      <a class="nav-item" href="care-plan-confirm.html"><span class="ic">&#10003;</span> ยืนยันแผนดูแล</a>
+
+      <div class="nav-group-label">ติดตามเยี่ยมบ้าน</div>
+      <a class="nav-item" href="followup-guide.html"><span class="ic">&#128203;</span> คู่มือติดตาม</a>
+      <a class="nav-item" href="followup-record.html"><span class="ic">&#9998;</span> บันทึกผลติดตาม</a>
+      <a class="nav-item active" href="review-decide.html"><span class="ic">&#9888;</span> ตรวจสอบและตัดสินใจ</a>
+
+      <div class="nav-group-label">ระบบ</div>
+      <a class="nav-item" href="admin-case-types-list.html"><span class="ic">&#9881;</span> ประเภทเคส</a>
+      <a class="nav-item" href="admin-users-list.html"><span class="ic">&#128101;</span> ผู้ใช้งาน</a>
+    </nav>
+    <div class="user-box">
+      <strong>พว.สุนีย์ ปานทอง</strong>
+      ทีมเยี่ยมบ้าน — หอผู้ป่วยอายุรกรรม
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="breadcrumb">ติดตามเยี่ยมบ้าน / บันทึกผลติดตาม ครั้งที่ 2</div>
+        <h1>ตรวจสอบและตัดสินใจ</h1>
+      </div>
+      <span class="chip chip-warning">พบความเสี่ยง — รอการยืนยันจากพยาบาล</span>
+    </div>
+
+    <div class="content">
+
+      <!-- Patient summary strip -->
+      <div class="patient-strip">
+        <div class="who">
+          <div class="avatar">สบ</div>
+          <div>
+            <h2>คุณสมชาย ใจบุญ</h2>
+            <div class="meta">HN-2026-00087 &nbsp;·&nbsp; ชาย อายุ 68 ปี &nbsp;·&nbsp; Palliative Care — มะเร็งปอดระยะที่ 4</div>
+          </div>
+        </div>
+        <div class="tags">
+          <span class="chip chip-primary">ในเขต</span>
+          <span class="chip chip-neutral">เยี่ยมบ้าน</span>
+          <span class="chip chip-neutral">แผนติดตาม ครั้งที่ 2</span>
+        </div>
+      </div>
+
+      <!-- Read-only recorded outcome -->
+      <section class="card">
+        <div class="card-label">ผลติดตามที่บันทึกไว้</div>
+        <div class="kv-grid">
+          <div class="kv">
+            <dt>วัน-เวลาที่ติดตาม</dt>
+            <dd>21/08/2026 09:30</dd>
+          </div>
+          <div class="kv">
+            <dt>PPS Score</dt>
+            <dd>40%</dd>
+          </div>
+        </div>
+        <dt style="font-size:12.5px;font-weight:600;color:var(--color-neutral-700);margin-bottom:8px;">อาการ / ปัญหาที่พบ</dt>
+        <div class="notes-box">ผู้ป่วยซึมลงจากการเยี่ยมครั้งก่อน รับประทานอาหารได้น้อยกว่าเดิมประมาณครึ่งหนึ่ง น้ำหนักลดลง ~2 กก. ในสองสัปดาห์
+พบแผลกดทับระดับ 2 ที่บริเวณก้นกบ ขนาดประมาณ 2x3 ซม. มีของเหลวซึมเล็กน้อย ยังไม่มีกลิ่นหรือหนอง
+ผู้ป่วยบ่นปวดระดับ 6/10 ยาแก้ปวดที่ได้รับดูเหมือนคุมอาการได้ไม่เต็มที่ในช่วงเย็น
+ผู้ดูแลหลัก (ภรรยา) แสดงอาการเหนื่อยล้าและวิตกกังวลสูง พูดว่า "ไม่ไหวจะดูแลคนเดียวแบบนี้ต่อไป"</div>
+        <div class="readonly-tag"><span class="lock">&#128274;</span> ข้อมูลนี้บันทึกจากหน้าบันทึกผลติดตามแล้ว — ไม่สามารถแก้ไขได้ในหน้านี้</div>
+      </section>
+
+      <!-- AI Draft risk analysis -->
+      <section class="ai-draft">
+        <span class="ai-draft-label">ร่างจาก AI — ยังไม่ยืนยัน</span>
+
+        <div class="ai-row">
+          <span class="field-label">ตรวจพบความเสี่ยง:</span>
+          <span class="field-value"><span class="chip chip-warning">ใช่ — ต้องพิจารณา</span></span>
+        </div>
+
+        <div class="ai-row" style="flex-direction:column;">
+          <span class="field-label">สรุปความเสี่ยงจาก AI:</span>
+          <p class="ai-summary-text">
+            จากอาการที่บันทึกในการเยี่ยมครั้งนี้ พบสัญญาณเสี่ยงร่วมกันหลายด้าน ได้แก่ ภาวะรับประทานอาหารได้น้อยลงและ
+            น้ำหนักลดต่อเนื่อง แผลกดทับระดับ 2 ที่มีโอกาสลุกลามหากไม่ได้รับการดูแลที่เหมาะสม อาการปวดที่ยาปัจจุบัน
+            คุมได้ไม่เต็มที่ในช่วงเย็น และสัญญาณภาวะเหนื่อยล้า/วิตกกังวลของผู้ดูแลหลักซึ่งอาจส่งผลต่อความสามารถใน
+            การดูแลผู้ป่วยที่บ้านต่อไป ควรได้รับการประเมินซ้ำในระยะสั้นเพื่อป้องกันการทรุดลงเฉียบพลัน
+          </p>
+        </div>
+
+        <div class="ai-recommendation">
+          <span class="ic">&#128161;</span>
+          <span><strong>คำแนะนำจาก AI:</strong> แนะนำให้ติดตามซ้ำภายใน 3 วัน และพิจารณาส่งต่อทีมจิตสังคมเพื่อประเมิน
+          และสนับสนุนผู้ดูแลหลัก</span>
+        </div>
+
+        <div class="ai-fallback-note">
+          <strong>หมายเหตุ (fallback):</strong> หาก AI ไม่สามารถประมวลผลได้ในบางครั้ง (เช่น เชื่อมต่อ endpoint ภายใน
+          เครือข่ายไม่สำเร็จ หรือรูปแบบผลลัพธ์ไม่ตรงตามที่กำหนด) ระบบจะแสดงข้อความแทนกล่องด้านบนว่า
+          "ไม่สามารถวิเคราะห์ได้ในขณะนี้ กรุณาประเมินความเสี่ยงด้วยตนเอง" และให้พยาบาลตัดสินใจในกล่องด้านล่างได้ตามปกติ
+          โดยไม่ต้องรอผล AI
+        </div>
+      </section>
+
+      <!-- Confirmed banner (hidden until submit) -->
+      <div class="confirmed-banner" id="confirmedBanner">
+        <strong>ยืนยันแล้วโดย พว.สุนีย์ ปานทอง เมื่อ 21/08/2026 14:05</strong>
+        <div id="confirmedSummary" style="margin-top:6px;"></div>
+      </div>
+
+      <!-- Nurse decision box -->
+      <section class="nurse-decision" id="nurseDecisionBox">
+        <span class="nurse-decision-label" id="decisionLabel">การตัดสินใจของพยาบาล — ต้องยืนยันเสมอ</span>
+
+        <form id="decisionForm">
+          <div class="field-group">
+            <span class="label">เลือกการตัดสินใจ</span>
+            <div class="radio-cards">
+              <label class="radio-card selected" data-value="repeat">
+                <input type="radio" name="nurse_decision" value="repeat" checked>
+                <div class="rc-title">ติดตามซ้ำ</div>
+                <div class="rc-desc">สร้างกำหนดการติดตามครั้งถัดไปโดยอัตโนมัติ ใช้เมื่อยังต้องเฝ้าดูอาการต่อเนื่องแต่ยังไม่ถึงระดับที่ต้องส่งต่อ</div>
+              </label>
+              <label class="radio-card" data-value="refer">
+                <input type="radio" name="nurse_decision" value="refer">
+                <div class="rc-title">ส่งต่อ</div>
+                <div class="rc-desc">ส่งต่อให้ทีม/แผนกที่เกี่ยวข้อง (เช่น ทีมจิตสังคม, แพทย์เจ้าของไข้) ประเมินเพิ่มเติมนอกเหนือจากทีมเยี่ยมบ้าน</div>
+              </label>
+              <label class="radio-card" data-value="close">
+                <input type="radio" name="nurse_decision" value="close">
+                <div class="rc-title">ปิดเคส</div>
+                <div class="rc-desc">ยุติการติดตามต่อเนื่อง ใช้เมื่อผู้ป่วยพ้นภาวะที่ต้องติดตาม เสียชีวิต หรือย้ายออกจากพื้นที่รับผิดชอบ</div>
+              </label>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <div class="checkbox-row">
+              <input type="checkbox" id="riskConfirm" required>
+              <label for="riskConfirm">
+                <span class="cb-title">ยืนยันความเสี่ยง</span>
+                <span class="cb-sub">ข้าพเจ้าได้ตรวจสอบผลวิเคราะห์ความเสี่ยงจาก AI ข้างต้นแล้ว และยืนยันว่าตรงกับการประเมินทางคลินิกของข้าพเจ้า</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <span class="label" for="decisionNotes" style="display:block;">หมายเหตุการตัดสินใจ</span>
+            <textarea id="decisionNotes" rows="3" placeholder="เช่น ส่งต่อถึงใคร/แผนกไหน หรือเหตุผลเพิ่มเติมในการตัดสินใจ">แนะนำให้ติดตามซ้ำภายใน 3 วัน ประสานทีมจิตสังคมให้เข้าเยี่ยมประเมินภาวะผู้ดูแลหลักร่วมด้วย และแจ้งพยาบาลแผลกดทับดูแลบริเวณก้นกบ</textarea>
+            <div class="hint">ข้อความเริ่มต้นดึงมาจากคำแนะนำของ AI — สามารถแก้ไขได้ก่อนยืนยัน</div>
+          </div>
+
+          <div class="decision-footer">
+            <button type="submit" class="btn btn-primary" id="submitBtn">ยืนยันการตัดสินใจ</button>
+            <a href="dashboard.html" class="btn btn-secondary">ยกเลิก</a>
+          </div>
+        </form>
+      </section>
+
+      <!-- What happens next -->
+      <div class="next-note">
+        <div class="nn-title">จะเกิดอะไรขึ้นต่อ</div>
+        หากเลือก "ติดตามซ้ำ" หรือ "ส่งต่อ" ระบบจะสร้างกำหนดการติดตามครั้งถัดไปให้อัตโนมัติ (คำนวณช่วงเวลาใหม่จาก
+        PPS Score หากเป็นเคส Palliative) — หากเลือก "ปิดเคส" ระบบจะยกเลิกกำหนดการที่เหลือทั้งหมดและปิดเคส
+        <br>
+        <a class="back-link" href="dashboard.html">&#8592; กลับสู่ Dashboard</a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  var cards = document.querySelectorAll('.radio-card');
+  cards.forEach(function (card) {
+    card.addEventListener('click', function () {
+      cards.forEach(function (c) { c.classList.remove('selected'); });
+      card.classList.add('selected');
+      card.querySelector('input[type="radio"]').checked = true;
+    });
+  });
+
+  var form = document.getElementById('decisionForm');
+  var box = document.getElementById('nurseDecisionBox');
+  var label = document.getElementById('decisionLabel');
+  var banner = document.getElementById('confirmedBanner');
+  var summary = document.getElementById('confirmedSummary');
+  var riskConfirm = document.getElementById('riskConfirm');
+  var notes = document.getElementById('decisionNotes');
+
+  var decisionText = {
+    repeat: 'ติดตามซ้ำ',
+    refer: 'ส่งต่อ',
+    close: 'ปิดเคส'
+  };
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (!riskConfirm.checked) {
+      riskConfirm.focus();
+      alert('กรุณาติ๊ก "ยืนยันความเสี่ยง" ก่อนยืนยันการตัดสินใจ');
+      return;
+    }
+    var selected = form.querySelector('input[name="nurse_decision"]:checked');
+    var value = selected ? selected.value : 'repeat';
+
+    label.textContent = 'ยืนยันแล้วโดย พว.สุนีย์ ปานทอง เมื่อ 21/08/2026 14:05';
+    box.classList.add('confirmed');
+    banner.style.display = 'block';
+    summary.innerHTML = 'การตัดสินใจ: <strong>' + decisionText[value] + '</strong>' +
+      (notes.value ? '<br><span style="color:var(--color-neutral-700);">' + notes.value + '</span>' : '');
+
+    document.getElementById('submitBtn').disabled = true;
+    banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>รับเคสใหม่ — Chira Continuity Care</title>
+<style>
+:root{
+  --color-primary-900:#212B1C; --color-primary-800:#2C3A22; --color-primary-700:#3C4D2A;
+  --color-primary-600:#4C5F35; --color-primary-500:#62784A; --color-primary-300:#AAB994;
+  --color-primary-100:#E9EDDF; --color-primary-50:#F5F6EF;
+  --color-neutral-900:#22201A; --color-neutral-700:#4A4739; --color-neutral-500:#7C7863;
+  --color-neutral-300:#C9C4AD; --color-neutral-200:#DEDAC6; --color-neutral-100:#F1EEE0; --color-surface:#FFFFFF;
+  --color-accent-blue:#3E7CA6; --color-accent-gold:#C9932E;
+  --color-risk:#B23B2C; --color-risk-tint:#F7E7E2;
+  --color-warning:#C2891F; --color-warning-tint:#FBF0DC;
+  --color-success:#3E8E49; --color-success-tint:#E5F2E4;
+  --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-5:20px; --space-6:24px; --space-8:32px; --space-10:40px; --space-12:48px;
+  --radius-sm:4px; --radius-md:8px; --radius-lg:12px; --radius-pill:999px;
+  --shadow-sm:0 1px 2px rgba(34,32,26,0.06);
+  --shadow-md:0 1px 2px rgba(34,32,26,0.06), 0 4px 14px rgba(34,32,26,0.08);
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:'Sarabun','Noto Sans Thai','Leelawadee UI','Segoe UI',system-ui,sans-serif;background:var(--color-primary-50);color:var(--color-neutral-900);font-size:14px;line-height:22px;}
+h1{font-size:24px;line-height:32px;font-weight:700;margin:0;}
+h2{font-size:20px;line-height:28px;font-weight:700;margin:0;}
+h3{font-size:16px;line-height:24px;font-weight:600;margin:0;}
+p{margin:0;}
+a{color:var(--color-primary-700);text-decoration:none;}
+a:hover{text-decoration:underline;}
+:focus-visible{outline:3px solid var(--color-primary-700);outline-offset:2px;}
+
+.app-shell{display:flex;min-height:100vh;}
+
+/* Sidebar */
+.sidebar{width:248px;flex-shrink:0;background:linear-gradient(180deg,var(--color-primary-900),var(--color-primary-800));color:#F5F6EF;display:flex;flex-direction:column;padding:var(--space-5) 0;}
+.sidebar-brand{display:flex;align-items:center;gap:var(--space-3);padding:0 var(--space-5) var(--space-5);border-bottom:1px solid rgba(255,255,255,0.14);margin-bottom:var(--space-4);}
+.brand-mark{position:relative;width:30px;height:26px;flex-shrink:0;}
+.brand-mark span{position:absolute;top:0;width:16px;height:16px;border-radius:50%;border:2.5px solid;background:transparent;}
+.brand-mark span.b1{left:0;border-color:var(--color-accent-blue);}
+.brand-mark span.b2{left:7px;border-color:var(--color-primary-500);}
+.brand-mark span.b3{left:14px;border-color:var(--color-accent-gold);}
+.brand-text{display:flex;flex-direction:column;line-height:1.2;}
+.brand-name{font-weight:800;font-size:15px;letter-spacing:0.02em;color:#F5F6EF;}
+.brand-sub{font-size:10.5px;color:var(--color-primary-300);}
+
+.sidebar-nav{display:flex;flex-direction:column;gap:2px;padding:0 var(--space-3);flex:1;}
+.nav-item{display:flex;align-items:center;gap:var(--space-2);padding:var(--space-3) var(--space-3);border-radius:var(--radius-md);color:#EDEFE4;font-size:14px;font-weight:600;border-left:3px solid transparent;}
+.nav-item:hover{background:rgba(255,255,255,0.08);text-decoration:none;}
+.nav-item.active{background:rgba(233,237,223,0.16);border-left-color:var(--color-primary-300);color:#ffffff;}
+.nav-icon{width:18px;text-align:center;flex-shrink:0;opacity:0.9;}
+.nav-group-label{padding:var(--space-3) var(--space-3) var(--space-1);font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--color-primary-300);font-weight:700;margin-top:var(--space-2);}
+.nav-sub{padding-left:var(--space-8);font-weight:500;font-size:13.5px;}
+
+.sidebar-footer{padding:var(--space-4) var(--space-5) 0;border-top:1px solid rgba(255,255,255,0.14);margin-top:var(--space-4);}
+.user-name{font-weight:700;font-size:13.5px;color:#fff;}
+.user-role{font-size:11.5px;color:var(--color-primary-300);}
+.logout-link{display:inline-block;margin-top:var(--space-2);font-size:12.5px;color:#EDEFE4;opacity:0.9;}
+
+/* Main */
+.main-content{flex:1;padding:var(--space-8);max-width:960px;}
+.page-header{margin-bottom:var(--space-6);}
+.page-lead{margin-top:var(--space-1);color:var(--color-neutral-700);font-size:14px;max-width:70ch;}
+
+.btn{display:inline-flex;align-items:center;gap:var(--space-2);border-radius:var(--radius-md);font-weight:700;font-size:14px;padding:var(--space-3) var(--space-5);border:1px solid transparent;cursor:pointer;line-height:1;white-space:nowrap;}
+.btn-primary{background:var(--color-primary-700);color:#fff;}
+.btn-primary:hover{background:var(--color-primary-600);text-decoration:none;}
+.btn-secondary{background:#fff;border-color:var(--color-neutral-300);color:var(--color-neutral-900);}
+.btn-secondary:hover{background:var(--color-neutral-100);text-decoration:none;}
+.btn-lg{padding:var(--space-4) var(--space-6);font-size:15px;}
+
+.card{background:var(--color-surface);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-6);}
+.section-title{font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--color-neutral-700);margin-bottom:var(--space-4);padding-bottom:var(--space-2);border-bottom:1px solid var(--color-neutral-200);}
+.section{margin-bottom:var(--space-8);}
+.section:last-of-type{margin-bottom:var(--space-6);}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4) var(--space-5);}
+.field{display:flex;flex-direction:column;gap:var(--space-1);}
+.field.span-2{grid-column:1 / -1;}
+.field label{font-size:12.5px;font-weight:600;color:var(--color-neutral-700);}
+.field .hint{font-size:11.5px;color:var(--color-neutral-500);}
+input,select,textarea{background:var(--color-neutral-100);border:1px solid var(--color-neutral-300);border-radius:var(--radius-sm);padding:var(--space-3);font-size:14px;font-family:inherit;color:var(--color-neutral-900);width:100%;}
+input:focus,select:focus,textarea:focus{outline:3px solid var(--color-primary-700);outline-offset:1px;border-color:var(--color-primary-700);}
+textarea{resize:vertical;min-height:96px;}
+
+.radio-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-3);}
+.radio-card{position:relative;}
+.radio-card input{position:absolute;opacity:0;inset:0;width:100%;height:100%;cursor:pointer;margin:0;}
+.radio-card label{display:flex;align-items:center;justify-content:center;text-align:center;height:100%;padding:var(--space-3);border:1px solid var(--color-neutral-300);border-radius:var(--radius-md);background:var(--color-surface);font-size:13.5px;font-weight:600;color:var(--color-neutral-700);cursor:pointer;}
+.radio-card input:checked + label{border-color:var(--color-primary-700);background:var(--color-primary-100);color:var(--color-primary-700);border-width:2px;}
+.radio-card input:focus-visible + label{outline:3px solid var(--color-primary-700);outline-offset:2px;}
+
+.zone-box{background:var(--color-neutral-100);border:1px solid var(--color-neutral-300);border-radius:var(--radius-md);padding:var(--space-4);display:flex;flex-direction:column;gap:var(--space-3);}
+.zone-auto-note{font-size:12.5px;color:var(--color-neutral-700);display:flex;gap:var(--space-2);align-items:flex-start;}
+.zone-badge-preview{display:flex;align-items:center;gap:var(--space-2);}
+.checkbox-row{display:flex;align-items:center;gap:var(--space-2);font-size:12.5px;color:var(--color-neutral-700);font-weight:500;}
+.checkbox-row input{width:auto;}
+
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:var(--radius-pill);font-size:12.5px;font-weight:600;white-space:nowrap;}
+.chip-in-area{background:var(--color-primary-100);color:var(--color-primary-700);}
+.chip-out-area{background:var(--color-neutral-100);color:var(--color-neutral-700);}
+
+.file-drop{border:1px dashed var(--color-neutral-300);border-radius:var(--radius-md);padding:var(--space-5);background:var(--color-neutral-100);text-align:center;}
+.file-drop input{width:auto;margin-top:var(--space-2);}
+
+.form-actions{display:flex;align-items:center;gap:var(--space-3);padding-top:var(--space-5);border-top:1px solid var(--color-neutral-200);}
+
+@media (max-width:860px){
+  .app-shell{flex-direction:column;}
+  .sidebar{width:100%;flex-direction:row;align-items:center;overflow-x:auto;padding:var(--space-3) var(--space-4);gap:var(--space-4);}
+  .sidebar-brand{border-bottom:none;border-right:1px solid rgba(255,255,255,0.14);margin-bottom:0;padding:0 var(--space-4) 0 0;flex-shrink:0;}
+  .sidebar-nav{flex-direction:row;flex:0 0 auto;padding:0;}
+  .nav-group-label{display:none;}
+  .nav-item{border-left:none;border-bottom:3px solid transparent;white-space:nowrap;}
+  .nav-item.active{border-left:none;border-bottom-color:var(--color-primary-300);}
+  .nav-sub{padding-left:var(--space-3);}
+  .sidebar-footer{display:none;}
+  .main-content{padding:var(--space-5);}
+  .grid-2{grid-template-columns:1fr;}
+  .radio-cards{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-mark"><span class="b1"></span><span class="b2"></span><span class="b3"></span></div>
+      <div class="brand-text">
+        <span class="brand-name">TRIPLE C</span>
+        <span class="brand-sub">Chira Continuity Care</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item" href="dashboard.html"><span class="nav-icon">&#9635;</span> Dashboard</a>
+      <a class="nav-item active" href="referrals-list.html"><span class="nav-icon">&#128203;</span> รายการเคส</a>
+      <div class="nav-group-label">จัดการระบบ</div>
+      <a class="nav-item nav-sub" href="admin-case-types-list.html">ประเภทเคส</a>
+      <a class="nav-item nav-sub" href="admin-users-list.html">ผู้ใช้งาน</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-name">กัลยา เจ้าหน้าที่ธุรการ</div>
+      <div class="user-role">ward_staff · หอผู้ป่วยอายุรกรรม</div>
+      <a class="logout-link" href="#">ออกจากระบบ</a>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div class="page-header">
+      <h1>รับเคสใหม่ — สร้างใบส่งต่อผู้ป่วย</h1>
+      <p class="page-lead">กรอกข้อมูลแหล่งที่มาและข้อมูลผู้ป่วยให้ครบถ้วน ระบบจะให้ AI ช่วยสรุปข้อมูลและแนะนำแผนดูแลในขั้นตอนถัดไป — พยาบาลต้องตรวจสอบและยืนยันก่อนใช้งานจริงเสมอ</p>
+    </div>
+
+    <form class="card" onsubmit="event.preventDefault(); location.href='referral-detail.html';">
+
+      <div class="section">
+        <div class="section-title">แหล่งที่มาของเคส</div>
+        <div class="field span-2" style="margin-bottom:var(--space-4);">
+          <label>แหล่งที่มา (source_type)</label>
+          <div class="radio-cards">
+            <div class="radio-card">
+              <input type="radio" name="source_type" id="src_ward" checked>
+              <label for="src_ward">หอผู้ป่วย (ward)</label>
+            </div>
+            <div class="radio-card">
+              <input type="radio" name="source_type" id="src_opd">
+              <label for="src_opd">OPD</label>
+            </div>
+            <div class="radio-card">
+              <input type="radio" name="source_type" id="src_internal">
+              <label for="src_internal">แผนกภายใน รพ.</label>
+            </div>
+            <div class="radio-card">
+              <input type="radio" name="source_type" id="src_external">
+              <label for="src_external">โรงพยาบาลอื่น</label>
+            </div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="field span-2">
+            <label for="source_detail">รายละเอียดแหล่งที่มา</label>
+            <input type="text" id="source_detail" placeholder="เช่น หอผู้ป่วยอายุรกรรมหญิง, คลินิกศัลยกรรม" value="หอผู้ป่วยอายุรกรรมหญิง">
+            <span class="hint">ระบุชื่อหอผู้ป่วย/แผนก/โรงพยาบาลต้นทางให้ชัดเจน เพื่อให้ตรวจสอบย้อนกลับได้</span>
+          </div>
+          <div class="field">
+            <label for="case_type">ประเภทเคส (case_type)</label>
+            <select id="case_type">
+              <option value="">— ให้ AI ประเมินจากข้อมูลด้านล่าง —</option>
+              <option value="palliative">Palliative Care</option>
+              <option value="postpartum">หลังคลอด</option>
+              <option value="postop">หลังผ่าตัด</option>
+              <option value="other">อื่นๆ</option>
+            </select>
+            <span class="hint">ไม่บังคับ — เว้นว่างได้หากยังไม่แน่ใจ</span>
+          </div>
+          <div class="field">
+            <label>เขตพื้นที่ (zone)</label>
+            <div class="zone-box">
+              <div class="zone-auto-note">
+                <span>&#9432;</span>
+                <span>ระบบจะ<strong>ตรวจสอบอัตโนมัติจากตำบล</strong>ที่กรอกในข้อมูลที่อยู่ผู้ป่วยด้านล่าง เทียบกับพื้นที่รับผิดชอบของโรงพยาบาล</span>
+              </div>
+              <div class="zone-badge-preview">
+                ผลตรวจสอบล่าสุด: <span class="chip chip-in-area">ในเขต</span>
+              </div>
+              <label class="checkbox-row">
+                <input type="checkbox" id="zone_override" onchange="document.getElementById('zone_manual').disabled = !this.checked;">
+                ปรับเขตเอง (ไม่ใช้ผลตรวจจับอัตโนมัติ)
+              </label>
+              <select id="zone_manual" disabled>
+                <option value="in_area">ในเขต</option>
+                <option value="out_area">นอกเขต</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">ข้อมูลผู้ป่วย</div>
+        <div class="grid-2">
+          <div class="field">
+            <label for="hn">HN</label>
+            <input type="text" id="hn" placeholder="เช่น 660231" required>
+          </div>
+          <div class="field">
+            <label for="national_id">เลขบัตรประชาชน</label>
+            <input type="text" id="national_id" placeholder="1-XXXX-XXXXX-XX-X">
+          </div>
+          <div class="field">
+            <label for="patient_name">ชื่อ-นามสกุล</label>
+            <input type="text" id="patient_name" placeholder="เช่น นางสมหญิง ใจดี" required>
+          </div>
+          <div class="field">
+            <label for="dob">วันเกิด</label>
+            <input type="date" id="dob">
+          </div>
+          <div class="field">
+            <label for="phone">เบอร์โทร</label>
+            <input type="tel" id="phone" placeholder="08X-XXX-XXXX">
+          </div>
+          <div class="field"></div>
+          <div class="field span-2">
+            <label for="address">ที่อยู่</label>
+            <input type="text" id="address" placeholder="บ้านเลขที่ / หมู่ / ซอย / ถนน">
+          </div>
+          <div class="field">
+            <label for="sub_district">ตำบล/แขวง</label>
+            <input type="text" id="sub_district" placeholder="เช่น บ้านดู่">
+          </div>
+          <div class="field">
+            <label for="district">อำเภอ/เขต</label>
+            <input type="text" id="district" placeholder="เช่น เมืองเชียงราย">
+          </div>
+          <div class="field">
+            <label for="province">จังหวัด</label>
+            <input type="text" id="province" placeholder="เช่น เชียงราย">
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">ปัญหา/อาการปัจจุบัน</div>
+        <div class="field">
+          <label for="raw_notes">ข้อความสรุปอาการ / สถานการณ์ผู้ป่วย (raw_notes)</label>
+          <textarea id="raw_notes" required placeholder="พิมพ์เป็นข้อความอิสระ — AI จะช่วยอ่านสรุปและประเมินความเสี่ยงในขั้นตอนถัดไป"></textarea>
+          <span class="hint">เช่น ประวัติการรักษา อาการที่พบ ความต้องการของผู้ป่วยและญาติ</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">เอกสารแนบ</div>
+        <div class="file-drop">
+          <p style="font-size:13.5px;color:var(--color-neutral-700);">แนบไฟล์อ้างอิง เช่น ใบสรุปการรักษา ผลตรวจ แบบประเมิน</p>
+          <input type="file" id="attachments" accept=".pdf,.jpg,.jpeg,.png" multiple>
+          <p class="hint" style="margin-top:var(--space-2);">รองรับไฟล์ PDF/JPG/PNG — ไม่เกิน 10MB ต่อไฟล์</p>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary btn-lg">บันทึกและรับเคส</button>
+        <a class="btn btn-secondary" href="referrals-list.html">ยกเลิก</a>
+      </div>
+    </form>
+  </main>
+</div>
+</body>
+</html>
