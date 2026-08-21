@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ประเภทเคส — Chira Continuity Care</title>
+<style>
+  :root{
+    --color-primary-900:#212B1C;
+    --color-primary-800:#2C3A22;
+    --color-primary-700:#3C4D2A;
+    --color-primary-600:#4C5F35;
+    --color-primary-500:#62784A;
+    --color-primary-300:#AAB994;
+    --color-primary-100:#E9EDDF;
+    --color-primary-50:#F5F6EF;
+
+    --color-neutral-900:#22201A;
+    --color-neutral-700:#4A4739;
+    --color-neutral-500:#7C7863;
+    --color-neutral-300:#C9C4AD;
+    --color-neutral-200:#DEDAC6;
+    --color-neutral-100:#F1EEE0;
+    --color-surface:#FFFFFF;
+
+    --color-risk:#B23B2C;
+    --color-risk-tint:#F7E7E2;
+    --color-warning:#C2891F;
+    --color-warning-tint:#FBF0DC;
+    --color-success:#3E8E49;
+    --color-success-tint:#E5F2E4;
+
+    --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px;
+    --space-5:20px; --space-6:24px; --space-8:32px; --space-10:40px;
+    --space-12:48px; --space-16:64px;
+
+    --radius-sm:4px; --radius-md:8px; --radius-lg:12px; --radius-pill:999px;
+    --shadow-sm:0 1px 2px rgba(34,32,26,0.06);
+    --shadow-md:0 1px 2px rgba(34,32,26,0.06), 0 4px 14px rgba(34,32,26,0.08);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Sarabun','Noto Sans Thai','Leelawadee UI','Segoe UI',system-ui,sans-serif;
+    background:var(--color-primary-50);
+    color:var(--color-neutral-900);
+    font-size:14px;
+    line-height:22px;
+  }
+  h1,h2,h3{margin:0;}
+  h1{font-size:24px;line-height:32px;font-weight:700;}
+  h2{font-size:20px;line-height:28px;font-weight:700;}
+  h3{font-size:16px;line-height:24px;font-weight:600;}
+  p{margin:0;}
+  a{color:var(--color-primary-700);}
+
+  .app-shell{display:flex;min-height:100vh;}
+
+  /* Sidebar */
+  .sidebar{
+    width:250px;flex-shrink:0;
+    background:linear-gradient(180deg,var(--color-primary-900),var(--color-primary-800));
+    color:#ECE9DD;
+    display:flex;flex-direction:column;
+    padding:var(--space-6) var(--space-4);
+  }
+  .brand{display:flex;align-items:center;gap:var(--space-3);padding:0 var(--space-3) var(--space-6);}
+  .brand-mark{
+    width:36px;height:36px;border-radius:50%;flex-shrink:0;
+    background:conic-gradient(from -40deg,#3E7CA6 0deg 110deg,#62784A 110deg 240deg,#C9932E 240deg 360deg);
+    box-shadow:0 0 0 3px rgba(245,246,239,0.15);
+  }
+  .brand-text{display:flex;flex-direction:column;}
+  .brand-text strong{font-size:14px;font-weight:700;color:#F5F6EF;letter-spacing:.02em;}
+  .brand-text span{font-size:11.5px;color:rgba(236,233,221,.65);}
+
+  nav.nav{display:flex;flex-direction:column;gap:2px;flex:1;}
+  .nav-section-label{
+    font-size:11.5px;line-height:16px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;
+    color:rgba(236,233,221,.5);
+    padding:var(--space-4) var(--space-3) var(--space-1);
+  }
+  .nav-link{
+    display:flex;align-items:center;gap:var(--space-2);
+    padding:10px var(--space-3);
+    border-radius:var(--radius-md);
+    color:rgba(236,233,221,.85);
+    text-decoration:none;font-size:14px;font-weight:500;
+    border-left:3px solid transparent;
+  }
+  .nav-link .ico{width:18px;text-align:center;flex-shrink:0;}
+  .nav-link:hover{background:rgba(255,255,255,.08);color:#F5F6EF;}
+  .nav-link.active{
+    background:rgba(60,77,42,0.35);
+    color:#F5F6EF;font-weight:700;
+    border-left:3px solid var(--color-primary-300);
+  }
+  .nav-link:focus-visible{outline:2px solid var(--color-primary-300);outline-offset:2px;}
+  .nav-sub{display:flex;flex-direction:column;gap:2px;margin-left:var(--space-3);padding-left:var(--space-2);border-left:1px solid rgba(236,233,221,.15);}
+
+  .sidebar-foot{padding:var(--space-3) var(--space-3) 0;border-top:1px solid rgba(236,233,221,.15);margin-top:var(--space-4);padding-top:var(--space-4);}
+  .sidebar-foot .who{font-size:12.5px;color:#F5F6EF;font-weight:600;}
+  .sidebar-foot .role{font-size:11.5px;color:rgba(236,233,221,.6);}
+
+  /* Main */
+  .main{flex:1;display:flex;flex-direction:column;min-width:0;}
+  .topbar{
+    background:var(--color-surface);
+    border-bottom:1px solid var(--color-neutral-200);
+    padding:var(--space-4) var(--space-6);
+    display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);
+    flex-wrap:wrap;
+  }
+  .topbar .crumb{font-size:11.5px;color:var(--color-neutral-500);margin-bottom:2px;}
+  .topbar-user{display:flex;align-items:center;gap:var(--space-2);font-size:12.5px;color:var(--color-neutral-700);}
+  .topbar-user .avatar{
+    width:30px;height:30px;border-radius:50%;background:var(--color-primary-100);color:var(--color-primary-700);
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;
+  }
+
+  .content{padding:var(--space-6);max-width:1200px;width:100%;}
+
+  .page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-4);margin-bottom:var(--space-6);flex-wrap:wrap;}
+  .page-head .subtitle{color:var(--color-neutral-700);margin-top:var(--space-1);}
+
+  /* Buttons */
+  .btn{
+    display:inline-flex;align-items:center;gap:var(--space-2);
+    font-family:inherit;font-size:14px;font-weight:600;
+    border-radius:var(--radius-md);padding:10px 20px;
+    border:1px solid transparent;cursor:pointer;text-decoration:none;
+    line-height:20px;
+  }
+  .btn-primary{background:var(--color-primary-700);color:#fff;}
+  .btn-primary:hover{background:var(--color-primary-600);}
+  .btn-secondary{background:#fff;border-color:var(--color-neutral-300);color:var(--color-neutral-900);}
+  .btn-secondary:hover{background:var(--color-neutral-100);}
+  .btn-danger{background:var(--color-risk);color:#fff;}
+  .btn:focus-visible{outline:2px solid var(--color-primary-700);outline-offset:2px;}
+
+  /* Card */
+  .card{background:var(--color-surface);border:1px solid var(--color-neutral-200);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);}
+
+  /* Chips */
+  .chip{
+    display:inline-flex;align-items:center;gap:5px;
+    padding:4px 11px;border-radius:var(--radius-pill);
+    font-size:12.5px;font-weight:600;line-height:18px;white-space:nowrap;
+  }
+  .chip-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+  .chip-primary{background:var(--color-primary-100);color:var(--color-primary-700);}
+  .chip-primary .chip-dot{background:var(--color-primary-700);}
+  .chip-success{background:var(--color-success-tint);color:var(--color-success);}
+  .chip-success .chip-dot{background:var(--color-success);}
+  .chip-warning{background:var(--color-warning-tint);color:var(--color-warning);}
+  .chip-warning .chip-dot{background:var(--color-warning);}
+  .chip-risk{background:var(--color-risk-tint);color:var(--color-risk);}
+  .chip-risk .chip-dot{background:var(--color-risk);}
+  .chip-neutral{background:var(--color-neutral-100);color:var(--color-neutral-700);}
+  .chip-neutral .chip-dot{background:var(--color-neutral-500);}
+
+  /* Table */
+  table.data{width:100%;border-collapse:collapse;}
+  table.data thead th{
+    text-align:left;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+    color:var(--color-neutral-500);
+    padding:var(--space-3) var(--space-4);
+    border-bottom:1px solid var(--color-neutral-300);
+  }
+  table.data tbody td{
+    padding:var(--space-4);
+    border-bottom:1px solid var(--color-neutral-200);
+    font-size:14px;vertical-align:middle;
+  }
+  table.data tbody tr:hover{background:var(--color-primary-50);}
+  table.data td.num{font-variant-numeric:tabular-nums;}
+  .row-title{font-weight:600;color:var(--color-neutral-900);}
+  .row-sub{font-size:11.5px;color:var(--color-neutral-500);}
+  .edit-link{font-size:13px;font-weight:600;color:var(--color-primary-700);text-decoration:none;}
+  .edit-link:hover{text-decoration:underline;}
+  .edit-link:focus-visible{outline:2px solid var(--color-primary-700);outline-offset:2px;border-radius:2px;}
+  code.slug{font-size:12.5px;background:var(--color-neutral-100);padding:2px 6px;border-radius:var(--radius-sm);color:var(--color-neutral-700);}
+
+  @media (max-width:860px){
+    .app-shell{flex-direction:column;}
+    .sidebar{
+      width:100%;flex-direction:row;align-items:center;
+      overflow-x:auto;padding:var(--space-3) var(--space-4);gap:var(--space-4);
+    }
+    .brand{padding:0;flex-shrink:0;}
+    .brand-text span{display:none;}
+    nav.nav{flex-direction:row;flex:none;gap:var(--space-1);}
+    .nav-section-label{display:none;}
+    .nav-sub{flex-direction:row;margin-left:0;padding-left:0;border-left:none;gap:var(--space-1);}
+    .sidebar-foot{display:none;}
+    .content{padding:var(--space-4);}
+    table.data{display:block;overflow-x:auto;white-space:nowrap;}
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div class="brand-text">
+        <strong>Triple C</strong>
+        <span>Chira Continuity Care</span>
+      </div>
+    </div>
+    <nav class="nav">
+      <a class="nav-link" href="dashboard.html"><span class="ico">&#9634;</span>แดชบอร์ด</a>
+      <a class="nav-link" href="referrals-list.html"><span class="ico">&#9776;</span>รายการเคส</a>
+      <div class="nav-section-label">จัดการระบบ</div>
+      <div class="nav-sub">
+        <a class="nav-link active" href="admin-case-types-list.html"><span class="ico">&#9873;</span>ประเภทเคส</a>
+        <a class="nav-link" href="admin-users-list.html"><span class="ico">&#128100;</span>ผู้ใช้งาน</a>
+      </div>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="who">ธนกร ฝ่ายสารสนเทศ</div>
+      <div class="role">แอดมิน — จัดการระบบ</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="crumb">จัดการระบบ / ประเภทเคส</div>
+      </div>
+      <div class="topbar-user">
+        <div class="avatar">ธ</div>
+        <span>ธนกร ฝ่ายสารสนเทศ (แอดมิน)</span>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="page-head">
+        <div>
+          <h1>ประเภทเคส</h1>
+          <p class="subtitle">กำหนดประเภทเคสและกฎการติดตามเยี่ยมบ้านสำหรับแต่ละประเภท</p>
+        </div>
+        <a class="btn btn-primary" href="admin-case-type-form.html">+ เพิ่มประเภทเคส</a>
+      </div>
+
+      <div class="card">
+        <table class="data">
+          <thead>
+            <tr>
+              <th>ชื่อ</th>
+              <th>Slug</th>
+              <th>คำอธิบาย</th>
+              <th>สถานะ</th>
+              <th>สรุปกฎการติดตาม</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="row-title">Palliative Care</td>
+              <td><code class="slug">palliative-care</code></td>
+              <td style="max-width:260px;white-space:normal;">ผู้ป่วยระยะท้ายที่ต้องการดูแลแบบประคับประคองต่อเนื่องที่บ้าน</td>
+              <td><span class="chip chip-success"><span class="chip-dot"></span>เปิดใช้งาน</span></td>
+              <td>ตามคะแนน PPS (3 ช่วงคะแนน)</td>
+              <td><a class="edit-link" href="admin-case-type-form.html">แก้ไข</a></td>
+            </tr>
+            <tr>
+              <td class="row-title">หลังคลอด</td>
+              <td><code class="slug">postpartum</code></td>
+              <td style="max-width:260px;white-space:normal;">มารดาและทารกหลังคลอดที่ต้องติดตามภาวะแทรกซ้อน</td>
+              <td><span class="chip chip-success"><span class="chip-dot"></span>เปิดใช้งาน</span></td>
+              <td>ตายตัว: 4 ครั้ง ห่างกัน 7 วัน</td>
+              <td><a class="edit-link" href="admin-case-type-form.html">แก้ไข</a></td>
+            </tr>
+            <tr>
+              <td class="row-title">หลังผ่าตัด</td>
+              <td><code class="slug">post-surgery</code></td>
+              <td style="max-width:260px;white-space:normal;">ผู้ป่วยหลังผ่าตัดที่จำหน่ายกลับบ้านและต้องติดตามแผล/ภาวะแทรกซ้อน</td>
+              <td><span class="chip chip-success"><span class="chip-dot"></span>เปิดใช้งาน</span></td>
+              <td>ตายตัว: 3 ครั้ง ห่างกัน 5 วัน</td>
+              <td><a class="edit-link" href="admin-case-type-form.html">แก้ไข</a></td>
+            </tr>
+            <tr>
+              <td class="row-title">อื่นๆ</td>
+              <td><code class="slug">other</code></td>
+              <td style="max-width:260px;white-space:normal;">เคสที่ไม่เข้าเกณฑ์ประเภทข้างต้น กำหนดแผนติดตามเป็นรายกรณี</td>
+              <td><span class="chip chip-neutral"><span class="chip-dot"></span>ปิดใช้งาน</span></td>
+              <td>ตายตัว: 2 ครั้ง ห่างกัน 14 วัน</td>
+              <td><a class="edit-link" href="admin-case-type-form.html">แก้ไข</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

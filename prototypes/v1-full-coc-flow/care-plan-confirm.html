@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ยืนยันแผนการดูแล — Chira Continuity Care (Triple C)</title>
+<style>
+  :root{
+    /* Primary - Olive/Military Green */
+    --color-primary-900:#212B1C;
+    --color-primary-800:#2C3A22;
+    --color-primary-700:#3C4D2A;
+    --color-primary-600:#4C5F35;
+    --color-primary-500:#62784A;
+    --color-primary-300:#AAB994;
+    --color-primary-100:#E9EDDF;
+    --color-primary-50:#F5F6EF;
+
+    /* Neutral - Warm Khaki */
+    --color-neutral-900:#22201A;
+    --color-neutral-700:#4A4739;
+    --color-neutral-500:#7C7863;
+    --color-neutral-300:#C9C4AD;
+    --color-neutral-200:#DEDAC6;
+    --color-neutral-100:#F1EEE0;
+    --color-surface:#FFFFFF;
+
+    /* Secondary accent */
+    --color-accent-blue:#3E7CA6;
+    --color-accent-gold:#C9932E;
+
+    /* Semantic */
+    --color-risk:#B23B2C;
+    --color-risk-tint:#F7E7E2;
+    --color-warning:#C2891F;
+    --color-warning-tint:#FBF0DC;
+    --color-success:#3E8E49;
+    --color-success-tint:#E5F2E4;
+
+    /* Spacing */
+    --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px;
+    --space-5:20px; --space-6:24px; --space-8:32px; --space-10:40px;
+    --space-12:48px; --space-16:64px;
+
+    /* Radius / Shadow */
+    --radius-sm:4px; --radius-md:8px; --radius-lg:12px; --radius-pill:999px;
+    --shadow-sm:0 1px 2px rgba(34,32,26,0.06);
+    --shadow-md:0 1px 2px rgba(34,32,26,0.06), 0 4px 14px rgba(34,32,26,0.08);
+
+    --sidebar-width:248px;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Sarabun','Noto Sans Thai','Leelawadee UI','Segoe UI',system-ui,sans-serif;
+    background:var(--color-primary-50);
+    color:var(--color-neutral-900);
+    font-size:14px;
+    line-height:22px;
+  }
+
+  a{color:var(--color-primary-700);}
+
+  h1,h2,h3{margin:0;font-weight:700;color:var(--color-neutral-900);}
+  h1{font-size:24px;line-height:32px;}
+  h2{font-size:20px;line-height:28px;}
+  h3{font-size:16px;line-height:24px;font-weight:600;}
+
+  .visually-hidden{position:absolute;left:-9999px;}
+
+  :focus-visible{
+    outline:3px solid var(--color-primary-700);
+    outline-offset:2px;
+  }
+
+  /* ---------- Layout ---------- */
+  .app-shell{display:flex;min-height:100vh;}
+
+  .sidebar{
+    width:var(--sidebar-width);
+    flex:0 0 var(--sidebar-width);
+    background:linear-gradient(180deg,var(--color-primary-900) 0%, var(--color-primary-800) 100%);
+    color:var(--color-neutral-100);
+    display:flex;
+    flex-direction:column;
+    position:fixed;
+    top:0;left:0;bottom:0;
+    overflow-y:auto;
+  }
+
+  .sidebar-brand{
+    display:flex;
+    align-items:center;
+    gap:var(--space-3);
+    padding:var(--space-5) var(--space-5) var(--space-4);
+    border-bottom:1px solid rgba(241,238,224,0.12);
+  }
+  .brand-mark{
+    width:36px;height:36px;border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, var(--color-accent-gold), var(--color-primary-700) 65%);
+    flex:0 0 36px;
+    box-shadow:inset 0 0 0 2px rgba(255,255,255,0.15);
+  }
+  .brand-text{line-height:1.2;}
+  .brand-text strong{display:block;font-size:15px;color:#F6F4EA;}
+  .brand-text span{display:block;font-size:11px;color:var(--color-primary-300);letter-spacing:.02em;}
+
+  .nav{flex:1;padding:var(--space-4) var(--space-3);}
+  .nav-group-label{
+    font-size:11.5px;
+    font-weight:600;
+    letter-spacing:.04em;
+    color:var(--color-primary-300);
+    padding:var(--space-4) var(--space-3) var(--space-2);
+  }
+  .nav a{
+    display:flex;
+    align-items:center;
+    gap:var(--space-3);
+    padding:var(--space-3) var(--space-3);
+    border-radius:var(--radius-md);
+    color:#EAE8DA;
+    text-decoration:none;
+    font-size:14px;
+    margin-bottom:2px;
+  }
+  .nav a .ico{
+    width:20px;height:20px;flex:0 0 20px;
+    display:inline-flex;align-items:center;justify-content:center;
+    font-size:14px;
+  }
+  .nav a:hover{background:rgba(170,185,148,0.14);}
+  .nav a.active{
+    background:rgba(60,77,42,0.55);
+    color:#fff;
+    font-weight:600;
+    box-shadow:inset 3px 0 0 var(--color-accent-gold);
+  }
+  .nav a.sub{padding-left:var(--space-8);font-size:13px;}
+
+  .sidebar-footer{
+    padding:var(--space-4) var(--space-5);
+    border-top:1px solid rgba(241,238,224,0.12);
+    font-size:12.5px;
+    color:var(--color-primary-300);
+  }
+  .sidebar-footer strong{display:block;color:#F1EEE0;font-size:13.5px;font-weight:600;}
+
+  .main{
+    margin-left:var(--sidebar-width);
+    flex:1;
+    min-width:0;
+    padding:var(--space-8) var(--space-8) var(--space-16);
+  }
+
+  .topbar{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:var(--space-3);
+    margin-bottom:var(--space-6);
+  }
+  .breadcrumb{
+    font-size:12.5px;
+    color:var(--color-neutral-500);
+    margin-bottom:var(--space-1);
+  }
+  .breadcrumb a{color:var(--color-neutral-500);text-decoration:none;}
+  .breadcrumb a:hover{color:var(--color-primary-700);text-decoration:underline;}
+  .breadcrumb .sep{margin:0 6px;color:var(--color-neutral-300);}
+  .breadcrumb .current{color:var(--color-neutral-700);font-weight:600;}
+
+  .back-link{
+    font-size:13px;
+    color:var(--color-primary-700);
+    text-decoration:none;
+    font-weight:600;
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+  }
+  .back-link:hover{text-decoration:underline;}
+
+  /* ---------- Patient summary strip ---------- */
+  .patient-strip{
+    background:var(--color-surface);
+    border:1px solid var(--color-neutral-200);
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-sm);
+    padding:var(--space-5) var(--space-6);
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:var(--space-6);
+    margin-bottom:var(--space-6);
+  }
+  .patient-strip .name-block strong{font-size:18px;color:var(--color-neutral-900);}
+  .patient-strip .name-block .hn{
+    color:var(--color-neutral-500);
+    font-size:13px;
+    font-variant-numeric:tabular-nums;
+  }
+  .patient-strip .meta-list{
+    display:flex;
+    flex-wrap:wrap;
+    gap:var(--space-5);
+    font-size:13px;
+    color:var(--color-neutral-700);
+  }
+  .patient-strip .meta-list .meta-item span.lbl{
+    display:block;font-size:11.5px;color:var(--color-neutral-500);font-weight:600;
+  }
+  .chip-row{display:flex;gap:var(--space-2);flex-wrap:wrap;margin-left:auto;}
+
+  .chip{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    padding:4px 12px;
+    border-radius:var(--radius-pill);
+    font-size:12.5px;
+    font-weight:600;
+    white-space:nowrap;
+  }
+  .chip::before{content:"";width:7px;height:7px;border-radius:50%;display:inline-block;}
+  .chip-inzone{background:var(--color-primary-100);color:var(--color-primary-700);}
+  .chip-inzone::before{background:var(--color-primary-700);}
+  .chip-outzone{background:var(--color-neutral-100);color:var(--color-neutral-700);}
+  .chip-outzone::before{background:var(--color-neutral-500);}
+  .chip-risk{background:var(--color-risk-tint);color:var(--color-risk);}
+  .chip-risk::before{background:var(--color-risk);}
+  .chip-warning{background:var(--color-warning-tint);color:var(--color-warning);}
+  .chip-warning::before{background:var(--color-warning);}
+  .chip-success{background:var(--color-success-tint);color:var(--color-success);}
+  .chip-success::before{background:var(--color-success);}
+  .chip-casetype{background:var(--color-neutral-100);color:var(--color-primary-700);}
+  .chip-casetype::before{background:var(--color-primary-500);}
+
+  /* ---------- AI draft box (canonical pattern) ---------- */
+  .section-title{margin-bottom:var(--space-3);}
+  .section-title p{margin:2px 0 0;color:var(--color-neutral-500);font-size:13px;}
+
+  .ai-box{
+    position:relative;
+    border:2px dashed var(--color-primary-300);
+    background:var(--color-primary-50);
+    border-radius:var(--radius-lg);
+    padding:var(--space-6);
+    margin-bottom:var(--space-5);
+  }
+  .confirmed-box{
+    position:relative;
+    border:2px solid var(--color-primary-700);
+    background:var(--color-surface);
+    border-radius:var(--radius-lg);
+    padding:var(--space-6);
+    margin-bottom:var(--space-5);
+  }
+
+  .box-label{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    background:var(--color-primary-100);
+    color:var(--color-primary-700);
+    font-size:12.5px;
+    font-weight:700;
+    border-radius:var(--radius-pill);
+    padding:5px 14px;
+    margin-bottom:var(--space-4);
+  }
+  .box-label .dot{width:7px;height:7px;border-radius:50%;background:var(--color-primary-700);}
+
+  .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4) var(--space-5);}
+  .field-grid .full{grid-column:1 / -1;}
+
+  .field label{
+    display:block;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--color-neutral-700);
+    margin-bottom:var(--space-2);
+  }
+  .field .hint{
+    display:block;
+    font-size:11.5px;
+    font-weight:500;
+    color:var(--color-neutral-500);
+    margin:-4px 0 6px;
+  }
+  .field select,
+  .field input[type="text"],
+  .field textarea{
+    width:100%;
+    background:var(--color-neutral-100);
+    border:1px solid var(--color-neutral-300);
+    border-radius:var(--radius-sm);
+    padding:var(--space-3);
+    font-family:inherit;
+    font-size:14px;
+    color:var(--color-neutral-900);
+    resize:vertical;
+  }
+  .field select:focus,
+  .field input[type="text"]:focus,
+  .field textarea:focus{
+    outline:none;
+    border-color:var(--color-primary-700);
+    box-shadow:0 0 0 3px rgba(60,77,42,0.18);
+  }
+  .field textarea{min-height:76px;line-height:1.55;}
+
+  .field-value{
+    background:var(--color-neutral-100);
+    border:1px solid var(--color-neutral-200);
+    border-radius:var(--radius-sm);
+    padding:var(--space-3);
+    color:var(--color-neutral-900);
+    font-size:14px;
+    line-height:1.55;
+    min-height:20px;
+  }
+  .field-value.multiline{white-space:pre-line;}
+  .field-value ul{margin:0;padding-left:18px;}
+  .field-value ul li{margin-bottom:2px;}
+
+  .pps-row{display:flex;align-items:center;gap:var(--space-4);}
+  .pps-row input[type="range"]{flex:1;accent-color:var(--color-primary-700);}
+  .pps-readout{
+    font-variant-numeric:tabular-nums;
+    font-weight:700;
+    font-size:18px;
+    color:var(--color-primary-700);
+    background:var(--color-primary-100);
+    border-radius:var(--radius-sm);
+    padding:4px 12px;
+    min-width:52px;
+    text-align:center;
+  }
+  .pps-scale{
+    display:flex;justify-content:space-between;
+    font-size:11px;color:var(--color-neutral-500);margin-top:4px;
+    font-variant-numeric:tabular-nums;
+  }
+
+  #ppsField{transition:opacity .15s ease;}
+  #ppsField[hidden]{display:none;}
+
+  .box-footnote{
+    margin-top:var(--space-4);
+    font-size:12.5px;
+    color:var(--color-neutral-500);
+  }
+
+  /* ---------- Buttons ---------- */
+  .btn-row{display:flex;gap:var(--space-3);align-items:center;flex-wrap:wrap;margin-top:var(--space-2);}
+  .btn{
+    font-family:inherit;
+    font-size:14px;
+    font-weight:600;
+    border-radius:var(--radius-md);
+    padding:12px 22px;
+    cursor:pointer;
+    border:1px solid transparent;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    transition:background .12s ease;
+  }
+  .btn-primary{
+    background:var(--color-primary-700);
+    color:#fff;
+    box-shadow:var(--shadow-sm);
+  }
+  .btn-primary:hover{background:var(--color-primary-600);}
+  .btn-secondary{
+    background:#fff;
+    border-color:var(--color-neutral-300);
+    color:var(--color-neutral-900);
+  }
+  .btn-secondary:hover{background:var(--color-neutral-100);}
+  .btn:disabled{opacity:.6;cursor:default;}
+
+  .after-confirm-note{
+    display:flex;
+    gap:var(--space-3);
+    align-items:flex-start;
+    background:var(--color-primary-100);
+    border-radius:var(--radius-md);
+    padding:var(--space-4);
+    margin:var(--space-6) 0;
+    font-size:13.5px;
+    color:var(--color-primary-800);
+  }
+  .after-confirm-note .ico{font-size:18px;line-height:1;}
+
+  .preview-divider{
+    display:flex;
+    align-items:center;
+    gap:var(--space-3);
+    margin:var(--space-10) 0 var(--space-5);
+  }
+  .preview-divider .line{flex:1;height:1px;background:var(--color-neutral-300);}
+  .preview-divider .tag{
+    font-size:12px;
+    font-weight:700;
+    color:var(--color-neutral-500);
+    letter-spacing:.03em;
+    white-space:nowrap;
+  }
+
+  .preview-note{
+    font-size:13px;
+    color:var(--color-neutral-500);
+    margin-bottom:var(--space-4);
+    max-width:70ch;
+  }
+
+  .confirmed-meta{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:var(--space-3);
+    margin-bottom:var(--space-4);
+  }
+
+  .next-step-link{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    margin-top:var(--space-5);
+    font-size:13.5px;
+    font-weight:600;
+    color:var(--color-primary-700);
+    text-decoration:none;
+  }
+  .next-step-link:hover{text-decoration:underline;}
+
+  .toast{
+    position:fixed;
+    bottom:24px;
+    left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:var(--color-primary-900);
+    color:#F6F4EA;
+    padding:12px 20px;
+    border-radius:var(--radius-md);
+    font-size:13.5px;
+    box-shadow:var(--shadow-md);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s ease, transform .2s ease;
+    z-index:50;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .toast .ico{color:var(--color-success);font-weight:700;}
+
+  /* ---------- Responsive ---------- */
+  @media (max-width:860px){
+    .app-shell{flex-direction:column;}
+    .sidebar{
+      position:relative;
+      width:100%;
+      flex:0 0 auto;
+      flex-direction:row;
+      overflow-x:auto;
+      overflow-y:visible;
+      align-items:center;
+    }
+    .sidebar-brand{border-bottom:none;border-right:1px solid rgba(241,238,224,0.12);flex:0 0 auto;}
+    .nav{
+      display:flex;
+      flex:1;
+      padding:var(--space-2);
+      gap:4px;
+      overflow-x:auto;
+    }
+    .nav-group-label{display:none;}
+    .nav a{white-space:nowrap;margin-bottom:0;}
+    .nav a.sub{padding-left:var(--space-4);}
+    .sidebar-footer{display:none;}
+    .main{margin-left:0;padding:var(--space-5);}
+    .field-grid{grid-template-columns:1fr;}
+    .chip-row{margin-left:0;}
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-mark" aria-hidden="true"></div>
+      <div class="brand-text">
+        <strong>Triple C</strong>
+        <span>Chira Continuity Care</span>
+      </div>
+    </div>
+
+    <nav class="nav" aria-label="เมนูหลัก">
+      <a href="dashboard.html"><span class="ico">&#9635;</span> Dashboard</a>
+      <a href="referrals-list.html" class="active"><span class="ico">&#9776;</span> รายการเคส</a>
+
+      <div class="nav-group-label">จัดการระบบ</div>
+      <a href="admin-case-types-list.html" class="sub"><span class="ico">&#9881;</span> ประเภทเคส</a>
+      <a href="admin-users-list.html" class="sub"><span class="ico">&#9881;</span> ผู้ใช้งาน</a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <strong>พว. สุนีย์ วงศ์ประเสริฐ</strong>
+      เจ้าหน้าที่หอผู้ป่วย (ward staff)<br>
+      หอผู้ป่วยอายุรกรรมหญิง
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main class="main">
+
+    <div class="topbar">
+      <div>
+        <div class="breadcrumb">
+          <a href="referrals-list.html">รายการเคส</a>
+          <span class="sep">/</span>
+          <a href="referral-detail.html">ใบส่งต่อ HN 6801234</a>
+          <span class="sep">/</span>
+          <span class="current">ยืนยันแผนการดูแล</span>
+        </div>
+        <h1>ยืนยันแผนการดูแล (AI ช่วยร่าง)</h1>
+      </div>
+      <a class="back-link" href="referral-detail.html">&larr; กลับไปหน้าใบส่งต่อ</a>
+    </div>
+
+    <!-- Patient summary strip -->
+    <section class="patient-strip" aria-label="ข้อมูลผู้ป่วยโดยสรุป">
+      <div class="name-block">
+        <strong>นางสมหญิง ใจดี</strong><br>
+        <span class="hn">HN 6801234 &nbsp;&middot;&nbsp; หญิง &middot; 68 ปี</span>
+      </div>
+      <div class="meta-list">
+        <div class="meta-item">
+          <span class="lbl">ส่งต่อจาก</span>
+          หอผู้ป่วยอายุรกรรมหญิง (ตึก 3)
+        </div>
+        <div class="meta-item">
+          <span class="lbl">วันที่ส่งต่อ</span>
+          20 ส.ค. 2569
+        </div>
+        <div class="meta-item">
+          <span class="lbl">ที่อยู่/เขต</span>
+          ต.ท่าสาย อ.เมือง (ในเขตรับผิดชอบ)
+        </div>
+      </div>
+      <div class="chip-row">
+        <span class="chip chip-inzone">ในเขต</span>
+        <span class="chip chip-casetype" id="caseTypeChip">Palliative Care</span>
+        <span class="chip chip-risk">พบสัญญาณเสี่ยง</span>
+      </div>
+    </section>
+
+    <!-- ============ AI DRAFT BOX (editable) ============ -->
+    <div class="section-title">
+      <h2>ร่างแผนการดูแลจาก AI</h2>
+      <p>ตรวจสอบและแก้ไขข้อมูลด้านล่างก่อนยืนยัน — ทุกช่องแก้ไขได้ ไม่มีข้อมูลใดถูกบันทึกจนกว่าพยาบาลจะกดยืนยัน</p>
+    </div>
+
+    <form id="aiDraftForm">
+      <div class="ai-box" id="aiBox">
+        <span class="box-label" id="aiBoxLabel"><span class="dot"></span>ร่างจาก AI — ยังไม่ยืนยัน</span>
+
+        <div class="field-grid">
+          <div class="field">
+            <label for="caseType">ประเภทเคส</label>
+            <select id="caseType">
+              <option value="Palliative Care" selected>Palliative Care</option>
+              <option value="หลังคลอด">หลังคลอด</option>
+              <option value="หลังผ่าตัด">หลังผ่าตัด</option>
+              <option value="อื่นๆ">อื่นๆ</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="patientType">กลุ่มผู้ป่วย / ประเภทผู้ป่วย</label>
+            <input type="text" id="patientType" value="ผู้ป่วยมะเร็งตับระยะสุดท้าย (End-stage, receiving comfort care)">
+          </div>
+
+          <div class="field full">
+            <label for="mainProblem">ปัญหาหลัก</label>
+            <textarea id="mainProblem" rows="4">ผู้ป่วยหญิงอายุ 68 ปี วินิจฉัยมะเร็งตับระยะที่ 4 มีอาการปวดท้องบริเวณชายโครงขวาระดับ 6-7/10 ควบคุมด้วยยาแก้ปวดกลุ่มโอปิออยด์ที่ได้รับจากโรงพยาบาลไม่เพียงพอ ร่วมกับเบื่ออาหารและน้ำหนักลดลงประมาณ 3 กก. ใน 1 เดือนที่ผ่านมา ญาติผู้ดูแลหลัก (บุตรสาว) แสดงความเครียดและความกังวลสูงเกี่ยวกับการดูแลผู้ป่วยที่บ้าน</textarea>
+          </div>
+
+          <div class="field full">
+            <label for="followUpNeed">ความจำเป็นในการติดตาม</label>
+            <textarea id="followUpNeed" rows="3">ต้องติดตามการควบคุมอาการปวดและการปรับขนาดยาอย่างใกล้ชิด ประเมินความพร้อมของญาติในการดูแลผู้ป่วยที่บ้าน ให้คำแนะนำการดูแลแบบประคับประคอง และเฝ้าระวังภาวะแทรกซ้อนที่อาจนำไปสู่การกลับเข้ารักษาซ้ำ</textarea>
+          </div>
+
+          <div class="field full">
+            <label for="riskSignals">สัญญาณความเสี่ยง <span class="hint" style="display:inline;margin:0;">(บรรทัดละ 1 รายการ)</span></label>
+            <textarea id="riskSignals" rows="4">ปวดควบคุมไม่ได้
+ญาติเครียดสูง
+รับประทานอาหารได้น้อยลงมาก
+มีความเสี่ยงต่อภาวะขาดน้ำ</textarea>
+          </div>
+
+          <div class="field full" id="ppsField">
+            <label for="ppsScore">PPS Score เริ่มต้น</label>
+            <span class="hint">ใช้กำหนดความถี่ของการเยี่ยมครั้งแรกโดยอัตโนมัติ — แสดงเมื่อประเภทเคสเป็น Palliative Care</span>
+            <div class="pps-row">
+              <input type="range" id="ppsScore" min="0" max="100" step="10" value="60"
+                     oninput="document.getElementById('ppsReadout').textContent=this.value">
+              <span class="pps-readout" id="ppsReadout">60</span>
+            </div>
+            <div class="pps-scale"><span>0</span><span>20</span><span>40</span><span>60</span><span>80</span><span>100</span></div>
+          </div>
+        </div>
+
+        <p class="box-footnote">ร่างนี้สร้างโดย AI จากข้อมูลในใบส่งต่อและประวัติผู้ป่วย — พยาบาลต้องตรวจสอบความถูกต้องทางคลินิกก่อนยืนยันทุกครั้ง</p>
+      </div>
+
+      <div class="btn-row">
+        <button type="button" class="btn btn-primary" id="confirmBtn">ยืนยันแผนติดตาม</button>
+        <button type="button" class="btn btn-secondary" id="regenBtn">&#8635; ขอให้ AI สรุปใหม่</button>
+      </div>
+    </form>
+
+    <div class="after-confirm-note">
+      <span class="ico">&#8505;</span>
+      <span>การยืนยันจะสร้างกำหนดการติดตามให้อัตโนมัติตามประเภทเคสและ PPS Score — เช่น กรณี Palliative Care ที่ PPS Score 60 ระบบจะตั้งรอบเยี่ยมทุก 2 สัปดาห์ตามเกณฑ์ที่ผู้ดูแลระบบกำหนดไว้</span>
+    </div>
+
+    <!-- ============ CONFIRMED STATE PREVIEW ============ -->
+    <div class="preview-divider">
+      <span class="tag">ตัวอย่างสถานะหลังยืนยัน (PREVIEW)</span>
+      <div class="line"></div>
+    </div>
+    <p class="preview-note" id="previewNote">
+      เนื่องจากต้นแบบนี้เป็นไฟล์ตัวอย่างแบบสถิต ส่วนด้านล่างนี้แสดงให้เห็นว่ากล่องด้านบนจะมีหน้าตาอย่างไรหลังพยาบาลกดยืนยันแล้ว
+      (ช่องข้อมูลจะกลายเป็นแบบอ่านอย่างเดียว และกรอบเปลี่ยนจากเส้นประเป็นเส้นทึบ) โดยไม่ต้องกดปุ่มใดๆ ก่อน
+    </p>
+
+    <div class="confirmed-box" id="confirmedBox">
+      <div class="confirmed-meta">
+        <span class="box-label"><span class="dot"></span><span id="confirmedLabelText">ยืนยันแล้วโดย พว.สุนีย์ วงศ์ประเสริฐ เมื่อ 21 ส.ค. 2569 14:32</span></span>
+        <span class="chip chip-success">ยืนยันแผนติดตามแล้ว</span>
+      </div>
+
+      <div class="field-grid">
+        <div class="field">
+          <label>ประเภทเคส</label>
+          <div class="field-value">Palliative Care</div>
+        </div>
+        <div class="field">
+          <label>กลุ่มผู้ป่วย / ประเภทผู้ป่วย</label>
+          <div class="field-value">ผู้ป่วยมะเร็งตับระยะสุดท้าย (End-stage, receiving comfort care)</div>
+        </div>
+        <div class="field full">
+          <label>ปัญหาหลัก</label>
+          <div class="field-value multiline">ผู้ป่วยหญิงอายุ 68 ปี วินิจฉัยมะเร็งตับระยะที่ 4 มีอาการปวดท้องบริเวณชายโครงขวาระดับ 6-7/10 ควบคุมด้วยยาแก้ปวดกลุ่มโอปิออยด์ที่ได้รับจากโรงพยาบาลไม่เพียงพอ ร่วมกับเบื่ออาหารและน้ำหนักลดลงประมาณ 3 กก. ใน 1 เดือนที่ผ่านมา ญาติผู้ดูแลหลัก (บุตรสาว) แสดงความเครียดและความกังวลสูงเกี่ยวกับการดูแลผู้ป่วยที่บ้าน</div>
+        </div>
+        <div class="field full">
+          <label>ความจำเป็นในการติดตาม</label>
+          <div class="field-value multiline">ต้องติดตามการควบคุมอาการปวดและการปรับขนาดยาอย่างใกล้ชิด ประเมินความพร้อมของญาติในการดูแลผู้ป่วยที่บ้าน ให้คำแนะนำการดูแลแบบประคับประคอง และเฝ้าระวังภาวะแทรกซ้อนที่อาจนำไปสู่การกลับเข้ารักษาซ้ำ</div>
+        </div>
+        <div class="field full">
+          <label>สัญญาณความเสี่ยง</label>
+          <div class="field-value">
+            <ul>
+              <li>ปวดควบคุมไม่ได้</li>
+              <li>ญาติเครียดสูง</li>
+              <li>รับประทานอาหารได้น้อยลงมาก</li>
+              <li>มีความเสี่ยงต่อภาวะขาดน้ำ</li>
+            </ul>
+          </div>
+        </div>
+        <div class="field full">
+          <label>PPS Score เริ่มต้น</label>
+          <div class="pps-row">
+            <div class="field-value" style="flex:1;">60 / 100 — ตั้งรอบเยี่ยมทุก 2 สัปดาห์โดยอัตโนมัติ</div>
+          </div>
+        </div>
+      </div>
+
+      <a class="next-step-link" href="followup-guide.html">ดูตัวอย่างขั้นตอนถัดไป: คู่มือก่อนเยี่ยม &rarr;</a>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <span class="ico">&#10003;</span>
+  <span id="toastText">บันทึกการยืนยันไว้ในต้นแบบนี้แล้ว — ดูตัวอย่างสถานะ &quot;ยืนยันแล้ว&quot; ด้านล่าง</span>
+</div>
+
+<script>
+  // Show/hide PPS field based on case type (only relevant for Palliative Care)
+  var caseTypeSelect = document.getElementById('caseType');
+  var ppsField = document.getElementById('ppsField');
+  var caseTypeChip = document.getElementById('caseTypeChip');
+
+  function syncCaseType(){
+    var val = caseTypeSelect.value;
+    ppsField.hidden = (val !== 'Palliative Care');
+    caseTypeChip.textContent = val;
+  }
+  caseTypeSelect.addEventListener('change', syncCaseType);
+  syncCaseType();
+
+  // Simulated "regenerate" — cycles between two plausible AI drafts to demonstrate the action
+  var regenBtn = document.getElementById('regenBtn');
+  var altDraftUsed = false;
+  var mainProblemEl = document.getElementById('mainProblem');
+  var followUpNeedEl = document.getElementById('followUpNeed');
+  var riskSignalsEl = document.getElementById('riskSignals');
+  var ppsScoreEl = document.getElementById('ppsScore');
+  var ppsReadoutEl = document.getElementById('ppsReadout');
+
+  var draftA = {
+    mainProblem: mainProblemEl.value,
+    followUpNeed: followUpNeedEl.value,
+    riskSignals: riskSignalsEl.value,
+    pps: '60'
+  };
+  var draftB = {
+    mainProblem: "ผู้ป่วยหญิงอายุ 68 ปี ระยะท้ายของโรคมะเร็งตับ อาการปวดยังควบคุมไม่ดีแม้ปรับยาโอปิออยด์ครั้งล่าสุด มีอาการเหนื่อยง่ายและนอนมากขึ้นในช่วง 3-4 วัน ผู้ดูแลหลักคือบุตรสาวซึ่งต้องแบ่งเวลาทำงานประจำ ยังไม่มั่นใจในการดูแลผู้ป่วยที่บ้านช่วงกลางคืน",
+    followUpNeed: "ควรเยี่ยมประเมินอาการปวดและระดับการรู้ตัวอย่างใกล้ชิด ให้คำแนะนำการดูแลแบบประคับประคองแก่ผู้ดูแล และประสานทีมสหวิชาชีพหากอาการทรุดลงเร็วกว่าที่ประเมินไว้",
+    riskSignals: "ปวดควบคุมไม่ได้\nญาติเครียดสูง\nระดับการรู้ตัวลดลง\nผู้ดูแลไม่พร้อมดูแลช่วงกลางคืน",
+    pps: '50'
+  };
+
+  regenBtn.addEventListener('click', function(){
+    regenBtn.disabled = true;
+    var originalLabel = regenBtn.innerHTML;
+    regenBtn.innerHTML = 'กำลังให้ AI สรุปใหม่&hellip;';
+
+    setTimeout(function(){
+      var draft = altDraftUsed ? draftA : draftB;
+      altDraftUsed = !altDraftUsed;
+      mainProblemEl.value = draft.mainProblem;
+      followUpNeedEl.value = draft.followUpNeed;
+      riskSignalsEl.value = draft.riskSignals;
+      ppsScoreEl.value = draft.pps;
+      ppsReadoutEl.textContent = draft.pps;
+      regenBtn.disabled = false;
+      regenBtn.innerHTML = originalLabel;
+      showToast('AI สร้างร่างใหม่แล้ว — กรุณาตรวจสอบความถูกต้องอีกครั้งก่อนยืนยัน');
+    }, 900);
+  });
+
+  // Confirm action — scrolls reviewer down to the confirmed-state preview
+  var confirmBtn = document.getElementById('confirmBtn');
+  confirmBtn.addEventListener('click', function(){
+    showToast('บันทึกการยืนยันไว้ในต้นแบบนี้แล้ว — ดูตัวอย่างสถานะ "ยืนยันแล้ว" ด้านล่าง');
+    document.getElementById('confirmedBox').scrollIntoView({behavior:'smooth', block:'center'});
+  });
+
+  var toastEl = document.getElementById('toast');
+  var toastTextEl = document.getElementById('toastText');
+  var toastTimer;
+  function showToast(msg){
+    toastTextEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('show'); }, 3200);
+  }
+</script>
+</body>
+</html>

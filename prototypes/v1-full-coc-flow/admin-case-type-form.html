@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แก้ไขประเภทเคส — Chira Continuity Care</title>
+<style>
+  :root{
+    --color-primary-900:#212B1C;
+    --color-primary-800:#2C3A22;
+    --color-primary-700:#3C4D2A;
+    --color-primary-600:#4C5F35;
+    --color-primary-500:#62784A;
+    --color-primary-300:#AAB994;
+    --color-primary-100:#E9EDDF;
+    --color-primary-50:#F5F6EF;
+
+    --color-neutral-900:#22201A;
+    --color-neutral-700:#4A4739;
+    --color-neutral-500:#7C7863;
+    --color-neutral-300:#C9C4AD;
+    --color-neutral-200:#DEDAC6;
+    --color-neutral-100:#F1EEE0;
+    --color-surface:#FFFFFF;
+
+    --color-risk:#B23B2C;
+    --color-risk-tint:#F7E7E2;
+    --color-warning:#C2891F;
+    --color-warning-tint:#FBF0DC;
+    --color-success:#3E8E49;
+    --color-success-tint:#E5F2E4;
+
+    --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px;
+    --space-5:20px; --space-6:24px; --space-8:32px; --space-10:40px;
+    --space-12:48px; --space-16:64px;
+
+    --radius-sm:4px; --radius-md:8px; --radius-lg:12px; --radius-pill:999px;
+    --shadow-sm:0 1px 2px rgba(34,32,26,0.06);
+    --shadow-md:0 1px 2px rgba(34,32,26,0.06), 0 4px 14px rgba(34,32,26,0.08);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Sarabun','Noto Sans Thai','Leelawadee UI','Segoe UI',system-ui,sans-serif;
+    background:var(--color-primary-50);
+    color:var(--color-neutral-900);
+    font-size:14px;
+    line-height:22px;
+  }
+  h1,h2,h3{margin:0;}
+  h1{font-size:24px;line-height:32px;font-weight:700;}
+  h2{font-size:20px;line-height:28px;font-weight:700;}
+  h3{font-size:16px;line-height:24px;font-weight:600;}
+  p{margin:0;}
+  a{color:var(--color-primary-700);}
+
+  .app-shell{display:flex;min-height:100vh;}
+
+  /* Sidebar */
+  .sidebar{
+    width:250px;flex-shrink:0;
+    background:linear-gradient(180deg,var(--color-primary-900),var(--color-primary-800));
+    color:#ECE9DD;
+    display:flex;flex-direction:column;
+    padding:var(--space-6) var(--space-4);
+  }
+  .brand{display:flex;align-items:center;gap:var(--space-3);padding:0 var(--space-3) var(--space-6);}
+  .brand-mark{
+    width:36px;height:36px;border-radius:50%;flex-shrink:0;
+    background:conic-gradient(from -40deg,#3E7CA6 0deg 110deg,#62784A 110deg 240deg,#C9932E 240deg 360deg);
+    box-shadow:0 0 0 3px rgba(245,246,239,0.15);
+  }
+  .brand-text{display:flex;flex-direction:column;}
+  .brand-text strong{font-size:14px;font-weight:700;color:#F5F6EF;letter-spacing:.02em;}
+  .brand-text span{font-size:11.5px;color:rgba(236,233,221,.65);}
+
+  nav.nav{display:flex;flex-direction:column;gap:2px;flex:1;}
+  .nav-section-label{
+    font-size:11.5px;line-height:16px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;
+    color:rgba(236,233,221,.5);
+    padding:var(--space-4) var(--space-3) var(--space-1);
+  }
+  .nav-link{
+    display:flex;align-items:center;gap:var(--space-2);
+    padding:10px var(--space-3);
+    border-radius:var(--radius-md);
+    color:rgba(236,233,221,.85);
+    text-decoration:none;font-size:14px;font-weight:500;
+    border-left:3px solid transparent;
+  }
+  .nav-link .ico{width:18px;text-align:center;flex-shrink:0;}
+  .nav-link:hover{background:rgba(255,255,255,.08);color:#F5F6EF;}
+  .nav-link.active{
+    background:rgba(60,77,42,0.35);
+    color:#F5F6EF;font-weight:700;
+    border-left:3px solid var(--color-primary-300);
+  }
+  .nav-link:focus-visible{outline:2px solid var(--color-primary-300);outline-offset:2px;}
+  .nav-sub{display:flex;flex-direction:column;gap:2px;margin-left:var(--space-3);padding-left:var(--space-2);border-left:1px solid rgba(236,233,221,.15);}
+
+  .sidebar-foot{padding:var(--space-3) var(--space-3) 0;border-top:1px solid rgba(236,233,221,.15);margin-top:var(--space-4);padding-top:var(--space-4);}
+  .sidebar-foot .who{font-size:12.5px;color:#F5F6EF;font-weight:600;}
+  .sidebar-foot .role{font-size:11.5px;color:rgba(236,233,221,.6);}
+
+  /* Main */
+  .main{flex:1;display:flex;flex-direction:column;min-width:0;}
+  .topbar{
+    background:var(--color-surface);
+    border-bottom:1px solid var(--color-neutral-200);
+    padding:var(--space-4) var(--space-6);
+    display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);
+    flex-wrap:wrap;
+  }
+  .topbar .crumb{font-size:11.5px;color:var(--color-neutral-500);margin-bottom:2px;}
+  .topbar-user{display:flex;align-items:center;gap:var(--space-2);font-size:12.5px;color:var(--color-neutral-700);}
+  .topbar-user .avatar{
+    width:30px;height:30px;border-radius:50%;background:var(--color-primary-100);color:var(--color-primary-700);
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;
+  }
+
+  .content{padding:var(--space-6);max-width:900px;width:100%;}
+
+  .page-head{margin-bottom:var(--space-6);}
+  .page-head .subtitle{color:var(--color-neutral-700);margin-top:var(--space-1);}
+
+  /* Buttons */
+  .btn{
+    display:inline-flex;align-items:center;gap:var(--space-2);
+    font-family:inherit;font-size:14px;font-weight:600;
+    border-radius:var(--radius-md);padding:10px 20px;
+    border:1px solid transparent;cursor:pointer;text-decoration:none;
+    line-height:20px;
+  }
+  .btn-primary{background:var(--color-primary-700);color:#fff;}
+  .btn-primary:hover{background:var(--color-primary-600);}
+  .btn-secondary{background:#fff;border-color:var(--color-neutral-300);color:var(--color-neutral-900);}
+  .btn-secondary:hover{background:var(--color-neutral-100);}
+  .btn-sm{padding:6px 12px;font-size:12.5px;}
+  .btn:focus-visible{outline:2px solid var(--color-primary-700);outline-offset:2px;}
+
+  /* Card */
+  .card{background:var(--color-surface);border:1px solid var(--color-neutral-200);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-6);margin-bottom:var(--space-6);}
+  .card h2{margin-bottom:var(--space-1);}
+  .card .card-desc{color:var(--color-neutral-500);font-size:12.5px;margin-bottom:var(--space-5);}
+
+  /* Forms */
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:var(--space-5);}
+  .field label.label{font-size:12.5px;font-weight:600;color:var(--color-neutral-700);}
+  .field .hint{font-size:11.5px;color:var(--color-neutral-500);}
+  input[type=text],input[type=number],textarea,select{
+    background:var(--color-neutral-100);
+    border:1px solid var(--color-neutral-300);
+    border-radius:var(--radius-sm);
+    padding:10px 12px;
+    font-size:14px;font-family:inherit;color:var(--color-neutral-900);
+    width:100%;
+  }
+  textarea{resize:vertical;min-height:72px;line-height:22px;}
+  input:focus,textarea:focus,select:focus{
+    outline:2px solid var(--color-primary-700);outline-offset:1px;
+    border-color:var(--color-primary-700);background:#fff;
+  }
+  .row-2{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);}
+
+  /* Toggle */
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);padding:var(--space-3) 0;}
+  .toggle-row .toggle-label strong{display:block;font-size:14px;font-weight:600;}
+  .toggle-row .toggle-label span{font-size:11.5px;color:var(--color-neutral-500);}
+  .switch{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;}
+  .switch input{opacity:0;width:0;height:0;}
+  .switch .track{position:absolute;inset:0;background:var(--color-neutral-300);border-radius:var(--radius-pill);transition:.15s;cursor:pointer;}
+  .switch .track:before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.15s;box-shadow:var(--shadow-sm);}
+  .switch input:checked + .track{background:var(--color-primary-700);}
+  .switch input:checked + .track:before{transform:translateX(20px);}
+  .switch input:focus-visible + .track{outline:2px solid var(--color-primary-700);outline-offset:2px;}
+
+  /* Segmented control (visit rule mode) */
+  .segmented{display:flex;gap:var(--space-2);margin-bottom:var(--space-5);}
+  .segmented label{
+    flex:1;display:flex;flex-direction:column;gap:4px;
+    border:1px solid var(--color-neutral-300);border-radius:var(--radius-md);
+    padding:var(--space-3) var(--space-4);cursor:pointer;background:#fff;
+  }
+  .segmented label strong{font-size:14px;font-weight:600;}
+  .segmented label span{font-size:11.5px;color:var(--color-neutral-500);}
+  .segmented input{position:absolute;opacity:0;pointer-events:none;}
+  .segmented label:has(input:checked){
+    border-color:var(--color-primary-700);
+    background:var(--color-primary-100);
+    box-shadow:0 0 0 1px var(--color-primary-700) inset;
+  }
+  .segmented label:has(input:checked) strong{color:var(--color-primary-700);}
+  .segmented label:has(input:focus-visible){outline:2px solid var(--color-primary-700);outline-offset:2px;}
+
+  .rule-panel{display:none;}
+  .rule-panel.active{display:block;}
+
+  table.rule-table{width:100%;border-collapse:collapse;margin-bottom:var(--space-4);}
+  table.rule-table thead th{
+    text-align:left;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+    color:var(--color-neutral-500);padding:var(--space-2) var(--space-3);
+    border-bottom:1px solid var(--color-neutral-300);
+  }
+  table.rule-table tbody td{padding:var(--space-2) var(--space-3);border-bottom:1px solid var(--color-neutral-200);}
+  table.rule-table tbody td input{padding:8px 10px;font-variant-numeric:tabular-nums;}
+  table.rule-table tbody td.num-col{width:130px;}
+  table.rule-table tbody td.interval-col{width:150px;}
+  table.rule-table tbody td.remove-col{width:44px;text-align:center;}
+  .remove-row-btn{
+    background:none;border:1px solid var(--color-neutral-300);border-radius:var(--radius-sm);
+    color:var(--color-risk);width:28px;height:28px;cursor:pointer;font-size:14px;line-height:1;
+  }
+  .remove-row-btn:hover{background:var(--color-risk-tint);}
+  .remove-row-btn:focus-visible{outline:2px solid var(--color-risk);outline-offset:1px;}
+
+  .add-row-btn{
+    background:#fff;border:1px dashed var(--color-primary-300);color:var(--color-primary-700);
+    border-radius:var(--radius-md);padding:8px 16px;font-size:13px;font-weight:600;
+    cursor:pointer;font-family:inherit;
+  }
+  .add-row-btn:hover{background:var(--color-primary-50);}
+  .add-row-btn:focus-visible{outline:2px solid var(--color-primary-700);outline-offset:2px;}
+
+  .fixed-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);}
+
+  .form-actions{display:flex;gap:var(--space-3);align-items:center;}
+
+  @media (max-width:860px){
+    .app-shell{flex-direction:column;}
+    .sidebar{
+      width:100%;flex-direction:row;align-items:center;
+      overflow-x:auto;padding:var(--space-3) var(--space-4);gap:var(--space-4);
+    }
+    .brand{padding:0;flex-shrink:0;}
+    .brand-text span{display:none;}
+    nav.nav{flex-direction:row;flex:none;gap:var(--space-1);}
+    .nav-section-label{display:none;}
+    .nav-sub{flex-direction:row;margin-left:0;padding-left:0;border-left:none;gap:var(--space-1);}
+    .sidebar-foot{display:none;}
+    .content{padding:var(--space-4);}
+    .row-2,.fixed-grid,.segmented{grid-template-columns:1fr;flex-direction:column;}
+    table.rule-table{display:block;overflow-x:auto;}
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div class="brand-text">
+        <strong>Triple C</strong>
+        <span>Chira Continuity Care</span>
+      </div>
+    </div>
+    <nav class="nav">
+      <a class="nav-link" href="dashboard.html"><span class="ico">&#9634;</span>แดชบอร์ด</a>
+      <a class="nav-link" href="referrals-list.html"><span class="ico">&#9776;</span>รายการเคส</a>
+      <div class="nav-section-label">จัดการระบบ</div>
+      <div class="nav-sub">
+        <a class="nav-link active" href="admin-case-types-list.html"><span class="ico">&#9873;</span>ประเภทเคส</a>
+        <a class="nav-link" href="admin-users-list.html"><span class="ico">&#128100;</span>ผู้ใช้งาน</a>
+      </div>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="who">ธนกร ฝ่ายสารสนเทศ</div>
+      <div class="role">แอดมิน — จัดการระบบ</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="crumb">จัดการระบบ / ประเภทเคส / แก้ไข</div>
+      </div>
+      <div class="topbar-user">
+        <div class="avatar">ธ</div>
+        <span>ธนกร ฝ่ายสารสนเทศ (แอดมิน)</span>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="page-head">
+        <h1>แก้ไขประเภทเคส</h1>
+        <p class="subtitle">Palliative Care</p>
+      </div>
+
+      <form id="case-type-form" onsubmit="event.preventDefault(); window.location='admin-case-types-list.html';">
+
+        <div class="card">
+          <h2>ข้อมูลทั่วไป</h2>
+          <p class="card-desc">ชื่อและคำอธิบายที่จะแสดงให้ทีมงานเห็นเมื่อสร้างเคสใหม่</p>
+
+          <div class="field">
+            <label class="label" for="ct-name">ชื่อประเภทเคส</label>
+            <input type="text" id="ct-name" value="Palliative Care">
+          </div>
+
+          <div class="field">
+            <label class="label" for="ct-slug">Slug</label>
+            <input type="text" id="ct-slug" value="palliative-care">
+            <span class="hint">ใช้อ้างอิงในระบบ ปรับตามชื่อโดยอัตโนมัติเมื่อพิมพ์ชื่อประเภทเคส แก้ไขเองได้หากต้องการ</span>
+          </div>
+
+          <div class="field">
+            <label class="label" for="ct-desc">คำอธิบาย</label>
+            <textarea id="ct-desc">ผู้ป่วยระยะท้ายที่ต้องการดูแลแบบประคับประคองต่อเนื่องที่บ้าน ติดตามอาการปวด อาการทางกาย และคุณภาพชีวิตเป็นระยะตามคะแนน PPS</textarea>
+          </div>
+
+          <div class="toggle-row">
+            <div class="toggle-label">
+              <strong>เปิดใช้งาน</strong>
+              <span>หากปิดใช้งาน จะไม่สามารถเลือกประเภทเคสนี้เมื่อสร้างเคสใหม่ได้ แต่เคสเดิมยังใช้งานได้ตามปกติ</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="ct-active" checked>
+              <span class="track"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>กฎการติดตาม</h2>
+          <p class="card-desc">กำหนดวิธีคำนวณรอบการติดตามเยี่ยมบ้านสำหรับเคสประเภทนี้</p>
+
+          <div class="segmented" role="radiogroup" aria-label="รูปแบบกฎการติดตาม">
+            <label>
+              <input type="radio" name="rule-mode" value="fixed" onchange="switchRuleMode('fixed')">
+              <strong>แบบตายตัว</strong>
+              <span>ติดตามครบตามจำนวนครั้งคงที่ ห่างกันทุกกี่วัน</span>
+            </label>
+            <label>
+              <input type="radio" name="rule-mode" value="score" checked onchange="switchRuleMode('score')">
+              <strong>แบบตามคะแนน</strong>
+              <span>รอบติดตามเปลี่ยนไปตามช่วงคะแนน PPS ของผู้ป่วย</span>
+            </label>
+          </div>
+
+          <!-- Fixed count panel -->
+          <div class="rule-panel" id="panel-fixed">
+            <div class="fixed-grid">
+              <div class="field">
+                <label class="label" for="fixed-count">จำนวนครั้งที่ติดตาม</label>
+                <input type="number" id="fixed-count" min="1" value="4">
+              </div>
+              <div class="field">
+                <label class="label" for="fixed-interval">ห่างกันทุก (วัน)</label>
+                <input type="number" id="fixed-interval" min="1" value="7">
+              </div>
+            </div>
+          </div>
+
+          <!-- Score based panel -->
+          <div class="rule-panel active" id="panel-score">
+            <table class="rule-table" id="score-table">
+              <thead>
+                <tr>
+                  <th>คะแนนต่ำสุด</th>
+                  <th>คะแนนสูงสุด</th>
+                  <th>ห่างกัน (วัน)</th>
+                  <th>ป้ายกำกับ</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="score-table-body">
+                <tr>
+                  <td class="num-col"><input type="number" min="0" max="100" value="70"></td>
+                  <td class="num-col"><input type="number" min="0" max="100" value="100"></td>
+                  <td class="interval-col"><input type="number" min="1" value="30"></td>
+                  <td><input type="text" value="ติดตามห่าง"></td>
+                  <td class="remove-col"><button type="button" class="remove-row-btn" onclick="this.closest('tr').remove()" aria-label="ลบช่วงคะแนนนี้">&times;</button></td>
+                </tr>
+                <tr>
+                  <td class="num-col"><input type="number" min="0" max="100" value="40"></td>
+                  <td class="num-col"><input type="number" min="0" max="100" value="69"></td>
+                  <td class="interval-col"><input type="number" min="1" value="14"></td>
+                  <td><input type="text" value="ติดตามปานกลาง"></td>
+                  <td class="remove-col"><button type="button" class="remove-row-btn" onclick="this.closest('tr').remove()" aria-label="ลบช่วงคะแนนนี้">&times;</button></td>
+                </tr>
+                <tr>
+                  <td class="num-col"><input type="number" min="0" max="100" value="0"></td>
+                  <td class="num-col"><input type="number" min="0" max="100" value="39"></td>
+                  <td class="interval-col"><input type="number" min="1" value="7"></td>
+                  <td><input type="text" value="ติดตามใกล้ชิด"></td>
+                  <td class="remove-col"><button type="button" class="remove-row-btn" onclick="this.closest('tr').remove()" aria-label="ลบช่วงคะแนนนี้">&times;</button></td>
+                </tr>
+              </tbody>
+            </table>
+            <button type="button" class="add-row-btn" onclick="addScoreRow()">+ เพิ่มช่วงคะแนน</button>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">บันทึกประเภทเคส</button>
+          <a class="btn btn-secondary" href="admin-case-types-list.html">ยกเลิก</a>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>
+
+<script>
+  function switchRuleMode(mode){
+    document.getElementById('panel-fixed').classList.toggle('active', mode === 'fixed');
+    document.getElementById('panel-score').classList.toggle('active', mode === 'score');
+  }
+
+  function addScoreRow(){
+    var tbody = document.getElementById('score-table-body');
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td class="num-col"><input type="number" min="0" max="100" value=""></td>' +
+      '<td class="num-col"><input type="number" min="0" max="100" value=""></td>' +
+      '<td class="interval-col"><input type="number" min="1" value=""></td>' +
+      '<td><input type="text" value=""></td>' +
+      '<td class="remove-col"><button type="button" class="remove-row-btn" onclick="this.closest(\'tr\').remove()" aria-label="ลบช่วงคะแนนนี้">&times;</button></td>';
+    tbody.appendChild(tr);
+  }
+
+  // Auto-generate slug hint from name (demo only, edit stays manual override friendly)
+  document.getElementById('ct-name').addEventListener('input', function(){
+    // Intentionally left non-destructive in edit mode: existing slug is preserved unless cleared.
+  });
+</script>
+</body>
+</html>

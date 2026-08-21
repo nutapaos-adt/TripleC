@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>คู่มือติดตามก่อนเยี่ยม — Triple C</title>
+<style>
+  :root{
+    --color-primary-900:#212B1C;
+    --color-primary-800:#2C3A22;
+    --color-primary-700:#3C4D2A;
+    --color-primary-600:#4C5F35;
+    --color-primary-500:#62784A;
+    --color-primary-300:#AAB994;
+    --color-primary-100:#E9EDDF;
+    --color-primary-50:#F5F6EF;
+    --color-neutral-900:#22201A;
+    --color-neutral-700:#4A4739;
+    --color-neutral-500:#7C7863;
+    --color-neutral-300:#C9C4AD;
+    --color-neutral-200:#DEDAC6;
+    --color-neutral-100:#F1EEE0;
+    --color-surface:#FFFFFF;
+    --color-accent-blue:#3E7CA6;
+    --color-accent-gold:#C9932E;
+    --color-risk:#B23B2C;
+    --color-risk-tint:#F7E7E2;
+    --color-warning:#C2891F;
+    --color-warning-tint:#FBF0DC;
+    --color-success:#3E8E49;
+    --color-success-tint:#E5F2E4;
+    --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-5:20px;
+    --space-6:24px; --space-8:32px; --space-10:40px; --space-12:48px; --space-16:64px;
+    --radius-sm:4px; --radius-md:8px; --radius-lg:12px; --radius-pill:999px;
+    --shadow-sm:0 1px 2px rgba(34,32,26,0.06);
+    --shadow-md:0 1px 2px rgba(34,32,26,0.06), 0 4px 14px rgba(34,32,26,0.08);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Sarabun','Noto Sans Thai','Leelawadee UI','Segoe UI',system-ui,sans-serif;
+    background:var(--color-primary-50);
+    color:var(--color-neutral-900);
+    font-size:14px;
+    line-height:1.55;
+  }
+  a{color:var(--color-primary-700);text-decoration:none;}
+
+  /* ---------- focus states (WCAG / DESIGN.md 4.6) ---------- */
+  a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, [tabindex]:focus-visible{
+    outline:2px solid var(--color-primary-700);
+    outline-offset:2px;
+    border-radius:var(--radius-sm);
+  }
+
+  /* ---------- app shell / sidebar ---------- */
+  .app-shell{display:flex;min-height:100vh;}
+  .sidebar{
+    width:250px;flex-shrink:0;
+    background:linear-gradient(180deg,var(--color-primary-900),var(--color-primary-800));
+    color:#EDE9DA;
+    display:flex;flex-direction:column;
+    position:sticky;top:0;height:100vh;
+    z-index:10;
+  }
+  .sidebar-brand{padding:24px 20px 16px;border-bottom:1px solid rgba(255,255,255,0.08);}
+  .brand-title{font-size:18px;font-weight:800;letter-spacing:.5px;color:#F5F6EF;}
+  .brand-sub{font-size:11.5px;color:#C7CBB8;margin-top:2px;}
+  .sidebar-nav{flex:1;padding:16px 12px;display:flex;flex-direction:column;gap:4px;}
+  .nav-item{
+    display:flex;align-items:center;gap:10px;
+    padding:11px 12px;border-radius:var(--radius-md);
+    color:#DCD9C8;font-size:14px;font-weight:600;
+    border-left:3px solid transparent;
+  }
+  .nav-item svg{width:18px;height:18px;flex-shrink:0;}
+  .nav-item:hover{background:rgba(255,255,255,0.06);}
+  .nav-item.active{
+    background:rgba(60,77,42,0.38);
+    color:#FFFFFF;
+    border-left-color:var(--color-primary-300);
+  }
+  .sidebar-footer{
+    padding:14px 16px;border-top:1px solid rgba(255,255,255,0.08);
+    display:flex;align-items:center;gap:10px;
+  }
+  .user-avatar{
+    width:34px;height:34px;border-radius:50%;background:var(--color-primary-500);
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;flex-shrink:0;
+  }
+  .user-name{font-size:12.5px;font-weight:700;color:#F1EEE0;}
+  .user-role{font-size:11px;color:#B7BBA5;}
+
+  .main{flex:1;min-width:0;padding:32px;}
+  .content{max-width:820px;margin:0 auto;}
+
+  .page-head{margin-bottom:20px;}
+  .h1{font-size:24px;line-height:32px;font-weight:700;margin:0 0 4px;color:var(--color-neutral-900);}
+  .h2{font-size:20px;line-height:28px;font-weight:700;margin:0 0 6px;color:var(--color-primary-900);}
+  .h3{font-size:16px;line-height:24px;font-weight:600;margin:0;}
+  .page-sub{font-size:12.5px;color:var(--color-neutral-500);margin:0;}
+
+  /* ---------- patient summary strip ---------- */
+  .patient-strip{
+    background:var(--color-surface);
+    border:1px solid var(--color-neutral-200);
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-sm);
+    padding:18px 20px;
+    display:flex;flex-wrap:wrap;gap:14px;
+    align-items:center;justify-content:space-between;
+    margin-bottom:24px;
+  }
+  .patient-name{font-size:16px;line-height:26px;font-weight:700;color:var(--color-neutral-900);}
+  .patient-meta{font-size:12.5px;color:var(--color-neutral-500);margin-top:2px;}
+  .patient-chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{
+    display:inline-flex;align-items:center;gap:4px;
+    padding:5px 12px;border-radius:var(--radius-pill);
+    font-size:12.5px;font-weight:600;white-space:nowrap;
+  }
+  .chip-info{background:var(--color-neutral-100);color:var(--color-neutral-700);}
+  .chip-zone{background:var(--color-primary-100);color:var(--color-primary-700);}
+  .chip-warning{background:var(--color-warning-tint);color:var(--color-warning);}
+  .chip-risk{background:var(--color-risk-tint);color:var(--color-risk);}
+  .chip-success{background:var(--color-success-tint);color:var(--color-success);}
+
+  /* ---------- AI draft box (DESIGN.md 3.3) ---------- */
+  .ai-draft{
+    border:2px dashed var(--color-primary-300);
+    background:var(--color-primary-50);
+    border-radius:var(--radius-lg);
+    padding:20px;margin-bottom:20px;
+  }
+  .ai-draft-label{
+    display:inline-block;background:var(--color-primary-100);color:var(--color-primary-700);
+    font-size:11.5px;font-weight:700;letter-spacing:.2px;
+    padding:5px 12px;border-radius:var(--radius-pill);margin-bottom:14px;
+  }
+  .ai-draft-desc{font-size:13px;color:var(--color-neutral-700);margin:0 0 16px;max-width:64ch;}
+  .ai-checklist{display:flex;flex-direction:column;gap:10px;}
+  .ai-item{
+    display:flex;gap:12px;align-items:flex-start;
+    background:var(--color-surface);border:1px solid var(--color-neutral-200);
+    border-radius:var(--radius-md);padding:14px;
+  }
+  .ai-item input[type="checkbox"]{
+    width:20px;height:20px;margin-top:2px;flex-shrink:0;accent-color:var(--color-primary-700);cursor:pointer;
+  }
+  .ai-item-body{flex:1;min-width:0;}
+  .ai-item-title{
+    width:100%;border:none;background:transparent;
+    font-size:15px;font-weight:600;color:var(--color-neutral-900);
+    font-family:inherit;padding:2px 0;margin-bottom:4px;
+  }
+  .ai-item-title:focus{outline:2px solid var(--color-primary-700);outline-offset:2px;border-radius:var(--radius-sm);}
+  .ai-item-note{
+    width:100%;border:none;background:transparent;resize:none;
+    font-size:12.5px;color:var(--color-neutral-700);font-family:inherit;line-height:18px;padding:2px 0;
+  }
+  .ai-item-note:focus{outline:2px solid var(--color-primary-700);outline-offset:2px;border-radius:var(--radius-sm);}
+  .ai-draft-footnote{font-size:11.5px;color:var(--color-neutral-500);margin:16px 0 0;}
+
+  .action-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    min-height:48px;padding:12px 22px;border-radius:var(--radius-md);
+    font-size:14px;font-weight:700;cursor:pointer;border:1px solid transparent;
+    font-family:inherit;transition:background .15s ease;
+  }
+  .btn-primary{background:var(--color-primary-700);color:#fff;}
+  .btn-primary:hover{background:var(--color-primary-600);}
+  .btn-secondary{background:#fff;border-color:var(--color-neutral-300);color:var(--color-neutral-900);}
+  .btn-secondary:hover{background:var(--color-neutral-100);}
+  .btn:disabled{opacity:.65;cursor:not-allowed;}
+
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--color-primary-900);color:#F5F6EF;padding:10px 18px;border-radius:var(--radius-md);
+    font-size:13px;box-shadow:var(--shadow-md);opacity:0;pointer-events:none;
+    transition:opacity .2s ease, transform .2s ease;z-index:100;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* ---------- responsive / field-first (DESIGN.md 4.4) ---------- */
+  @media (max-width:860px){
+    .app-shell{flex-direction:column;}
+    .sidebar{
+      width:100%;height:auto;position:sticky;top:0;
+      flex-direction:row;align-items:center;
+      overflow-x:auto;-webkit-overflow-scrolling:touch;
+      padding:8px 10px;gap:8px;
+    }
+    .sidebar-brand{border-bottom:none;padding:4px 12px;border-right:1px solid rgba(255,255,255,0.1);flex-shrink:0;}
+    .brand-sub{display:none;}
+    .sidebar-nav{flex-direction:row;padding:0;gap:6px;overflow-x:auto;}
+    .nav-item{flex-direction:column;gap:3px;font-size:11px;white-space:nowrap;padding:8px 12px;border-left:none;border-bottom:3px solid transparent;}
+    .nav-item.active{border-left:none;border-bottom-color:var(--color-primary-300);}
+    .sidebar-footer{display:none;}
+    .main{padding:16px;}
+    .patient-strip{padding:14px;}
+    .action-row{flex-direction:column;}
+    .action-row .btn{width:100%;}
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-title">TRIPLE C</div>
+      <div class="brand-sub">Chira Continuity Care</div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item" href="dashboard.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h5v-6h4v6h5V9.5"/></svg>
+        <span>ภาพรวม</span>
+      </a>
+      <a class="nav-item" href="referrals-list.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="1.5"/><path d="M9 3.5h6v2H9zM9 10h6M9 14h6"/></svg>
+        <span>ใบส่งต่อ</span>
+      </a>
+      <a class="nav-item active" href="followup-guide.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-11.2A7 7 0 1 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.6" r="2.4"/></svg>
+        <span>แผนติดตามวันนี้</span>
+      </a>
+      <a class="nav-item" href="referral-detail.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5l3.2 2"/></svg>
+        <span>ประวัติผู้ป่วย</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-avatar">กร</div>
+      <div>
+        <div class="user-name">พว.กัญญา รักษ์ผู้ป่วย</div>
+        <div class="user-role">ทีมเยี่ยมบ้าน</div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="content">
+      <div class="page-head">
+        <h1 class="h1">คู่มือติดตามก่อนเยี่ยม/โทร</h1>
+        <p class="page-sub">เตรียมความพร้อมก่อนออกเยี่ยมบ้านหรือโทรติดตามผู้ป่วยรายนี้</p>
+      </div>
+
+      <section class="patient-strip">
+        <div>
+          <div class="patient-name">คุณสมชาย ใจบุญ</div>
+          <div class="patient-meta">HN-2026-00087 · Palliative Care · ครั้งที่ 3 จาก 4 ครั้งตามแผน</div>
+        </div>
+        <div class="patient-chips">
+          <span class="chip chip-info">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h5v-6h4v6h5V9.5"/></svg>
+            เยี่ยมบ้าน
+          </span>
+          <span class="chip chip-zone">ในเขต</span>
+          <span class="chip chip-warning">กำหนด 21 ส.ค. 2569 · รอถึงกำหนด</span>
+        </div>
+      </section>
+
+      <section class="ai-draft" id="aiDraftBox">
+        <span class="ai-draft-label">ร่างจาก AI — ยังไม่ยืนยัน</span>
+        <h2 class="h2">หัวข้อที่ควรประเมินก่อนออกเยี่ยมครั้งนี้</h2>
+        <p class="ai-draft-desc">
+          สรุปจากบันทึกการติดตามครั้งก่อน (PPS 60 · ปรับแผนยาเมื่อ 2 สัปดาห์ที่แล้ว) — แก้ไขข้อความหรือลบหัวข้อที่ไม่เกี่ยวข้องได้ก่อนออกเยี่ยม
+        </p>
+        <div class="ai-checklist" id="aiChecklist">
+          <label class="ai-item">
+            <input type="checkbox">
+            <div class="ai-item-body">
+              <input class="ai-item-title" value="ประเมินระดับความปวดปัจจุบัน">
+              <textarea class="ai-item-note" rows="2">ครั้งก่อนผู้ป่วยรายงานปวดระดับ 6/10 และมีการปรับเพิ่มขนาดมอร์ฟีน ควรประเมินซ้ำว่าควบคุมอาการปวดได้ดีขึ้นหรือไม่</textarea>
+            </div>
+          </label>
+          <label class="ai-item">
+            <input type="checkbox">
+            <div class="ai-item-body">
+              <input class="ai-item-title" value="ตรวจสอบการรับประทานยาตามแผน">
+              <textarea class="ai-item-note" rows="2">มีการเปลี่ยนแผนยาเมื่อ 2 สัปดาห์ก่อน ควรยืนยันว่าผู้ป่วย/ผู้ดูแลรับประทานยาถูกต้องตามขนาดและเวลาที่กำหนด</textarea>
+            </div>
+          </label>
+          <label class="ai-item">
+            <input type="checkbox">
+            <div class="ai-item-body">
+              <input class="ai-item-title" value="สอบถามภาวะเครียดของผู้ดูแล">
+              <textarea class="ai-item-note" rows="2">ผู้ดูแลหลัก (ภรรยา) ดูแลผู้ป่วยต่อเนื่องมากกว่า 3 เดือน มีความเสี่ยงภาวะเหนื่อยล้าจากการดูแล (caregiver burnout)</textarea>
+            </div>
+          </label>
+          <label class="ai-item">
+            <input type="checkbox">
+            <div class="ai-item-body">
+              <input class="ai-item-title" value="ประเมินภาวะโภชนาการและการรับประทานอาหาร">
+              <textarea class="ai-item-note" rows="2">บันทึกครั้งก่อนระบุน้ำหนักลดลงประมาณ 2 กก. ใน 1 เดือน ควรติดตามปริมาณอาหาร/น้ำที่รับได้จริง</textarea>
+            </div>
+          </label>
+          <label class="ai-item">
+            <input type="checkbox">
+            <div class="ai-item-body">
+              <input class="ai-item-title" value="ตรวจสอบแผลกดทับและการเคลื่อนไหวบนเตียง">
+              <textarea class="ai-item-note" rows="2">ผู้ป่วยนอนติดเตียงเป็นส่วนใหญ่ ควรตรวจผิวหนังบริเวณจุดเสี่ยง (ก้นกบ ส้นเท้า) และแนะนำการพลิกตัว</textarea>
+            </div>
+          </label>
+        </div>
+        <p class="ai-draft-footnote">รายการนี้เป็นเพียงแนวทางช่วยจำสำหรับทีมเยี่ยมบ้าน ไม่ถูกบันทึกลงระบบโดยอัตโนมัติ — ผลการประเมินจริงให้กรอกในหน้าบันทึกผลติดตาม</p>
+      </section>
+
+      <div class="action-row">
+        <a class="btn btn-primary" href="followup-record.html">เริ่มบันทึกผลติดตาม →</a>
+        <button class="btn btn-secondary" type="button" id="regenBtn">↻ ให้ AI แนะนำหัวข้อประเมินใหม่</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast">กำลังให้ AI แนะนำหัวข้อประเมินใหม่...</div>
+
+<script>
+  var altSets = [
+    [
+      {t:"ประเมินระดับความรู้สึกตัวและการสื่อสาร", n:"ควรสังเกตระดับความรู้สึกตัวเปรียบเทียบกับครั้งก่อน เนื่องจากอยู่ในระยะ palliative ที่อาจเปลี่ยนแปลงเร็ว"},
+      {t:"ตรวจสอบอุปกรณ์ทางการแพทย์ที่ใช้ที่บ้าน", n:"ครั้งก่อนมีการติดตั้งเครื่องผลิตออกซิเจน ควรตรวจสอบการใช้งานและความเข้าใจของผู้ดูแล"},
+      {t:"สอบถามอาการท้องผูกจากการใช้มอร์ฟีน", n:"ผลข้างเคียงที่พบบ่อยจากการใช้ยาแก้ปวดกลุ่มโอปิออยด์ ควรประเมินและแนะนำการจัดการเบื้องต้น"},
+      {t:"ประเมินความพร้อมด้านจิตใจของครอบครัว", n:"ควรเปิดโอกาสให้ครอบครัวได้พูดคุยเกี่ยวกับแผนการดูแลระยะท้าย (advance care planning) หากยังไม่ได้พูดคุย"},
+      {t:"ตรวจสอบความสะอาดและความปลอดภัยของสภาพแวดล้อมที่บ้าน", n:"ลดความเสี่ยงพลัดตกหกล้มและการติดเชื้อ โดยเฉพาะบริเวณห้องนอนและห้องน้ำ"}
+    ]
+  ];
+
+  var regenBtn = document.getElementById('regenBtn');
+  var toast = document.getElementById('toast');
+  var checklist = document.getElementById('aiChecklist');
+  var altIndex = 0;
+
+  function showToast(msg){
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(function(){ toast.classList.remove('show'); }, 2200);
+  }
+
+  regenBtn.addEventListener('click', function(){
+    regenBtn.disabled = true;
+    regenBtn.textContent = 'กำลังให้ AI แนะนำหัวข้อ...';
+    showToast('กำลังให้ AI แนะนำหัวข้อประเมินใหม่...');
+    setTimeout(function(){
+      var set = altSets[altIndex % altSets.length];
+      altIndex++;
+      checklist.innerHTML = '';
+      set.forEach(function(item){
+        var label = document.createElement('label');
+        label.className = 'ai-item';
+        label.innerHTML =
+          '<input type="checkbox">' +
+          '<div class="ai-item-body">' +
+            '<input class="ai-item-title" value="' + item.t + '">' +
+            '<textarea class="ai-item-note" rows="2">' + item.n + '</textarea>' +
+          '</div>';
+        checklist.appendChild(label);
+      });
+      regenBtn.disabled = false;
+      regenBtn.textContent = '↻ ให้ AI แนะนำหัวข้อประเมินใหม่';
+      showToast('AI แนะนำหัวข้อประเมินชุดใหม่แล้ว — ตรวจสอบและแก้ไขได้ก่อนออกเยี่ยม');
+    }, 900);
+  });
+</script>
+</body>
+</html>
