@@ -104,3 +104,12 @@ specifies — don't assume the current views already match the design system.
 Clickable HTML/CSS/JS prototypes (built via the `create-prototype` skill and the `prototype-builder` agent)
 live under `prototypes/v<N>-<slug>/`, each with a `MANIFEST.md` describing what it covers and why. These are
 static mockups for stakeholder review, not part of the Laravel app itself.
+
+## Detailed design docs
+
+Internal/technical design documents — conceptual design (actors/components/responsibilities) plus at least
+one Mermaid sequence-flow diagram per flow — are built via the `detailed-design` skill and the
+`detailed-design-writer` agent, and live under `docs/design/<SLUG>_DESIGN.md` (one file per feature/flow,
+same naming convention as `docs/testing/*.md`). Unlike prototypes, these are updated in place rather than
+versioned per attempt. Any architecturally significant point left unresolved gets its own "Open Decisions"
+section (problem + ≥3 options + pros/cons) rather than being silently decided.
