@@ -1,24 +1,17 @@
-// Mock data for one Referral (เคส) — UI/UX demo only, not wired to Firestore yet.
-const referral = {
-  id: "referral_001",
-  patientName: "คุณสมชาย ใจดี",
-  caseType: "Palliative Care",
-  sourceType: "หอผู้ป่วย (Ward)",
-  createdBy: "เจ้าหน้าที่หอผู้ป่วย — สมหญิง",
-  createdAt: "1 ก.ย. 2569, 09:12",
-  status: "pending_review",
-  aiSummary:
-    "ผู้ป่วยมะเร็งระยะท้าย ปวดระดับ 6/10 ควบคุมด้วยมอร์ฟีนวันละ 2 ครั้ง " +
-    "ครอบครัวต้องการดูแลต่อที่บ้าน แนะนำเยี่ยมบ้านสัปดาห์ละ 2 ครั้ง " +
-    "ประเมินความปวดและสภาพจิตใจผู้ดูแลร่วมด้วย",
-  confirmedSummary: null,
-  confirmedBy: null,
-  confirmedAt: null,
-  rounds: [
-    { label: "รอบติดตามที่ 1", decision: null },
-    { label: "รอบติดตามที่ 2 (ปิดเคส)", decision: null },
-  ],
+// Loaded live from Firestore (collection `referrals`, doc REFERRAL_ID) — see loadReferral().
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+import { db } from "./firebase-config.js";
+
+const REFERRAL_ID = "referral_001";
+
+const SOURCE_TYPE_TEXT = {
+  ward: "หอผู้ป่วย (Ward)",
+  opd: "OPD",
+  internal_dept: "แผนกภายในโรงพยาบาล",
+  external_hospital: "โรงพยาบาลภายนอก (ส่งต่อ)",
 };
+
+let referral = null;
 
 const STEPS = [
   { key: "pending_review", label: "รอตรวจสอบ" },
@@ -142,6 +135,57 @@ function nowThai() {
   return new Date().toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" });
 }
 
+function formatDate(value) {
+  if (!value) return "-";
+  const date = typeof value?.toDate === "function" ? value.toDate() : new Date(value);
+  return date.toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" });
+}
+
+function formatSummary(summary) {
+  if (!summary) return "";
+  const parts = [];
+  if (summary.keyIssues?.length) parts.push(`ปัญหาหลัก: ${summary.keyIssues.join(", ")}`);
+  if (summary.riskSignals?.length) parts.push(`สัญญาณเสี่ยง: ${summary.riskSignals.join(", ")}`);
+  if (summary.nurseNote) parts.push(`บันทึกพยาบาล: ${summary.nurseNote}`);
+  return parts.join("\n");
+}
+
+async function fetchDoc(collectionName, id) {
+  if (!id) return null;
+  const snap = await getDoc(doc(db, collectionName, id));
+  return snap.exists() ? snap.data() : null;
+}
+
+async function loadReferral() {
+  const data = await fetchDoc("referrals", REFERRAL_ID);
+  if (!data) throw new Error(`ไม่พบเอกสาร referrals/${REFERRAL_ID} ใน Firestore`);
+
+  const [patient, caseType, createdByUser, confirmedByUser] = await Promise.all([
+    fetchDoc("patients", data.patientId),
+    fetchDoc("caseTypes", data.caseTypeId),
+    fetchDoc("users", data.createdBy),
+    fetchDoc("users", data.confirmedBy),
+  ]);
+
+  referral = {
+    id: REFERRAL_ID,
+    patientName: patient?.fullName ?? data.patientId,
+    caseType: caseType?.name ?? data.caseTypeId,
+    sourceType: SOURCE_TYPE_TEXT[data.sourceType] ?? data.sourceType,
+    createdBy: createdByUser?.name ?? data.createdBy,
+    createdAt: formatDate(data.createdAt),
+    status: data.status,
+    aiSummary: formatSummary(data.aiSummary),
+    confirmedSummary: data.confirmedSummary ? formatSummary(data.confirmedSummary) : null,
+    confirmedBy: confirmedByUser?.name ?? data.confirmedBy,
+    confirmedAt: data.confirmedAt ? formatDate(data.confirmedAt) : null,
+    rounds: [
+      { label: "รอบติดตามที่ 1", decision: null },
+      { label: "รอบติดตามที่ 2 (ปิดเคส)", decision: null },
+    ],
+  };
+}
+
 function onConfirmPlan() {
   referral.confirmedSummary = el.confirmedSummary.value.trim();
   if (!referral.confirmedSummary) return;
@@ -161,4 +205,14 @@ function onConfirmRound(index) {
 
 el.confirmBtn.addEventListener("click", onConfirmPlan);
 
-render();
+loadReferral()
+  .then(render)
+  .catch((err) => {
+    console.error(err);
+    document
+      .querySelector(".page")
+      .insertAdjacentHTML(
+        "afterbegin",
+        `<div class="card" style="border-color:#c0392b"><strong>โหลดข้อมูลจาก Firestore ไม่สำเร็จ:</strong> ${err.message}</div>`
+      );
+  });
