@@ -42,9 +42,10 @@ const patients = [
   { id: 'patient_002', fullName: 'นางสมหญิง พักผ่อนดี', hn: 'HN-000456', zone: 'out_area' },
   { id: 'patient_003', fullName: 'นายอนุชา ฟื้นตัวช้า', hn: 'HN-000789', zone: 'in_area' },
   { id: 'patient_004', fullName: 'นางสาวปราณี ใกล้บ้าน', hn: 'HN-000999', zone: 'in_area' },
+  { id: 'patient_005', fullName: 'นายวิชัย หายใจลำบาก', hn: 'HN-001111', zone: 'out_area' },
 ];
 
-// ---------- Referrals (สถานะครบทั้ง 4 แบบ ตาม status enum จริงของระบบ) ----------
+// ---------- Referrals (5 ตัวอย่าง ครอบคลุมสถานะครบทั้ง 4 แบบตาม status enum จริงของระบบ) ----------
 
 const referrals = [
   {
@@ -149,6 +150,28 @@ const referrals = [
     status: 'closed', // ปิดเคสแล้วหลังพยาบาลตัดสินใจ "ปิดเคส"
     closedAt: '2026-08-25T16:00:00+07:00',
     createdAt: '2026-07-01T08:30:00+07:00',
+  },
+  {
+    id: 'referral_005',
+    patientId: 'patient_005',
+    caseTypeId: 'ct_copd',
+    sourceType: 'ward',
+    sourceDetail: 'หอผู้ป่วยอายุรกรรมชาย 1',
+    createdBy: 'user_ward01',
+    rawNotes: 'ผู้ป่วย COPD เพิ่งจำหน่ายจากโรงพยาบาลเมื่อเช้านี้ หอบเหนื่อยง่าย อยู่นอกเขตพื้นที่รับผิดชอบ',
+    aiSummary: {
+      patientType: 'copd',
+      keyIssues: ['หอบเหนื่อยง่าย', 'อยู่นอกเขตพื้นที่ (out_area) ต้องประสาน รพ.สต. ในพื้นที่'],
+      riskSignals: ['ผู้ป่วยอาศัยคนเดียว'],
+    },
+    aiSummaryGeneratedAt: '2026-08-30T08:20:00+07:00',
+    confirmedSummary: null,
+    confirmedBy: null,
+    confirmedAt: null,
+    zone: 'out_area',
+    status: 'pending_review', // เพิ่งสร้างเคส ยังไม่ผ่านการยืนยันของพยาบาล
+    closedAt: null,
+    createdAt: '2026-08-30T08:00:00+07:00',
   },
 ];
 

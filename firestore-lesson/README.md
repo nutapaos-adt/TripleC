@@ -7,8 +7,8 @@
 
 | Collection | ใช้แทน | หมายเหตุ |
 |---|---|---|
-| `referrals` | เคส (entity หลัก) | field `status` ครบทั้ง 4 ค่า: `pending_review` → `plan_confirmed` → `in_progress` → `closed` |
-| `patients` | ผู้ป่วยที่ `referrals.patientId` อ้างอิง | ข้อมูลจำลอง 4 คน |
+| `referrals` | เคส (entity หลัก) | 5 ตัวอย่าง ครอบคลุม `status` ครบทั้ง 4 ค่า: `pending_review` → `plan_confirmed` → `in_progress` → `closed` |
+| `patients` | ผู้ป่วยที่ `referrals.patientId` อ้างอิง | ข้อมูลจำลอง 5 คน |
 | `caseTypes` | ประเภทเคสที่ `referrals.caseTypeId` อ้างอิง | Palliative Care / ผู้ป่วยติดเตียง / COPD ติดตามหลังจำหน่าย |
 | `users` | เจ้าหน้าที่/พยาบาลที่ `createdBy` / `confirmedBy` อ้างอิง | 1 ward staff, 1 nurse, 1 admin |
 
@@ -37,6 +37,7 @@
    ```
 
 4. ตรวจสอบผลลัพธ์ใน Firebase Console → **Firestore Database** → ควรเห็น 4 collections ตามตารางด้านบน
+   (collection `referrals` ควรมี 5 documents)
 
 ## บริบท / ที่มาของข้อมูล
 
