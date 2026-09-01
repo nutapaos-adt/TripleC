@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>รายละเอียดเคส — ProjectTripleC</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <a class="back-link" href="index.html">&larr; กลับหน้ารายการเคส</a>
+    </div>
+
+    <!-- Case header -->
+    <div class="card">
+      <div class="case-header">
+        <div>
+          <div class="case-id" id="case-id">referral_001</div>
+          <h1 id="patient-name">คุณสมชาย ใจดี</h1>
+        </div>
+        <span class="status-badge" id="status-badge"></span>
+      </div>
+
+      <div class="meta-grid">
+        <div class="meta-item">
+          <div class="label">ประเภทเคส</div>
+          <div class="value"><span class="badge badge-casetype" id="case-type">Palliative Care</span></div>
+        </div>
+        <div class="meta-item">
+          <div class="label">ส่งมาจาก</div>
+          <div class="value" id="source-type">หอผู้ป่วย (Ward)</div>
+        </div>
+        <div class="meta-item">
+          <div class="label">สร้างโดย</div>
+          <div class="value" id="created-by">พยาบาลวอร์ด — สมหญิง</div>
+        </div>
+        <div class="meta-item">
+          <div class="label">วันที่สร้าง</div>
+          <div class="value" id="created-at">1 ก.ย. 2569, 09:12</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status stepper -->
+    <div class="card">
+      <div class="stepper" id="stepper"></div>
+    </div>
+
+    <!-- AI draft summary -->
+    <div class="card">
+      <div class="section-title">
+        สรุปโดย AI
+        <span class="tag tag-ai">ร่าง — ยังไม่ยืนยัน</span>
+      </div>
+      <div class="summary-box summary-ai" id="ai-summary"></div>
+    </div>
+
+    <!-- Confirmed summary (nurse) -->
+    <div class="card">
+      <div class="section-title">
+        แผนดูแลที่ยืนยันแล้ว (พยาบาล)
+        <span class="tag tag-confirmed" id="confirmed-tag" hidden>ยืนยันแล้ว</span>
+      </div>
+
+      <div class="summary-box summary-confirmed">
+        <textarea id="confirmed-summary" placeholder="ยังไม่มีการยืนยัน — พยาบาลตรวจร่างจาก AI ด้านบน แก้ไขได้ที่นี่ก่อนกดยืนยัน"></textarea>
+      </div>
+      <div class="confirm-meta" id="confirm-meta"></div>
+
+      <div class="action-panel">
+        <div class="hint">
+          กฎ human-in-the-loop: ค่าจาก AI ด้านบนจะไม่ไหลเข้าสถานะเคสเอง ต้องให้พยาบาลตรวจ แก้ไขถ้าจำเป็น แล้วกดยืนยันเท่านั้น
+        </div>
+        <button class="btn btn-primary" id="confirm-btn">ยืนยันแผนดูแล</button>
+      </div>
+    </div>
+
+    <!-- Follow-up rounds -->
+    <div class="card" id="rounds-card" hidden>
+      <div class="section-title">รอบติดตาม (Follow-up rounds)</div>
+      <div class="round-list" id="round-list"></div>
+    </div>
+  </div>
+
+  <script type="module" src="js/referral-detail.js"></script>
+</body>
+</html>

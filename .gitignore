@@ -25,3 +25,7 @@ yarn-error.log
 # local clutter unrelated to this project — not part of the app
 /.obsidian
 /TripleC
+
+# Firestore lesson coursework — Firebase Admin SDK credentials, never commit
+/firestore-lesson/serviceAccountKey.json
+/firestore-lesson/node_modules

@@ -1,0 +1,13 @@
+{
+  "name": "triplec-firestore-lesson",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Seed script สำหรับสร้าง Firestore ตาม entity Referral ของ Triple C (งานส่งบทเรียน)",
+  "main": "seed.js",
+  "scripts": {
+    "seed": "node seed.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.0.0"
+  }
+}
