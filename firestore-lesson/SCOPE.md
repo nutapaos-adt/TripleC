@@ -16,6 +16,23 @@
 - สะท้อนกฎสำคัญของระบบต้นทาง (human-in-the-loop — ดู [ENTITY_CONTEXT.md](ENTITY_CONTEXT.md) ข้อ 1)
   ผ่านโครงสร้างข้อมูลได้ตรงที่สุด เพราะมีทั้งฟิลด์ "ร่างจาก AI" และ "ค่าที่พยาบาลยืนยันแล้ว" แยกกันชัดเจน
 
+## ตารางขอบเขต (9 ข้อ ตามคู่มือ RAISE Module 2)
+
+ตามรูปแบบจาก [คู่มือเลือกขอบเขตงาน](https://cnacha-mfu.github.io/raise2-module2/materials/shared/homework-scope-guide.html)
+(ตัวอย่างอ้างอิง LeaveEasy) — คอลัมน์ขวาสุดคือคำตอบของ Triple C (`Referral`):
+
+| | 🔧 ตัวอย่าง (LeaveEasy) | 👤 ของฉัน (Triple C — Referral) |
+|---|---|---|
+| 📁 โฟลเดอร์หลัก | `leaveRequests` | `referrals` |
+| 📁 โฟลเดอร์ประเภท | `leaveTypes` | `caseTypes` |
+| 📁 โฟลเดอร์ย่อย | `approvals` | `followUpPlans` (subcollection ใต้ `referrals/{id}` — กำหนดการติดตามที่เกิดจากเคสนั้น) |
+| ✏️ ช่องบอกว่าเป็นของใคร | `requesterId` · `requesterName` | `createdBy` (uid อ้างอิง `users`) · `createdByName` (ชื่อ denormalize ไว้แสดงผล) |
+| 🔀 สถานะทั้งหมด | รอพิจารณา · อนุมัติ · ไม่อนุมัติ | `pending_review` · `plan_confirmed` · `in_progress` · `closed` |
+| 👤 คนที่สร้างรายการ | พนักงาน | เจ้าหน้าที่หอผู้ป่วย/OPD/แผนกภายใน (role `ward_staff`) |
+| 👤 คนที่เปลี่ยนสถานะ | หัวหน้า | พยาบาล (role `home_visit_team`, ผ่าน `confirmed_by` / `nurse_decision`) |
+| 📝 ช่องข้อความยาวที่ AI จะอ่าน | `reason` | `rawNotes` (บันทึกดิบที่เจ้าหน้าที่พิมพ์ตอนรับเคส) |
+| 🤖 งานที่ AI ช่วย (สัปดาห์ที่ 8) | จัดประเภทการลาให้อัตโนมัติ | สรุปข้อมูลเคส/สัญญาณเสี่ยงเป็นร่าง (`aiSummary`) ให้พยาบาลตรวจสอบก่อนยืนยัน |
+
 ## อยู่ในขอบเขต
 
 - Collection `referrals` (entity หลักที่ทำ) พร้อมข้อมูลตัวอย่าง 5 รายการ ครอบคลุมสถานะครบ 4 ค่า
