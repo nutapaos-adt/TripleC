@@ -21,6 +21,11 @@
 ตามรูปแบบจาก [คู่มือเลือกขอบเขตงาน](https://cnacha-mfu.github.io/raise2-module2/materials/shared/homework-scope-guide.html)
 (ตัวอย่างอ้างอิง LeaveEasy) — คอลัมน์ขวาสุดคือคำตอบของ Triple C (`Referral`):
 
+![Firestore Console ของโปรเจกต์ตัวอย่าง LeaveEasy แสดง collection leaveRequests, leaveTypes, users และ document lr001 พร้อม subcollection approvals](screenshots/leaveeasy-reference-example.png)
+
+*ภาพอ้างอิง: โครงสร้างจริงของโปรเจกต์ตัวอย่าง `leaveeasy-nutapao` ที่อาจารย์ใช้สาธิตในคู่มือ — ใช้เทียบ
+กับคอลัมน์ "ตัวอย่าง (LeaveEasy)" ด้านล่าง*
+
 | | 🔧 ตัวอย่าง (LeaveEasy) | 👤 ของฉัน (Triple C — Referral) |
 |---|---|---|
 | 📁 โฟลเดอร์หลัก | `leaveRequests` | `referrals` |
