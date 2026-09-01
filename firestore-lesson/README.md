@@ -9,8 +9,8 @@
 |---|---|---|
 | `referrals` | เคส (entity หลัก) | 5 ตัวอย่าง ครอบคลุม `status` ครบทั้ง 4 ค่า: `pending_review` → `plan_confirmed` → `in_progress` → `closed` |
 | `patients` | ผู้ป่วยที่ `referrals.patientId` อ้างอิง | ข้อมูลจำลอง 5 คน |
-| `caseTypes` | ประเภทเคสที่ `referrals.caseTypeId` อ้างอิง | Palliative Care / ผู้ป่วยติดเตียง / COPD ติดตามหลังจำหน่าย |
-| `users` | เจ้าหน้าที่/พยาบาลที่ `createdBy` / `confirmedBy` อ้างอิง | 1 ward staff, 1 nurse, 1 admin |
+| `caseTypes` | ประเภทเคสที่ `referrals.caseTypeId` อ้างอิง | 5 ประเภท: Palliative Care / ผู้ป่วยติดเตียง / COPD / โรคหลอดเลือดสมอง / แผลเบาหวาน |
+| `users` | เจ้าหน้าที่/พยาบาลที่ `createdBy` / `confirmedBy` อ้างอิง | 5 คน: 2 ward staff, 2 nurse (home_visit_team), 1 admin |
 
 ค่า `status` เริ่มต้นคือ `pending_review` (ยังไม่ผ่านพยาบาล) และเปลี่ยนได้เฉพาะพยาบาลเป็นคนกดยืนยัน —
 ตรงกับกฎ human-in-the-loop ของระบบจริง (AI สร้างได้แค่ `aiSummary`/`aiSummary...`, ต้องพยาบาลกดยืนยันก่อน

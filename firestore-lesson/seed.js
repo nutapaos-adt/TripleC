@@ -29,12 +29,16 @@ const users = [
   { id: 'user_ward01', name: 'พยาบาลสมศรี ใจดี', role: 'ward_staff', department: 'หอผู้ป่วยอายุรกรรม' },
   { id: 'user_nurse01', name: 'พยาบาลวิภา ติดตามผล', role: 'home_visit_team', department: 'ทีมเยี่ยมบ้าน' },
   { id: 'user_admin01', name: 'แอดมิน ระบบดี', role: 'admin', department: 'IT' },
+  { id: 'user_ward02', name: 'พยาบาลนภา ส่งต่อดี', role: 'ward_staff', department: 'OPD อายุรกรรม' },
+  { id: 'user_nurse02', name: 'พยาบาลสุดา เยี่ยมบ้านไว', role: 'home_visit_team', department: 'ทีมเยี่ยมบ้าน' },
 ];
 
 const caseTypes = [
   { id: 'ct_palliative', name: 'Palliative Care', slug: 'palliative-care', isActive: true },
   { id: 'ct_bedridden', name: 'ผู้ป่วยติดเตียง', slug: 'bedridden', isActive: true },
   { id: 'ct_copd', name: 'COPD ติดตามหลังจำหน่าย', slug: 'copd-followup', isActive: true },
+  { id: 'ct_stroke', name: 'ผู้ป่วยโรคหลอดเลือดสมอง', slug: 'stroke-followup', isActive: true },
+  { id: 'ct_dm_wound', name: 'แผลเบาหวาน', slug: 'diabetic-wound-care', isActive: true },
 ];
 
 const patients = [
