@@ -39,6 +39,10 @@
 4. ตรวจสอบผลลัพธ์ใน Firebase Console → **Firestore Database** → ควรเห็น 4 collections ตามตารางด้านบน
    (collection `referrals` ควรมี 5 documents)
 
+## ขอบเขตงาน
+
+ดู [SCOPE.md](SCOPE.md) — บอกว่าเลือกทำ entity ไหนของระบบ ทำไมถึงเลือก และอะไรอยู่/ไม่อยู่ในขอบเขต
+
 ## บริบท / ที่มาของข้อมูล
 
 ดู [ENTITY_CONTEXT.md](ENTITY_CONTEXT.md) — อธิบายว่า entity นี้มาจากไหน โครงสร้างเดิมก่อนแปลงเป็น
