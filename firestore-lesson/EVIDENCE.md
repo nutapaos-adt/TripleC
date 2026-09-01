@@ -5,7 +5,7 @@
 
 ## Firestore Console — collection `referrals`
 
-![Firestore Console แสดง collection referrals พร้อม document referral_001 ถึง referral_005](screenshots/firestore-console-referrals.png)
+![Firestore Console แสดง collection referrals พร้อม document referral_001 ถึง referral_005](docs/firestore-console-referrals.png)
 
 - **Project:** `triplec-a5e75` (Firebase project จริง, mode: `(default)` Native mode)
 - **Path:** Cloud Firestore → Database → Data
@@ -30,10 +30,10 @@
 
 **แก้ไขค่าใน Firebase Console:**
 
-![แก้ไขฟิลด์ patients/patient_001.fullName ใน Firebase Console เป็น "นายสมชาย ใจดีที่สุด (แก้)"](screenshots/firestore-console-edit-patient-fullname.png)
+![แก้ไขฟิลด์ patients/patient_001.fullName ใน Firebase Console เป็น "นายสมชาย ใจดีที่สุด (แก้)"](docs/firestore-console-edit-patient-fullname.png)
 
 **กด F5 ที่หน้าเว็บ — ข้อความเปลี่ยนตามทันที:**
 
-![หน้า referral-detail.html หลังกด F5 แสดงชื่อผู้ป่วยที่อัปเดตแล้ว "นายสมชาย ใจดีที่สุด (แก้)"](screenshots/web-page-after-refresh.png)
+![หน้า referral-detail.html หลังกด F5 แสดงชื่อผู้ป่วยที่อัปเดตแล้ว "นายสมชาย ใจดีที่สุด (แก้)"](docs/web-page-after-refresh.png)
 
 ยืนยันว่าหน้าเว็บไม่ได้ผูกกับ mock data แต่ query ข้อมูลจริงจาก Firestore ทุกครั้งที่โหลดหน้า
