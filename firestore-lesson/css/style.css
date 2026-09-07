@@ -408,6 +408,12 @@ body {
   white-space: pre-wrap;
 }
 
+.summary-raw {
+  border: 1.5px solid var(--color-border);
+  background: #f9fafb;
+  color: var(--color-text);
+}
+
 .summary-ai {
   border: 1.5px dashed var(--color-border);
   background: #fafafa;
