@@ -26,6 +26,11 @@ onAuthStateChanged(auth, (user) => {
   if (user) location.replace(nextUrl());
 });
 
+if (new URLSearchParams(location.search).get("error") === "no-profile") {
+  el.error.textContent = "บัญชีนี้ยังไม่มีข้อมูลโปรไฟล์ผู้ใช้ กรุณาลงทะเบียนใหม่หรือติดต่อแอดมิน";
+  el.error.hidden = false;
+}
+
 el.form.addEventListener("submit", async (event) => {
   event.preventDefault();
   el.error.hidden = true;

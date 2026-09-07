@@ -1,8 +1,15 @@
 # ACL — สิทธิ์การเข้าถึงตามบทบาท (Referral / firestore-lesson)
 
-บทบาท (`role`) มาจาก **Firebase Auth custom claim** ที่ตั้งค่าโดย `setup-users.js` (Admin SDK) เท่านั้น —
-ไม่ใช่ฟิลด์ใน Firestore ที่ผู้ใช้แก้เองได้ ทุกกฎด้านล่างบังคับใช้จริงสองชั้น: (1) UI ซ่อน/ปิดปุ่มที่ทำไม่ได้
-(2) `firestore.rules` ปฏิเสธคำขอที่ฝ่าฝืนกฎ แม้ผู้ใช้จะพยายามเรียก Firestore ตรง ๆ ผ่าน console ก็ตาม
+บทบาท (`role`) เก็บอยู่ใน **เอกสาร `users/{uid}` ของผู้ใช้เอง** ใน Firestore ไม่ใช่ Firebase Auth custom
+claim (custom claim ตั้งจากฝั่ง client เองไม่ได้ ต้องผ่าน Admin SDK เท่านั้น ซึ่งจะทำให้ผู้ใช้สมัครสมาชิกเอง
+ไม่ได้เลยถ้าไม่มี Cloud Functions) — สมัครสมาชิกเองได้ที่ `register.html` แต่**เลือกได้เฉพาะ `ward_staff`
+หรือ `home_visit_team` เท่านั้น** (`firestore.rules` ปฏิเสธถ้าพยายามส่ง `role: 'admin'` ตอนสมัคร) บัญชี
+`admin` สร้างได้ทางเดียวคือรันสคริปต์ `setup-users.js` ด้วย Admin SDK เท่านั้น (ดู README.md) และหลังสมัคร
+เสร็จ ผู้ใช้จะแก้ไขเอกสาร `users/{uid}` ของตัวเองอีกไม่ได้เลย (แก้ได้เฉพาะ admin) — ป้องกันไม่ให้ใครยกระดับ
+สิทธิ์ตัวเองภายหลัง
+
+ทุกกฎด้านล่างบังคับใช้จริงสองชั้น: (1) UI ซ่อน/ปิดปุ่มที่ทำไม่ได้ (2) `firestore.rules` ปฏิเสธคำขอที่ฝ่าฝืน
+กฎ แม้ผู้ใช้จะพยายามเรียก Firestore ตรง ๆ ผ่าน console ก็ตาม
 
 ## ตารางสิทธิ์
 
@@ -26,7 +33,9 @@
 | กฎ | UI (`js/*.js`) | Firestore Rules (`firestore.rules`) |
 |---|---|---|
 | ต้องล็อกอินก่อนอ่าน/เขียนทุกครั้ง | `requireLogin()` ใน `session.js` เรียกก่อนทุกหน้า | `isSignedIn()` เป็นเงื่อนไขแรกของทุก `allow` |
-| ward_staff เห็นเฉพาะเคสตัวเอง | `referrals-list.js` เติม `where('createdBy','==',uid)` ในคิว | กฎ `read` ของ `/referrals/{id}` เช็ค `role() == 'ward_staff' && isOwner(resource.data)` |
+| สมัครสมาชิกเองได้เฉพาะ ward_staff/home_visit_team ห้าม admin | `register.html` มีตัวเลือก role แค่ 2 ค่านี้ในฟอร์ม | กฎ `create` ของ `/users/{userId}` เช็ค `role in ['ward_staff','home_visit_team']` และ `request.auth.uid == userId` |
+| แก้ไข role ตัวเองภายหลังไม่ได้ | ไม่มีหน้า "แก้ไขโปรไฟล์" ให้ผู้ใช้ทั่วไป | กฎ `update`/`delete` ของ `/users/{userId}` ต้อง `myRole() == 'admin'` เท่านั้น |
+| ward_staff เห็นเฉพาะเคสตัวเอง | `referrals-list.js` เติม `where('createdBy','==',uid)` ในคิว | กฎ `read` ของ `/referrals/{id}` เช็ค `myRole() == 'ward_staff' && isOwner(resource.data)` |
 | ห้ามอนุมัติของตัวเอง | `referral-detail.js` → `canConfirm()` ซ่อนปุ่มยืนยัน | กฎ `update` ของ `/referrals/{id}` เช็ค `!isOwner(resource.data)` — ไม่มีข้อยกเว้นแม้ role admin |
 | แก้ได้เฉพาะช่องสถานะ | ฟอร์มไม่มีช่องแก้ไขข้อมูลเคสอื่นเลย มีแต่ปุ่มเปลี่ยนสถานะ | `request.resource.data.diff(resource.data).affectedKeys().hasOnly([...])` จำกัดคีย์ที่แก้ได้ |
 | ลบต้องยืนยันก่อน | `confirm()` dialog ใน `onDelete()` | กฎ `delete` จำกัดว่าใครลบได้ (ดูตารางด้านบน) — ไม่เกี่ยวกับ dialog ฝั่ง UI |
@@ -36,3 +45,5 @@
 - ward_staff พยายามอ่านเคสของคนอื่นตรง ๆ ผ่าน `getDoc()` → `permission-denied`
 - admin สร้างเคสแล้วพยายามยืนยันเคสของตัวเองทันที → `permission-denied`
 - ผู้ใช้ที่ไม่ได้ล็อกอิน (`auth.currentUser === null`) พยายามอ่านเคสใด ๆ → `permission-denied`
+- สมัครสมาชิกผ่าน `register.html` แล้วพยายามเขียน `role: 'admin'` ลงในเอกสารโปรไฟล์ตัวเองตรง ๆ ผ่าน
+  `setDoc()` → `permission-denied` (ปิดช่องยกระดับสิทธิ์ตัวเองตอนสมัคร)

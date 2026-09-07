@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ลงทะเบียน — ProjectTripleC</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="page page-narrow">
+    <div class="card login-card">
+      <h1>ลงทะเบียนบัญชีใหม่</h1>
+      <p class="login-subtitle">
+        เลือกได้เฉพาะบทบาทเจ้าหน้าที่หอผู้ป่วยหรือพยาบาลทีมเยี่ยมบ้าน — บัญชีแอดมินสร้างแยกต่างหาก
+      </p>
+
+      <form id="register-form">
+        <label class="field">
+          <span>ชื่อ-นามสกุล</span>
+          <input type="text" id="name" required />
+        </label>
+        <label class="field">
+          <span>อีเมล</span>
+          <input type="email" id="email" required autocomplete="username" />
+        </label>
+        <label class="field">
+          <span>บทบาท</span>
+          <select id="role" required>
+            <option value="ward_staff">เจ้าหน้าที่หอผู้ป่วย (ward_staff)</option>
+            <option value="home_visit_team">พยาบาลทีมเยี่ยมบ้าน (home_visit_team)</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>รหัสผ่าน (อย่างน้อย 6 ตัวอักษร)</span>
+          <input type="password" id="password" required minlength="6" autocomplete="new-password" />
+        </label>
+        <label class="field">
+          <span>ยืนยันรหัสผ่าน</span>
+          <input type="password" id="password-confirm" required minlength="6" autocomplete="new-password" />
+        </label>
+
+        <div class="form-error" id="form-error" hidden></div>
+        <button class="btn btn-primary" type="submit" id="submit-btn">สร้างบัญชี</button>
+      </form>
+
+      <p class="login-subtitle" style="margin:16px 0 0">
+        มีบัญชีอยู่แล้ว? <a href="login.html">เข้าสู่ระบบ</a>
+      </p>
+    </div>
+  </div>
+
+  <script type="module" src="js/register.js"></script>
+</body>
+</html>

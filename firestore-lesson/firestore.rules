@@ -4,8 +4,12 @@ rules_version = '2';
 // Baseline (non-negotiable): every read and every write requires being signed in —
 // there is no rule anywhere below that grants access to `request.auth == null`.
 //
-// Role is read from the Firebase Auth custom claim `role` (set via the Admin SDK —
-// see setup-users.js), not from a Firestore document, so it can't be forged by a client.
+// Role lives in the signed-in user's own `users/{uid}` document, NOT a Firebase Auth
+// custom claim — custom claims can only be set via the Admin SDK, which would make
+// self-service registration impossible (no Cloud Functions in this project). A user
+// may create their OWN `users/{uid}` doc at signup, but only with role `ward_staff` or
+// `home_visit_team` (never `admin` — see the `/users/{userId}` rules below), and can
+// never update it afterwards; only an existing admin can promote/edit a profile.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -13,30 +17,47 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function role() {
-      return request.auth.token.role;
+    // Reads the caller's own role from their `users/{uid}` profile doc. If the doc
+    // doesn't exist yet (e.g. mid-registration), `get()` fails and every rule using
+    // this evaluates to false — a user with no profile is denied everywhere, which
+    // is the correct default.
+    function myRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
     }
 
     function isOwner(data) {
       return data.createdBy == request.auth.uid;
     }
 
-    // Reference collections (patients, caseTypes, users): readable by any signed-in
-    // user (needed to resolve names/labels shown on referrals), writable only by admin.
+    // Reference collections (patients, caseTypes): readable by any signed-in user
+    // (needed to resolve names/labels shown on referrals), writable only by admin —
+    // except `patients`, which ward_staff/admin can also create (new referral's patient).
     match /patients/{patientId} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn() && role() in ['ward_staff', 'admin'];
-      allow update, delete: if isSignedIn() && role() == 'admin';
+      allow create: if isSignedIn() && myRole() in ['ward_staff', 'admin'];
+      allow update, delete: if isSignedIn() && myRole() == 'admin';
     }
 
     match /caseTypes/{caseTypeId} {
       allow read: if isSignedIn();
-      allow write: if isSignedIn() && role() == 'admin';
+      allow write: if isSignedIn() && myRole() == 'admin';
     }
 
+    // User profiles. Anyone signed in can read (needed to resolve display names).
+    // Self-registration creates exactly one doc, for yourself, with a non-admin role
+    // and no other fields — this is the only way a `role` ever gets set without going
+    // through setup-users.js (Admin SDK, used for the admin account only).
     match /users/{userId} {
       allow read: if isSignedIn();
-      allow write: if isSignedIn() && role() == 'admin';
+
+      allow create: if isSignedIn()
+        && request.auth.uid == userId
+        && request.resource.data.role in ['ward_staff', 'home_visit_team']
+        && request.resource.data.keys().hasOnly(['name', 'role', 'email']);
+
+      // No self-service updates (that would let a user re-write their own role) —
+      // only an existing admin may edit or delete a profile after creation.
+      allow update, delete: if isSignedIn() && myRole() == 'admin';
     }
 
     // Referrals (the case/entity this homework is built around).
@@ -45,12 +66,12 @@ service cloud.firestore {
       // on createdBy == uid to match this (Firestore rejects the whole `list`
       // request otherwise; rules are not a post-query filter).
       allow read: if isSignedIn() && (
-        role() in ['home_visit_team', 'admin'] ||
-        (role() == 'ward_staff' && isOwner(resource.data))
+        myRole() in ['home_visit_team', 'admin'] ||
+        (myRole() == 'ward_staff' && isOwner(resource.data))
       );
 
       allow create: if isSignedIn()
-        && role() in ['ward_staff', 'admin']
+        && myRole() in ['ward_staff', 'admin']
         && isOwner(request.resource.data)
         && request.resource.data.status == 'pending_review'
         && request.resource.data.confirmedBy == null;
@@ -59,7 +80,7 @@ service cloud.firestore {
       // touch status-related fields, nothing else — and never by the case's own
       // creator, no exceptions (no self-approval, not even for admin).
       allow update: if isSignedIn()
-        && role() in ['admin', 'home_visit_team']
+        && myRole() in ['admin', 'home_visit_team']
         && !isOwner(resource.data)
         && request.resource.data.diff(resource.data).affectedKeys()
              .hasOnly(['status', 'confirmedSummary', 'confirmedBy', 'confirmedAt', 'closedAt']);
@@ -67,8 +88,8 @@ service cloud.firestore {
       // Delete: admin any time, or the ward_staff creator retracting their own
       // case before a nurse has acted on it.
       allow delete: if isSignedIn() && (
-        role() == 'admin' ||
-        (role() == 'ward_staff' && isOwner(resource.data) && resource.data.status == 'pending_review')
+        myRole() == 'admin' ||
+        (myRole() == 'ward_staff' && isOwner(resource.data) && resource.data.status == 'pending_review')
       );
     }
   }
