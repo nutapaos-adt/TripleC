@@ -196,6 +196,24 @@
     gap:var(--space-6);
     margin-bottom:var(--space-6);
   }
+  .raw-notes-box{
+    background:var(--color-surface);
+    border:1px solid var(--color-neutral-200);
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-sm);
+    padding:var(--space-5) var(--space-6);
+    margin-bottom:var(--space-6);
+  }
+  .raw-notes-box .lbl{color:var(--color-neutral-500);font-size:13px;margin-bottom:var(--space-2);display:block;}
+  .raw-notes-box .note-text{
+    background:var(--color-neutral-100);
+    border-radius:var(--radius-md);
+    padding:var(--space-4);
+    font-size:14px;
+    white-space:pre-line;
+    color:var(--color-neutral-900);
+  }
+  .raw-notes-box .hint{color:var(--color-neutral-500);font-size:12.5px;margin-top:var(--space-2);}
   .patient-strip .name-block strong{font-size:18px;color:var(--color-neutral-900);}
   .patient-strip .name-block .hn{
     color:var(--color-neutral-500);
@@ -563,6 +581,13 @@
         <span class="chip chip-risk">พบสัญญาณเสี่ยง</span>
       </div>
     </section>
+
+    <!-- Raw notes from origin — compare against the AI draft below -->
+    <div class="raw-notes-box" aria-label="ข้อมูลต้นทางก่อน AI สรุป">
+      <span class="lbl">ข้อมูลต้นทาง (บันทึกดิบก่อน AI สรุป)</span>
+      <div class="note-text">ผู้ป่วยระยะท้าย ปวดจากมะเร็งระยะท้าย ต้องการอุปกรณ์ทางการแพทย์ที่บ้าน ผู้ดูแลหลักมีคนเดียว</div>
+      <p class="hint">เทียบกับร่างจาก AI ด้านล่าง เพื่อตรวจว่า AI สรุปครบถ้วนและตรงกับข้อมูลที่ส่งเข้ามาจริงหรือไม่</p>
+    </div>
 
     <!-- ============ AI DRAFT BOX (editable) ============ -->
     <div class="section-title">
