@@ -1,13 +1,16 @@
 /**
- * One-off admin script: creates the 3 demo Firebase Auth accounts used to grade this
- * homework (one per role) and sets the `role` custom claim Firestore Security Rules
- * read via `request.auth.token.role`. Also writes a matching `users/{uid}` Firestore
- * doc so the UI can show a display name.
+ * One-off admin script: provisions a single `admin` account. This is the ONLY way to
+ * get an admin account — self-registration (register.html) only ever allows
+ * `ward_staff` or `home_visit_team` (see the `create` rule on /users/{userId} in
+ * firestore.rules). ward_staff/home_visit_team accounts should just use
+ * register.html instead of this script.
  *
- * Run once after `npm install` (needs serviceAccountKey.json — see README.md):
- *   node setup-users.js
+ * Credentials are read from environment variables, never hardcoded/committed:
  *
- * Safe to re-run: existing accounts are updated in place rather than duplicated.
+ *   ADMIN_EMAIL=you@example.com ADMIN_PASSWORD=... ADMIN_NAME="Your Name" node setup-users.js
+ *
+ * Needs serviceAccountKey.json in this folder (see README.md). Safe to re-run: an
+ * existing account with the same email is updated in place rather than duplicated.
  */
 
 const admin = require('firebase-admin');
@@ -19,13 +22,17 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
-const DEMO_USERS = [
-  { email: 'ward1@triplec.demo', password: 'Ward@1234', name: 'พยาบาลสมศรี ใจดี (ward_staff)', role: 'ward_staff' },
-  { email: 'nurse1@triplec.demo', password: 'Nurse@1234', name: 'พยาบาลวิภา ติดตามผล (home_visit_team)', role: 'home_visit_team' },
-  { email: 'admin1@triplec.demo', password: 'Admin@1234', name: 'แอดมิน ระบบดี (admin)', role: 'admin' },
-];
+const email = process.env.ADMIN_EMAIL;
+const password = process.env.ADMIN_PASSWORD;
+const name = process.env.ADMIN_NAME || 'Admin';
 
-async function upsertUser({ email, password, name, role }) {
+if (!email || !password) {
+  console.error('Set ADMIN_EMAIL and ADMIN_PASSWORD environment variables first, e.g.:');
+  console.error('  ADMIN_EMAIL=you@example.com ADMIN_PASSWORD=... node setup-users.js');
+  process.exit(1);
+}
+
+async function main() {
   let user;
   try {
     user = await admin.auth().getUserByEmail(email);
@@ -35,18 +42,11 @@ async function upsertUser({ email, password, name, role }) {
     user = await admin.auth().createUser({ email, password, displayName: name });
   }
 
-  await admin.auth().setCustomUserClaims(user.uid, { role, name });
-  await db.collection('users').doc(user.uid).set({ name, role, email });
+  // Admin SDK writes bypass firestore.rules entirely, so this is the one place a
+  // `role: 'admin'` document can legitimately be created.
+  await db.collection('users').doc(user.uid).set({ name, role: 'admin', email });
 
-  console.log(`  ✔ ${role.padEnd(16)} ${email}  (uid: ${user.uid})`);
-}
-
-async function main() {
-  console.log('Provisioning demo accounts for Triple C week7 homework...');
-  for (const demoUser of DEMO_USERS) {
-    await upsertUser(demoUser);
-  }
-  console.log('Done. Sign-in credentials are listed in README.md.');
+  console.log(`✔ admin account ready: ${email}  (uid: ${user.uid})`);
   process.exit(0);
 }
 

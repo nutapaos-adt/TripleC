@@ -1,8 +1,9 @@
-// Shared auth/session helpers used by every page except login.html.
+// Shared auth/session helpers used by every page except login.html/register.html.
 // Every page that reads or writes Firestore must go through requireLogin() first —
 // this is the client-side half of "ต้องล็อกอินก่อนอ่านหรือเขียน" (the other half is firestore.rules).
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
-import { auth } from "./firebase-config.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+import { auth, db } from "./firebase-config.js";
 
 export const ROLE_TEXT = {
   ward_staff: "เจ้าหน้าที่หอผู้ป่วย",
@@ -13,6 +14,9 @@ export const ROLE_TEXT = {
 /**
  * Resolves once with the signed-in user + role, or redirects to login.html
  * (preserving the current page as ?next=) if nobody is signed in.
+ *
+ * Role comes from the user's own `users/{uid}` Firestore doc, not a Firebase Auth
+ * custom claim — see the comment at the top of firestore.rules for why.
  */
 export function requireLogin() {
   return new Promise((resolve) => {
@@ -22,9 +26,18 @@ export function requireLogin() {
         location.replace(`login.html?next=${next}`);
         return;
       }
-      const tokenResult = await user.getIdTokenResult();
-      const role = tokenResult.claims.role ?? null;
-      resolve({ user, role, name: tokenResult.claims.name ?? user.email });
+
+      const profileSnap = await getDoc(doc(db, "users", user.uid));
+      if (!profileSnap.exists()) {
+        // Signed-up in Auth but the profile write never landed — nothing in this
+        // app can do anything useful without a role, so bounce back to login.
+        await signOut(auth);
+        location.replace("login.html?error=no-profile");
+        return;
+      }
+
+      const profile = profileSnap.data();
+      resolve({ user, role: profile.role, name: profile.name ?? user.email });
     });
   });
 }

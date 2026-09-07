@@ -7,26 +7,25 @@
 ผ่านการล็อกอิน + สิทธิ์ตามบทบาท — ดู [ACL.md](ACL.md) สำหรับตารางสิทธิ์เต็ม และ [CLAUDE.md](CLAUDE.md)
 สำหรับภาพรวมทางเทคนิค
 
-## เข้าสู่ระบบทดสอบ (บัญชีสาธิต 3 บทบาท)
+## เข้าสู่ระบบ
 
-| บทบาท | อีเมล | รหัสผ่าน |
-|---|---|---|
-| ward_staff (เจ้าหน้าที่หอผู้ป่วย) | `ward1@triplec.demo` | `Ward@1234` |
-| home_visit_team (พยาบาลทีมเยี่ยมบ้าน) | `nurse1@triplec.demo` | `Nurse@1234` |
-| admin | `admin1@triplec.demo` | `Admin@1234` |
+**สมัครสมาชิกได้เองที่หน้า [login.html](https://triplec-a5e75.web.app/login.html) → "ลงทะเบียน"** — เลือก
+บทบาทได้เฉพาะ `ward_staff` (เจ้าหน้าที่หอผู้ป่วย) หรือ `home_visit_team` (พยาบาลทีมเยี่ยมบ้าน) เท่านั้น
 
-บัญชีเหล่านี้สร้างล่วงหน้าด้วย `setup-users.js` (ไม่มีระบบสมัครสมาชิกสาธารณะ) — รหัสผ่านเป็นข้อมูลสาธิต
-สำหรับตรวจงานเท่านั้น ไม่ใช่บัญชีจริง
+บัญชี **admin** ไม่มีระบบสมัครสมาชิกสาธารณะ (ป้องกันการยกระดับสิทธิ์ตัวเอง) — สร้างได้ทางเดียวคือรัน
+`setup-users.js` ด้วยอีเมล/รหัสผ่านของคุณเอง (ดูขั้นตอนด้านล่าง) ไม่มีรหัสผ่านตัวอย่างใด ๆ เผยแพร่ในเอกสารนี้
 
 ## ฟีเจอร์ (อัปเดตสัปดาห์ที่ 7)
 
-- **ล็อกอินด้วย Firebase Authentication (Email/Password)** — ทุกหน้าบังคับล็อกอินก่อนอ่าน/เขียน Firestore
+- **ลงทะเบียน/ล็อกอินด้วย Firebase Authentication (Email/Password)** — ทุกหน้าบังคับล็อกอินก่อนอ่าน/เขียน
+  Firestore; สมัครสมาชิกเองได้ที่ `register.html` (จำกัดบทบาทที่เลือกได้ ดูด้านบน)
 - **เพิ่มเคสใหม่** (`referral-create.html`) — เขียนลง Firestore จริง สถานะเริ่มต้น `pending_review` เสมอ
 - **แก้สถานะเคส** (ยืนยันแผนดูแล / เปลี่ยนสถานะรอบติดตาม) — เขียนกลับ Firestore จริง ปิดเบราว์เซอร์แล้ว
   เปิดใหม่ข้อมูลยังอยู่ (ต่างจากเวอร์ชันสัปดาห์ที่ 6 ที่แค่ mutate ตัวแปรในหน่วยความจำ)
 - **ลบเคส** พร้อม dialog ยืนยันก่อนลบเสมอ
-- **เมนู/ปุ่มเปลี่ยนตามบทบาทจริง** ของผู้ใช้ที่ล็อกอินอยู่ (อ่านจาก Firebase Auth custom claim `role`)
-- **Firestore Security Rules** (`firestore.rules`) บังคับกฎ ACL จริงฝั่งเซิร์ฟเวอร์ ไม่ใช่แค่ซ่อนปุ่มฝั่ง UI
+- **เมนู/ปุ่มเปลี่ยนตามบทบาทจริง** ของผู้ใช้ที่ล็อกอินอยู่ (อ่านจากเอกสาร `users/{uid}` ของผู้ใช้เองใน Firestore)
+- **Firestore Security Rules** (`firestore.rules`) บังคับกฎ ACL จริงฝั่งเซิร์ฟเวอร์ ไม่ใช่แค่ซ่อนปุ่มฝั่ง UI —
+  รวมถึงกันไม่ให้ผู้สมัครสมาชิกเองตั้ง role เป็น `admin`
 
 ## Collections ที่จะถูกสร้าง
 
@@ -54,20 +53,27 @@
 3. เปิด **Authentication → Sign-in method** ใน Firebase Console แล้วเปิดใช้งาน **Email/Password** (ขั้นตอน
    นี้ทำครั้งเดียว ทำผ่าน Console เท่านั้น ไม่มี API ให้ทำอัตโนมัติ)
 
-4. รัน seed ข้อมูลตัวอย่าง + สร้างบัญชีสาธิต 3 บทบาท:
+4. รัน seed ข้อมูลตัวอย่าง:
 
    ```bash
    npm run seed
-   npm run setup-users
    ```
 
-5. รันเว็บในเครื่อง:
+5. สร้างบัญชี **admin** ของคุณเอง (อีเมล/รหัสผ่านกำหนดเองผ่าน environment variable — ไม่ hardcode/commit):
+
+   ```bash
+   ADMIN_EMAIL=you@example.com ADMIN_PASSWORD=yourpassword ADMIN_NAME="Your Name" npm run setup-users
+   ```
+
+   บัญชี `ward_staff`/`home_visit_team` ไม่ต้องใช้สคริปต์นี้ — สมัครเองได้ที่หน้า `register.html`
+
+6. รันเว็บในเครื่อง:
 
    ```bash
    powershell -File server.ps1   # http://localhost:8080
    ```
 
-6. Deploy ขึ้น Firebase Hosting พร้อม Security Rules **ในรอบเดียว** (ห้าม deploy hosting โดยไม่มี rules):
+7. Deploy ขึ้น Firebase Hosting พร้อม Security Rules **ในรอบเดียว** (ห้าม deploy hosting โดยไม่มี rules):
 
    ```bash
    firebase deploy --only hosting,firestore:rules
