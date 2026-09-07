@@ -1,22 +1,43 @@
-# Firestore seed — Triple C "Referral" (งานส่งบทเรียน)
+# Firestore lesson/homework — Triple C "Referral" (งานส่งบทเรียนสัปดาห์ที่ 6-7)
+
+**เว็บออนไลน์: https://triplec-a5e75.web.app**
 
 โฟลเดอร์นี้แปลง entity **Referral** ของโปรเจกต์ Triple C (ดู `app/Models/Referral.php` และ
-`database/migrations` ในต้นฉบับ) ให้เป็น Firestore collections พร้อมข้อมูลตัวอย่าง สำหรับส่งงานบทเรียน
+`database/migrations` ในต้นฉบับ) ให้เป็น Firestore collections พร้อมเว็บแอปเพิ่ม/แก้สถานะ/ลบเคสได้จริง
+ผ่านการล็อกอิน + สิทธิ์ตามบทบาท — ดู [ACL.md](ACL.md) สำหรับตารางสิทธิ์เต็ม และ [CLAUDE.md](CLAUDE.md)
+สำหรับภาพรวมทางเทคนิค
+
+## เข้าสู่ระบบทดสอบ (บัญชีสาธิต 3 บทบาท)
+
+| บทบาท | อีเมล | รหัสผ่าน |
+|---|---|---|
+| ward_staff (เจ้าหน้าที่หอผู้ป่วย) | `ward1@triplec.demo` | `Ward@1234` |
+| home_visit_team (พยาบาลทีมเยี่ยมบ้าน) | `nurse1@triplec.demo` | `Nurse@1234` |
+| admin | `admin1@triplec.demo` | `Admin@1234` |
+
+บัญชีเหล่านี้สร้างล่วงหน้าด้วย `setup-users.js` (ไม่มีระบบสมัครสมาชิกสาธารณะ) — รหัสผ่านเป็นข้อมูลสาธิต
+สำหรับตรวจงานเท่านั้น ไม่ใช่บัญชีจริง
+
+## ฟีเจอร์ (อัปเดตสัปดาห์ที่ 7)
+
+- **ล็อกอินด้วย Firebase Authentication (Email/Password)** — ทุกหน้าบังคับล็อกอินก่อนอ่าน/เขียน Firestore
+- **เพิ่มเคสใหม่** (`referral-create.html`) — เขียนลง Firestore จริง สถานะเริ่มต้น `pending_review` เสมอ
+- **แก้สถานะเคส** (ยืนยันแผนดูแล / เปลี่ยนสถานะรอบติดตาม) — เขียนกลับ Firestore จริง ปิดเบราว์เซอร์แล้ว
+  เปิดใหม่ข้อมูลยังอยู่ (ต่างจากเวอร์ชันสัปดาห์ที่ 6 ที่แค่ mutate ตัวแปรในหน่วยความจำ)
+- **ลบเคส** พร้อม dialog ยืนยันก่อนลบเสมอ
+- **เมนู/ปุ่มเปลี่ยนตามบทบาทจริง** ของผู้ใช้ที่ล็อกอินอยู่ (อ่านจาก Firebase Auth custom claim `role`)
+- **Firestore Security Rules** (`firestore.rules`) บังคับกฎ ACL จริงฝั่งเซิร์ฟเวอร์ ไม่ใช่แค่ซ่อนปุ่มฝั่ง UI
 
 ## Collections ที่จะถูกสร้าง
 
 | Collection | ใช้แทน | หมายเหตุ |
 |---|---|---|
-| `referrals` | เคส (entity หลัก) | 5 ตัวอย่าง ครอบคลุม `status` ครบทั้ง 4 ค่า: `pending_review` → `plan_confirmed` → `in_progress` → `closed` |
-| `patients` | ผู้ป่วยที่ `referrals.patientId` อ้างอิง | ข้อมูลจำลอง 5 คน |
+| `referrals` | เคส (entity หลัก) | เริ่มต้นด้วยข้อมูลตัวอย่าง 5 รายการจาก `seed.js` ครอบคลุม `status` ครบทั้ง 4 ค่า — เพิ่มเติมได้จากหน้าเว็บ |
+| `patients` | ผู้ป่วยที่ `referrals.patientId` อ้างอิง | ข้อมูลจำลอง 5 คน + ที่สร้างใหม่จากฟอร์ม |
 | `caseTypes` | ประเภทเคสที่ `referrals.caseTypeId` อ้างอิง | 5 ประเภท: Palliative Care / ผู้ป่วยติดเตียง / COPD / โรคหลอดเลือดสมอง / แผลเบาหวาน |
-| `users` | เจ้าหน้าที่/พยาบาลที่ `createdBy` / `confirmedBy` อ้างอิง | 5 คน: 2 ward staff, 2 nurse (home_visit_team), 1 admin |
+| `users` | เจ้าหน้าที่/พยาบาลที่ `createdBy` / `confirmedBy` อ้างอิง | doc id = Firebase Auth uid สำหรับบัญชีจริง (ดูตารางด้านบน) + ข้อมูลเก่าจาก seed ไว้แสดงผลย้อนหลัง |
 
-ค่า `status` เริ่มต้นคือ `pending_review` (ยังไม่ผ่านพยาบาล) และเปลี่ยนได้เฉพาะพยาบาลเป็นคนกดยืนยัน —
-ตรงกับกฎ human-in-the-loop ของระบบจริง (AI สร้างได้แค่ `aiSummary`/`aiSummary...`, ต้องพยาบาลกดยืนยันก่อน
-ค่าจะไหลเข้า `confirmedSummary`/`confirmedBy`/`status`)
-
-## วิธีรัน
+## วิธีรันในเครื่อง (local)
 
 1. ติดตั้ง dependency:
 
@@ -24,20 +45,33 @@
    npm install
    ```
 
-2. สร้าง Service Account Key ของโปรเจกต์ Firebase ของคุณเอง:
+2. สร้าง Service Account Key ของโปรเจกต์ Firebase ของคุณเอง (ใช้กับ `seed.js`/`setup-users.js` เท่านั้น):
    - เปิด [Firebase Console](https://console.firebase.google.com/) → เลือกโปรเจกต์ของคุณ
    - Project settings (ไอคอนเฟือง) → **Service accounts** → **Generate new private key**
    - ดาวน์โหลดไฟล์ JSON แล้วเปลี่ยนชื่อเป็น `serviceAccountKey.json` วางไว้ในโฟลเดอร์นี้
-   - **ห้าม commit ไฟล์นี้เข้า git** — มีสิทธิ์แอดมินเต็มโปรเจกต์ Firebase ของคุณ
+   - **ห้าม commit ไฟล์นี้เข้า git** (อยู่ใน `.gitignore` แล้ว) — มีสิทธิ์แอดมินเต็มโปรเจกต์ Firebase ของคุณ
 
-3. รัน seed:
+3. เปิด **Authentication → Sign-in method** ใน Firebase Console แล้วเปิดใช้งาน **Email/Password** (ขั้นตอน
+   นี้ทำครั้งเดียว ทำผ่าน Console เท่านั้น ไม่มี API ให้ทำอัตโนมัติ)
+
+4. รัน seed ข้อมูลตัวอย่าง + สร้างบัญชีสาธิต 3 บทบาท:
 
    ```bash
    npm run seed
+   npm run setup-users
    ```
 
-4. ตรวจสอบผลลัพธ์ใน Firebase Console → **Firestore Database** → ควรเห็น 4 collections ตามตารางด้านบน
-   (collection `referrals` ควรมี 5 documents)
+5. รันเว็บในเครื่อง:
+
+   ```bash
+   powershell -File server.ps1   # http://localhost:8080
+   ```
+
+6. Deploy ขึ้น Firebase Hosting พร้อม Security Rules **ในรอบเดียว** (ห้าม deploy hosting โดยไม่มี rules):
+
+   ```bash
+   firebase deploy --only hosting,firestore:rules
+   ```
 
 ## ขอบเขตงาน
 
@@ -48,7 +82,11 @@
 ดู [ENTITY_CONTEXT.md](ENTITY_CONTEXT.md) — อธิบายว่า entity นี้มาจากไหน โครงสร้างเดิมก่อนแปลงเป็น
 Firestore เป็นอย่างไร และทำไมข้อมูลตัวอย่างถึงออกแบบมาแบบนี้ (เผื่อผู้ตรวจงานไม่คุ้นเคยกับระบบต้นทาง)
 
-## หลักฐานว่ารันจริงบน Firebase
+## สิทธิ์การเข้าถึง (ACL)
 
-ดู [EVIDENCE.md](EVIDENCE.md) — ภาพหน้าจอ Firestore Console ยืนยันว่า seed เข้าโปรเจกต์ Firebase จริง
-สำเร็จแล้ว
+ดู [ACL.md](ACL.md) — ตารางสิทธิ์เต็มของทั้ง 3 บทบาท พร้อมอ้างอิงว่าแต่ละกฎบังคับใช้ที่จุดไหนในโค้ดจริง
+
+## หลักฐานว่ารันจริงบน Firebase (Firestore + Auth + ACL)
+
+ดู [EVIDENCE.md](EVIDENCE.md) — ภาพหน้าจอยืนยันว่า seed/CRUD/login ทำงานกับ Firebase จริง รวมถึงภาพทดสอบ
+`permission-denied` เมื่อไม่ได้ล็อกอินหรือพยายามเข้าถึงเคสของคนอื่น

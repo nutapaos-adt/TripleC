@@ -1,0 +1,75 @@
+rules_version = '2';
+
+// Firestore Security Rules for the Triple C "Referral" lesson/homework build.
+// Baseline (non-negotiable): every read and every write requires being signed in —
+// there is no rule anywhere below that grants access to `request.auth == null`.
+//
+// Role is read from the Firebase Auth custom claim `role` (set via the Admin SDK —
+// see setup-users.js), not from a Firestore document, so it can't be forged by a client.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function role() {
+      return request.auth.token.role;
+    }
+
+    function isOwner(data) {
+      return data.createdBy == request.auth.uid;
+    }
+
+    // Reference collections (patients, caseTypes, users): readable by any signed-in
+    // user (needed to resolve names/labels shown on referrals), writable only by admin.
+    match /patients/{patientId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && role() in ['ward_staff', 'admin'];
+      allow update, delete: if isSignedIn() && role() == 'admin';
+    }
+
+    match /caseTypes/{caseTypeId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && role() == 'admin';
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && role() == 'admin';
+    }
+
+    // Referrals (the case/entity this homework is built around).
+    match /referrals/{referralId} {
+      // ward_staff only ever sees their own cases — the client query MUST filter
+      // on createdBy == uid to match this (Firestore rejects the whole `list`
+      // request otherwise; rules are not a post-query filter).
+      allow read: if isSignedIn() && (
+        role() in ['home_visit_team', 'admin'] ||
+        (role() == 'ward_staff' && isOwner(resource.data))
+      );
+
+      allow create: if isSignedIn()
+        && role() in ['ward_staff', 'admin']
+        && isOwner(request.resource.data)
+        && request.resource.data.status == 'pending_review'
+        && request.resource.data.confirmedBy == null;
+
+      // Status-change only: confirming a plan / advancing a follow-up round may
+      // touch status-related fields, nothing else — and never by the case's own
+      // creator, no exceptions (no self-approval, not even for admin).
+      allow update: if isSignedIn()
+        && role() in ['admin', 'home_visit_team']
+        && !isOwner(resource.data)
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['status', 'confirmedSummary', 'confirmedBy', 'confirmedAt', 'closedAt']);
+
+      // Delete: admin any time, or the ward_staff creator retracting their own
+      // case before a nurse has acted on it.
+      allow delete: if isSignedIn() && (
+        role() == 'admin' ||
+        (role() == 'ward_staff' && isOwner(resource.data) && resource.data.status == 'pending_review')
+      );
+    }
+  }
+}

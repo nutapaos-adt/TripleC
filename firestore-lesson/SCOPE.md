@@ -61,13 +61,22 @@
 | สถานะที่เปลี่ยนไป | `plan_confirmed` → `in_progress` → `closed` | `Referral::STATUS_*` constants |
 | ใครกดเปลี่ยน | พยาบาลเท่านั้น — ยืนยัน `confirmed_summary`/`confirmed_by` (→ `plan_confirmed`), และยืนยัน `nurse_decision` ในแต่ละรอบติดตาม (→ `in_progress`/`closed`) ตามกฎ human-in-the-loop 100% | `CLAUDE.md` §"The one rule…", `AI_DRAFT_NURSE_CONFIRM_DESIGN.md` |
 
+## อัปเดตสัปดาห์ที่ 7: เพิ่ม CRUD + Auth + ACL
+
+งานสัปดาห์ที่ 7 ขยายขอบเขตเดิม (ซึ่งตอนแรกมีแค่ข้อมูลตัวอย่างนิ่ง ๆ และหน้าเว็บอ่านอย่างเดียว) ให้ครบวงจร:
+
+- **เพิ่ม/แก้สถานะ/ลบ** เคสได้จริงผ่านหน้าเว็บ เขียนกลับ Firestore จริง (ไม่ใช่ mutate ตัวแปรในหน่วยความจำ
+  เหมือนเวอร์ชันสัปดาห์ที่ 6 อีกต่อไป) — ดู `referral-create.html`, `referral-detail.html`
+- **Firebase Authentication (Email/Password)** จริง — `login.html` — ไม่ใช่ test mode แล้ว
+- **Firestore Security Rules** (`firestore.rules`) บังคับต้องล็อกอินก่อนอ่าน/เขียนทุก collection พร้อม
+  กฎตาม role (ดูรายละเอียดครบใน [ACL.md](ACL.md))
+- ปุ่ม/เมนูของหน้าเว็บเปลี่ยนตาม role จริงของผู้ใช้ที่ล็อกอิน (`js/session.js` → `renderNav()`)
+
 ## ไม่อยู่ในขอบเขต (ไม่ได้ทำ)
 
 - `VisitRule`, `FollowUpPlan`, `FollowUpRecord`, `ReferralAttachment` — ยังไม่ได้แปลงเป็น Firestore
-  collection ในงานชิ้นนี้
+  collection ในงานชิ้นนี้ (รอบติดตามที่แสดงในหน้ารายละเอียดเคสเป็นแค่ UI ประกอบ ไม่ได้บันทึกลง Firestore)
 - Business logic ฝั่งเซิร์ฟเวอร์ (เช่น การสร้าง `FollowUpPlan` อัตโนมัติจาก `VisitRule`, การเรียก AI
   จริง) — งานนี้มีแค่ข้อมูลตัวอย่างนิ่ง ๆ (static seed data) ไม่มีโค้ด business logic ประกอบ
-- Authentication/Authorization จริง (Firebase Auth, security rules ตาม role) — ฐานข้อมูลตอนนี้เปิดแบบ
-  test mode เพื่อจุดประสงค์ส่งงานเท่านั้น
-- ส่วนหน้าเว็บ (`index.html`, `referral-detail.html`) เป็นแค่ตัวอย่างประกอบการสาธิตว่าเชื่อมต่อ Firebase
-  ได้จริง ไม่ใช่ requirement หลักของโจทย์
+- การสมัครสมาชิกด้วยตนเอง (self sign-up) — บัญชีทั้ง 3 บทบาทสร้างล่วงหน้าด้วย `setup-users.js` เท่านั้น
+  (สอดคล้องกับระบบต้นทางที่แอดมินเป็นผู้สร้างบัญชีให้พนักงาน ไม่ใช่ระบบสมัครสมาชิกสาธารณะ)

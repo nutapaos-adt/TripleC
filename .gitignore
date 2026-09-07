@@ -29,3 +29,4 @@ yarn-error.log
 # Firestore lesson coursework — Firebase Admin SDK credentials, never commit
 /firestore-lesson/serviceAccountKey.json
 /firestore-lesson/node_modules
+/firestore-lesson/.firebase

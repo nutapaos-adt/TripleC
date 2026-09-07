@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>เข้าสู่ระบบ — ProjectTripleC</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="page page-narrow">
+    <div class="card login-card">
+      <h1>ProjectTripleC</h1>
+      <p class="login-subtitle">เข้าสู่ระบบด้วยบัญชีที่แอดมินสร้างให้</p>
+
+      <form id="login-form">
+        <label class="field">
+          <span>อีเมล</span>
+          <input type="email" id="email" required autocomplete="username" />
+        </label>
+        <label class="field">
+          <span>รหัสผ่าน</span>
+          <input type="password" id="password" required autocomplete="current-password" />
+        </label>
+        <div class="form-error" id="form-error" hidden></div>
+        <button class="btn btn-primary" type="submit" id="submit-btn">เข้าสู่ระบบ</button>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="js/login.js"></script>
+</body>
+</html>

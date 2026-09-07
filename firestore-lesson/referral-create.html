@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>เพิ่มเคสใหม่ — ProjectTripleC</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="nav-mount"></div>
+
+  <div class="page page-narrow">
+    <div class="topbar">
+      <a class="back-link" href="index.html">&larr; กลับหน้ารายการเคส</a>
+    </div>
+
+    <div class="card">
+      <h1>เพิ่มเคสใหม่ (Referral)</h1>
+      <p class="login-subtitle">สถานะเริ่มต้นของเคสใหม่คือ <strong>รอตรวจสอบ (pending_review)</strong> เสมอ</p>
+
+      <form id="create-form">
+        <label class="field">
+          <span>ชื่อ-นามสกุลผู้ป่วย</span>
+          <input type="text" id="patient-name" required />
+        </label>
+        <label class="field">
+          <span>HN</span>
+          <input type="text" id="patient-hn" required />
+        </label>
+        <label class="field">
+          <span>เขตพื้นที่</span>
+          <select id="zone" required>
+            <option value="in_area">ในเขตพื้นที่</option>
+            <option value="out_area">นอกเขตพื้นที่</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>ประเภทเคส</span>
+          <select id="case-type" required></select>
+        </label>
+        <label class="field">
+          <span>ส่งมาจาก</span>
+          <select id="source-type" required>
+            <option value="ward">หอผู้ป่วย (Ward)</option>
+            <option value="opd">OPD</option>
+            <option value="internal_dept">แผนกภายในโรงพยาบาล</option>
+            <option value="external_hospital">โรงพยาบาลภายนอก (ส่งต่อ)</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>รายละเอียดที่มา</span>
+          <input type="text" id="source-detail" placeholder="เช่น หอผู้ป่วยอายุรกรรมชาย 3" />
+        </label>
+        <label class="field">
+          <span>บันทึกดิบ (สำหรับ AI สรุปในภายหลัง)</span>
+          <textarea id="raw-notes" rows="4" required></textarea>
+        </label>
+
+        <div class="form-error" id="form-error" hidden></div>
+        <button class="btn btn-primary" type="submit" id="submit-btn">บันทึกเคส</button>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="js/referral-create.js"></script>
+</body>
+</html>
