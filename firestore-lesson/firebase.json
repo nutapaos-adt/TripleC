@@ -1,0 +1,23 @@
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "serviceAccountKey.json",
+      "setup-users.js",
+      "seed.js",
+      "package.json",
+      "package-lock.json",
+      "server.ps1",
+      "firestore.rules",
+      "*.md",
+      "docs/**",
+      "screenshots/**"
+    ]
+  }
+}

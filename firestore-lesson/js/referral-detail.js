@@ -1,8 +1,16 @@
-// Loaded live from Firestore (collection `referrals`, doc REFERRAL_ID) — see loadReferral().
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+import {
+  doc, getDoc, updateDoc, deleteDoc, serverTimestamp,
+} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 import { db } from "./firebase-config.js";
+import { requireLogin, renderNav } from "./session.js";
 
-const REFERRAL_ID = "referral_001";
+const REFERRAL_ID = new URLSearchParams(location.search).get("id");
+
+const NAV_LINKS = {
+  ward_staff: [{ href: "referral-create.html", label: "+ เพิ่มเคสใหม่" }],
+  home_visit_team: [],
+  admin: [{ href: "referral-create.html", label: "+ เพิ่มเคสใหม่" }],
+};
 
 const SOURCE_TYPE_TEXT = {
   ward: "หอผู้ป่วย (Ward)",
@@ -12,6 +20,7 @@ const SOURCE_TYPE_TEXT = {
 };
 
 let referral = null;
+let session = null;
 
 const STEPS = [
   { key: "pending_review", label: "รอตรวจสอบ" },
@@ -28,6 +37,8 @@ const STATUS_TEXT = {
 };
 
 const el = {
+  navMount: document.getElementById("nav-mount"),
+  deleteBtn: document.getElementById("delete-btn"),
   caseId: document.getElementById("case-id"),
   patientName: document.getElementById("patient-name"),
   statusBadge: document.getElementById("status-badge"),
@@ -41,6 +52,7 @@ const el = {
   confirmedTag: document.getElementById("confirmed-tag"),
   confirmMeta: document.getElementById("confirm-meta"),
   confirmBtn: document.getElementById("confirm-btn"),
+  actionHint: document.querySelector(".action-panel .hint"),
   roundsCard: document.getElementById("rounds-card"),
   roundList: document.getElementById("round-list"),
 };
@@ -63,7 +75,7 @@ function renderHeader() {
   el.patientName.textContent = referral.patientName;
   el.caseType.textContent = referral.caseType;
   el.sourceType.textContent = referral.sourceType;
-  el.createdBy.textContent = referral.createdBy;
+  el.createdBy.textContent = referral.createdByName;
   el.createdAt.textContent = referral.createdAt;
 
   el.statusBadge.textContent = STATUS_TEXT[referral.status];
@@ -71,15 +83,15 @@ function renderHeader() {
 }
 
 function renderSummaries() {
-  el.aiSummary.textContent = referral.aiSummary;
+  el.aiSummary.textContent = referral.aiSummary || "(ยังไม่มีร่างจาก AI)";
 
   if (referral.confirmedSummary) {
     el.confirmedSummary.value = referral.confirmedSummary;
     el.confirmedSummary.readOnly = true;
     el.confirmedTag.hidden = false;
-    el.confirmMeta.textContent = `ยืนยันโดย ${referral.confirmedBy} เมื่อ ${referral.confirmedAt}`;
+    el.confirmMeta.textContent = `ยืนยันโดย ${referral.confirmedByName} เมื่อ ${referral.confirmedAt}`;
   } else {
-    el.confirmedSummary.value = referral.aiSummary;
+    el.confirmedSummary.value = referral.aiSummary || "";
     el.confirmedSummary.readOnly = false;
     el.confirmedTag.hidden = true;
     el.confirmMeta.textContent = "";
@@ -91,14 +103,17 @@ function renderRounds() {
   el.roundsCard.hidden = !isTrackingPhase;
   if (!isTrackingPhase) return;
 
+  const canDecide = canConfirm();
   el.roundList.innerHTML = referral.rounds
     .map((round, i) => {
       const isNext = referral.rounds.slice(0, i).every((r) => r.decision) && !round.decision;
       const stateClass = round.decision ? "" : "pending";
       const action = round.decision
         ? `<span class="round-decision">${round.decision}</span>`
-        : isNext
+        : isNext && canDecide
         ? `<button class="btn btn-secondary" data-round="${i}">พยาบาลยืนยันรอบนี้</button>`
+        : isNext
+        ? `<span class="round-decision">ต้องให้พยาบาลเป็นผู้ยืนยัน</span>`
         : `<span class="round-decision">รอรอบก่อนหน้า</span>`;
       return `
         <div class="round-item ${stateClass}">
@@ -113,14 +128,36 @@ function renderRounds() {
   });
 }
 
+// Self-approve ban: whoever created the case can never be the one who confirms it
+// (mirrors the ACL rule enforced server-side in firestore.rules).
+function canConfirm() {
+  if (session.role !== "home_visit_team" && session.role !== "admin") return false;
+  return referral.createdBy !== session.user.uid;
+}
+
 function renderConfirmButton() {
-  if (referral.status === "pending_review") {
-    el.confirmBtn.hidden = false;
-    el.confirmBtn.textContent = "ยืนยันแผนดูแล";
-    el.confirmBtn.disabled = false;
-  } else {
+  if (referral.status !== "pending_review") {
     el.confirmBtn.hidden = true;
+    return;
   }
+
+  if (!canConfirm()) {
+    el.confirmBtn.hidden = true;
+    el.actionHint.textContent = session.role === "ward_staff"
+      ? "เฉพาะพยาบาลทีมเยี่ยมบ้านหรือแอดมินเท่านั้นที่ยืนยันแผนดูแลได้"
+      : "คุณเป็นผู้สร้างเคสนี้ ตามกฎห้ามอนุมัติของตัวเอง จึงต้องให้พยาบาลท่านอื่นเป็นผู้ยืนยัน";
+    return;
+  }
+
+  el.confirmBtn.hidden = false;
+  el.confirmBtn.textContent = "ยืนยันแผนดูแล";
+  el.confirmBtn.disabled = false;
+}
+
+function renderDeleteButton() {
+  const canDelete = session.role === "admin"
+    || (session.role === "ward_staff" && referral.createdBy === session.user.uid && referral.status === "pending_review");
+  el.deleteBtn.hidden = !canDelete;
 }
 
 function render() {
@@ -129,6 +166,7 @@ function render() {
   renderSummaries();
   renderConfirmButton();
   renderRounds();
+  renderDeleteButton();
 }
 
 function nowThai() {
@@ -160,10 +198,9 @@ async function loadReferral() {
   const data = await fetchDoc("referrals", REFERRAL_ID);
   if (!data) throw new Error(`ไม่พบเอกสาร referrals/${REFERRAL_ID} ใน Firestore`);
 
-  const [patient, caseType, createdByUser, confirmedByUser] = await Promise.all([
+  const [patient, caseType, confirmedByUser] = await Promise.all([
     fetchDoc("patients", data.patientId),
     fetchDoc("caseTypes", data.caseTypeId),
-    fetchDoc("users", data.createdBy),
     fetchDoc("users", data.confirmedBy),
   ]);
 
@@ -172,13 +209,17 @@ async function loadReferral() {
     patientName: patient?.fullName ?? data.patientId,
     caseType: caseType?.name ?? data.caseTypeId,
     sourceType: SOURCE_TYPE_TEXT[data.sourceType] ?? data.sourceType,
-    createdBy: createdByUser?.name ?? data.createdBy,
+    createdBy: data.createdBy,
+    createdByName: data.createdByName ?? data.createdBy,
     createdAt: formatDate(data.createdAt),
     status: data.status,
     aiSummary: formatSummary(data.aiSummary),
     confirmedSummary: data.confirmedSummary ? formatSummary(data.confirmedSummary) : null,
-    confirmedBy: confirmedByUser?.name ?? data.confirmedBy,
+    confirmedBy: data.confirmedBy,
+    confirmedByName: confirmedByUser?.name ?? data.confirmedBy,
     confirmedAt: data.confirmedAt ? formatDate(data.confirmedAt) : null,
+    // Follow-up rounds are illustrative only in this lesson build — no `followUpPlans`
+    // subcollection exists yet (see SCOPE.md), so decisions here aren't persisted.
     rounds: [
       { label: "รอบติดตามที่ 1", decision: null },
       { label: "รอบติดตามที่ 2 (ปิดเคส)", decision: null },
@@ -186,28 +227,80 @@ async function loadReferral() {
   };
 }
 
-function onConfirmPlan() {
-  referral.confirmedSummary = el.confirmedSummary.value.trim();
-  if (!referral.confirmedSummary) return;
+async function onConfirmPlan() {
+  const confirmedText = el.confirmedSummary.value.trim();
+  if (!confirmedText) return;
 
-  referral.confirmedBy = "พยาบาล — สมหญิง (คุณ)";
-  referral.confirmedAt = nowThai();
-  referral.status = "plan_confirmed";
-  render();
+  el.confirmBtn.disabled = true;
+  try {
+    await updateDoc(doc(db, "referrals", REFERRAL_ID), {
+      confirmedSummary: { nurseNote: confirmedText },
+      confirmedBy: session.user.uid,
+      confirmedAt: serverTimestamp(),
+      status: "plan_confirmed",
+    });
+    await loadReferral();
+    render();
+  } catch (err) {
+    console.error(err);
+    alert(`ยืนยันไม่สำเร็จ: ${err.message}`);
+    el.confirmBtn.disabled = false;
+  }
 }
 
-function onConfirmRound(index) {
+async function onConfirmRound(index) {
+  // Illustrative only (see comment in loadReferral) — persists just the case-level
+  // status transition, not a per-round document, since there is no rounds subcollection yet.
   referral.rounds[index].decision = `ยืนยันโดยพยาบาล — ${nowThai()}`;
   const allDone = referral.rounds.every((r) => r.decision);
-  referral.status = allDone ? "closed" : "in_progress";
-  render();
+  const nextStatus = allDone ? "closed" : "in_progress";
+
+  try {
+    await updateDoc(doc(db, "referrals", REFERRAL_ID), {
+      status: nextStatus,
+      closedAt: allDone ? serverTimestamp() : null,
+    });
+    referral.status = nextStatus;
+    render();
+  } catch (err) {
+    console.error(err);
+    alert(`บันทึกไม่สำเร็จ: ${err.message}`);
+  }
+}
+
+async function onDelete() {
+  if (!confirm(`ยืนยันลบเคส ${referral.id}? การลบนี้ย้อนกลับไม่ได้`)) return;
+
+  el.deleteBtn.disabled = true;
+  try {
+    await deleteDoc(doc(db, "referrals", REFERRAL_ID));
+    location.href = "index.html";
+  } catch (err) {
+    console.error(err);
+    alert(`ลบไม่สำเร็จ: ${err.message}`);
+    el.deleteBtn.disabled = false;
+  }
 }
 
 el.confirmBtn.addEventListener("click", onConfirmPlan);
+el.deleteBtn.addEventListener("click", onDelete);
 
-loadReferral()
-  .then(render)
-  .catch((err) => {
+requireLogin().then(async (loggedInSession) => {
+  session = loggedInSession;
+  renderNav(el.navMount, session, NAV_LINKS);
+
+  if (!REFERRAL_ID) {
+    document.querySelector(".page").insertAdjacentHTML(
+      "beforeend",
+      '<div class="card" style="border-color:#c0392b"><strong>ไม่พบรหัสเคส</strong> — เปิดหน้านี้ผ่านลิงก์จากรายการเคสเท่านั้น</div>'
+    );
+    return;
+  }
+
+  try {
+    await loadReferral();
+    render();
+  } catch (err) {
     console.error(err);
     document
       .querySelector(".page")
@@ -215,4 +308,5 @@ loadReferral()
         "afterbegin",
         `<div class="card" style="border-color:#c0392b"><strong>โหลดข้อมูลจาก Firestore ไม่สำเร็จ:</strong> ${err.message}</div>`
       );
-  });
+  }
+});

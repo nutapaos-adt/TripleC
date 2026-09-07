@@ -38,6 +38,171 @@ body {
   padding: 24px 16px 80px;
 }
 
+.page-narrow {
+  max-width: 480px;
+}
+
+/* ---- app nav ---- */
+.app-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  padding: 12px 24px;
+}
+
+.app-nav-brand {
+  font-weight: 700;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.app-nav-links {
+  display: flex;
+  gap: 16px;
+  flex: 1;
+}
+
+.app-nav-links a {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.app-nav-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.app-nav-name {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.role-admin {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.role-home_visit_team {
+  background: var(--status-closed-bg);
+  color: var(--status-closed);
+}
+
+/* ---- login / forms ---- */
+.login-card h1 {
+  margin: 0 0 4px;
+  font-size: 20px;
+}
+
+.login-subtitle {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  margin: 0 0 20px;
+}
+
+.field {
+  display: block;
+  margin-bottom: 14px;
+}
+
+.field span {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font: inherit;
+  color: var(--color-text);
+  background: var(--color-surface);
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.form-error {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+/* ---- referral list ---- */
+.list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.list-header h1 {
+  font-size: 20px;
+  margin: 0;
+}
+
+.list-scope-hint {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  margin: 0 0 16px;
+}
+
+.referral-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.referral-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.referral-row-name {
+  font-weight: 700;
+  font-size: 15px;
+  margin: 2px 0;
+}
+
+.referral-row-meta {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
 /* ---- top bar ---- */
 .topbar {
   display: flex;
@@ -325,6 +490,24 @@ body {
 .btn-secondary {
   background: var(--color-primary-soft);
   color: var(--color-primary);
+}
+
+.btn-danger {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.btn-danger:hover {
+  background: #fecaca;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.topbar {
+  gap: 12px;
 }
 
 /* ---- follow-up rounds ---- */

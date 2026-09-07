@@ -5,7 +5,8 @@
   "description": "Seed script สำหรับสร้าง Firestore ตาม entity Referral ของ Triple C (งานส่งบทเรียน)",
   "main": "seed.js",
   "scripts": {
-    "seed": "node seed.js"
+    "seed": "node seed.js",
+    "setup-users": "node setup-users.js"
   },
   "dependencies": {
     "firebase-admin": "^12.0.0"
