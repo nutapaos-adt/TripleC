@@ -33,6 +33,14 @@
                 </div>
             @endif
 
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+                <dt class="text-gray-500 text-sm mb-1">ข้อมูลต้นทาง (บันทึกดิบก่อน AI สรุป)</dt>
+                <dd class="text-gray-900 whitespace-pre-line bg-gray-50 rounded-md p-4 text-sm">{{ $referral->raw_notes }}</dd>
+                <p class="text-xs text-gray-500 mt-2">
+                    เทียบกับร่างจาก AI ด้านล่าง เพื่อตรวจว่า AI สรุปครบถ้วนและตรงกับข้อมูลที่ส่งเข้ามาจริงหรือไม่
+                </p>
+            </div>
+
             <form method="POST" action="{{ route('referrals.care-plan.confirm', $referral) }}" class="space-y-4">
                 @csrf
 
