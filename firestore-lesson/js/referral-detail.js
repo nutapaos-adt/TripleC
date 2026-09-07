@@ -47,6 +47,7 @@ const el = {
   createdBy: document.getElementById("created-by"),
   createdAt: document.getElementById("created-at"),
   stepper: document.getElementById("stepper"),
+  rawNotes: document.getElementById("raw-notes"),
   aiSummary: document.getElementById("ai-summary"),
   confirmedSummary: document.getElementById("confirmed-summary"),
   confirmedTag: document.getElementById("confirmed-tag"),
@@ -83,6 +84,7 @@ function renderHeader() {
 }
 
 function renderSummaries() {
+  el.rawNotes.textContent = referral.rawNotes || "(ไม่มีบันทึกดิบ)";
   el.aiSummary.textContent = referral.aiSummary || "(ยังไม่มีร่างจาก AI)";
 
   if (referral.confirmedSummary) {
@@ -213,6 +215,7 @@ async function loadReferral() {
     createdByName: data.createdByName ?? data.createdBy,
     createdAt: formatDate(data.createdAt),
     status: data.status,
+    rawNotes: data.rawNotes,
     aiSummary: formatSummary(data.aiSummary),
     confirmedSummary: data.confirmedSummary ? formatSummary(data.confirmedSummary) : null,
     confirmedBy: data.confirmedBy,
