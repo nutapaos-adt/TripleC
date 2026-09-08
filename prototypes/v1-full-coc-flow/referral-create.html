@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>รับเคสใหม่ — Chira Continuity Care</title>
+<title>ส่งข้อมูลเยี่ยมบ้าน — Chira Continuity Care</title>
 <style>
 :root{
-  --color-primary-900:#212B1C; --color-primary-800:#2C3A22; --color-primary-700:#3C4D2A;
-  --color-primary-600:#4C5F35; --color-primary-500:#62784A; --color-primary-300:#AAB994;
-  --color-primary-100:#E9EDDF; --color-primary-50:#F5F6EF;
+  --color-primary-900:#16232C; --color-primary-800:#1E3644; --color-primary-700:#2C5166;
+  --color-primary-600:#3D6B84; --color-primary-500:#5586A0; --color-primary-300:#A8C4D2;
+  --color-primary-100:#E1EBEF; --color-primary-50:#F4F8FA;
   --color-neutral-900:#22201A; --color-neutral-700:#4A4739; --color-neutral-500:#7C7863;
   --color-neutral-300:#C9C4AD; --color-neutral-200:#DEDAC6; --color-neutral-100:#F1EEE0; --color-surface:#FFFFFF;
   --color-accent-blue:#3E7CA6; --color-accent-gold:#C9932E;
@@ -33,7 +33,7 @@ a:hover{text-decoration:underline;}
 .app-shell{display:flex;min-height:100vh;}
 
 /* Sidebar */
-.sidebar{width:248px;flex-shrink:0;background:linear-gradient(180deg,var(--color-primary-900),var(--color-primary-800));color:#F5F6EF;display:flex;flex-direction:column;padding:var(--space-5) 0;}
+.sidebar{width:248px;flex-shrink:0;background:linear-gradient(180deg,var(--color-primary-900),var(--color-primary-800));color:#F4F8FA;display:flex;flex-direction:column;padding:var(--space-5) 0;}
 .sidebar-brand{display:flex;align-items:center;gap:var(--space-3);padding:0 var(--space-5) var(--space-5);border-bottom:1px solid rgba(255,255,255,0.14);margin-bottom:var(--space-4);}
 .brand-mark{position:relative;width:30px;height:26px;flex-shrink:0;}
 .brand-mark span{position:absolute;top:0;width:16px;height:16px;border-radius:50%;border:2.5px solid;background:transparent;}
@@ -41,7 +41,7 @@ a:hover{text-decoration:underline;}
 .brand-mark span.b2{left:7px;border-color:var(--color-primary-500);}
 .brand-mark span.b3{left:14px;border-color:var(--color-accent-gold);}
 .brand-text{display:flex;flex-direction:column;line-height:1.2;}
-.brand-name{font-weight:800;font-size:15px;letter-spacing:0.02em;color:#F5F6EF;}
+.brand-name{font-weight:800;font-size:15px;letter-spacing:0.02em;color:#F4F8FA;}
 .brand-sub{font-size:10.5px;color:var(--color-primary-300);}
 
 .sidebar-nav{display:flex;flex-direction:column;gap:2px;padding:0 var(--space-3);flex:1;}
@@ -75,6 +75,8 @@ a:hover{text-decoration:underline;}
 .section:last-of-type{margin-bottom:var(--space-6);}
 
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4) var(--space-5);}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-4) var(--space-5);}
+.grid-2 + .grid-2, .grid-2 + .grid-3, .grid-3 + .grid-2, .grid-3 + .grid-3, .grid-2 + .field, .grid-3 + .field, .field + .grid-2, .field + .grid-3{margin-top:var(--space-4);}
 .field{display:flex;flex-direction:column;gap:var(--space-1);}
 .field.span-2{grid-column:1 / -1;}
 .field label{font-size:12.5px;font-weight:600;color:var(--color-neutral-700);}
@@ -99,6 +101,10 @@ textarea{resize:vertical;min-height:96px;}
 .chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:var(--radius-pill);font-size:12.5px;font-weight:600;white-space:nowrap;}
 .chip-in-area{background:var(--color-primary-100);color:var(--color-primary-700);}
 .chip-out-area{background:var(--color-neutral-100);color:var(--color-neutral-700);}
+.chip-severity-green{background:var(--color-success-tint);color:var(--color-success);}
+.chip-severity-yellow{background:var(--color-warning-tint);color:var(--color-warning);}
+.chip-severity-red{background:var(--color-risk-tint);color:var(--color-risk);}
+.chip-severity-palliative{background:var(--color-primary-100);color:var(--color-primary-700);}
 
 .file-drop{border:1px dashed var(--color-neutral-300);border-radius:var(--radius-md);padding:var(--space-5);background:var(--color-neutral-100);text-align:center;}
 .file-drop input{width:auto;margin-top:var(--space-2);}
@@ -116,8 +122,11 @@ textarea{resize:vertical;min-height:96px;}
   .nav-sub{padding-left:var(--space-3);}
   .sidebar-footer{display:none;}
   .main-content{padding:var(--space-5);}
-  .grid-2{grid-template-columns:1fr;}
+  .grid-2,.grid-3{grid-template-columns:1fr;}
   .radio-cards{grid-template-columns:1fr 1fr;}
+}
+@media (max-width:1100px) and (min-width:861px){
+  .grid-3{grid-template-columns:1fr 1fr;}
 }
 </style>
 </head>
@@ -147,7 +156,7 @@ textarea{resize:vertical;min-height:96px;}
 
   <main class="main-content">
     <div class="page-header">
-      <h1>รับเคสใหม่ — สร้างใบส่งต่อผู้ป่วย</h1>
+      <h1>ส่งข้อมูลเยี่ยมบ้าน — สร้างใบส่งต่อผู้ป่วย</h1>
       <p class="page-lead">กรอกข้อมูลแหล่งที่มาและข้อมูลผู้ป่วยให้ครบถ้วน ระบบจะให้ AI ช่วยสรุปข้อมูลและแนะนำแผนดูแลในขั้นตอนถัดไป — พยาบาลต้องตรวจสอบและยืนยันก่อนใช้งานจริงเสมอ</p>
     </div>
 
@@ -155,43 +164,73 @@ textarea{resize:vertical;min-height:96px;}
 
       <div class="section">
         <div class="section-title">แหล่งที่มาของเคส</div>
-        <div class="field span-2" style="margin-bottom:var(--space-4);">
+        <div class="field" style="margin-bottom:var(--space-4);">
           <label>แหล่งที่มา (source_type)</label>
-          <div class="radio-cards">
-            <div class="radio-card">
-              <input type="radio" name="source_type" id="src_ward" checked>
-              <label for="src_ward">หอผู้ป่วย (ward)</label>
-            </div>
-            <div class="radio-card">
-              <input type="radio" name="source_type" id="src_opd">
-              <label for="src_opd">OPD</label>
-            </div>
-            <div class="radio-card">
-              <input type="radio" name="source_type" id="src_internal">
-              <label for="src_internal">แผนกภายใน รพ.</label>
-            </div>
-            <div class="radio-card">
-              <input type="radio" name="source_type" id="src_external">
-              <label for="src_external">โรงพยาบาลอื่น</label>
+          <div class="zone-box" style="flex-direction:row;align-items:center;justify-content:space-between;">
+            <div class="zone-auto-note">
+              <span>&#9432;</span>
+              <span>
+                <span class="chip chip-in-area">หอผู้ป่วย (ward)</span>
+                <strong style="margin-left:6px;">หอผู้ป่วยอายุรกรรม</strong>
+                <br>ดึงข้อมูลอัตโนมัติจากบัญชีผู้ใช้งานที่เข้าสู่ระบบ (กัลยา เจ้าหน้าที่ธุรการ)
+              </span>
             </div>
           </div>
+          <input type="hidden" id="source_type" value="ward">
+          <input type="hidden" id="source_detail" value="หอผู้ป่วยอายุรกรรม">
         </div>
-        <div class="grid-2">
-          <div class="field span-2">
-            <label for="source_detail">รายละเอียดแหล่งที่มา</label>
-            <input type="text" id="source_detail" placeholder="เช่น หอผู้ป่วยอายุรกรรมหญิง, คลินิกศัลยกรรม" value="หอผู้ป่วยอายุรกรรมหญิง">
-            <span class="hint">ระบุชื่อหอผู้ป่วย/แผนก/โรงพยาบาลต้นทางให้ชัดเจน เพื่อให้ตรวจสอบย้อนกลับได้</span>
-          </div>
-          <div class="field">
-            <label for="case_type">ประเภทเคส (case_type)</label>
-            <select id="case_type">
-              <option value="">— ให้ AI ประเมินจากข้อมูลด้านล่าง —</option>
-              <option value="palliative">Palliative Care</option>
-              <option value="postpartum">หลังคลอด</option>
-              <option value="postop">หลังผ่าตัด</option>
-              <option value="other">อื่นๆ</option>
-            </select>
-            <span class="hint">ไม่บังคับ — เว้นว่างได้หากยังไม่แน่ใจ</span>
+        <div class="grid-2" style="align-items:start;">
+          <div style="display:flex;flex-direction:column;gap:var(--space-4);">
+            <div class="field">
+              <label for="case_type">ประเภทผู้ป่วย (case_type)</label>
+              <select id="case_type" required onchange="document.getElementById('pps_field').style.display = (this.value==='palliative') ? 'flex' : 'none';">
+                <option value="">— เลือกประเภทผู้ป่วย —</option>
+                <option value="med">อายุรกรรม</option>
+                <option value="surg">ศัลยกรรม</option>
+                <option value="ortho">กระดูกและข้อ</option>
+                <option value="peds">กุมารเวชกรรม</option>
+                <option value="postpartum">หลังคลอด</option>
+                <option value="palliative">Palliative Care</option>
+                <option value="other">อื่นๆ</option>
+              </select>
+              <span class="hint">เลือกประเภทที่ตรงกับผู้ป่วยที่สุด — ใช้กำหนดเกณฑ์การเยี่ยม/ติดตาม</span>
+            </div>
+            <div class="field">
+              <label for="patient_status">สถานะผู้ป่วย</label>
+              <select id="patient_status" onchange="document.getElementById('military_unit_field').style.display = (this.value==='active_duty' || this.value==='active_duty_family') ? 'flex' : 'none';">
+                <option value="">— เลือกสถานะ —</option>
+                <option value="active_duty">กำลังพล</option>
+                <option value="active_duty_family">ครอบครัวกำลังพล</option>
+                <option value="civilian">ประชาชน</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="severity_level">การจำแนกผู้ป่วยตามระดับความรุนแรง</label>
+              <select id="severity_level" onchange="
+                var map={
+                  g1:{cls:'chip-severity-green', text:'กลุ่ม 1 บ้านสีเขียว'},
+                  g2:{cls:'chip-severity-yellow', text:'กลุ่ม 2 บ้านสีเหลือง'},
+                  g3:{cls:'chip-severity-red', text:'กลุ่ม 3 บ้านสีแดง'},
+                  g4:{cls:'chip-severity-palliative', text:'กลุ่ม 4 Palliative Care'}
+                };
+                var v=map[this.value];
+                var chip=document.getElementById('severity_chip');
+                if(v){ chip.className='chip '+v.cls; chip.textContent=v.text; chip.style.display='inline-flex'; }
+                else{ chip.style.display='none'; }
+              ">
+                <option value="">— เลือกกลุ่ม —</option>
+                <option value="g1">กลุ่ม 1 บ้านสีเขียว (ช่วยเหลือตนเองได้ทั้งหมด)</option>
+                <option value="g2">กลุ่ม 2 บ้านสีเหลือง (ช่วยเหลือตนเองได้บางส่วน)</option>
+                <option value="g3">กลุ่ม 3 บ้านสีแดง (ช่วยเหลือตนเองไม่ได้เลย)</option>
+                <option value="g4">กลุ่ม 4 Palliative Care</option>
+              </select>
+              <span class="chip" id="severity_chip" style="display:none;margin-top:4px;"></span>
+            </div>
+            <div class="field" id="military_unit_field" style="display:none;">
+              <label for="military_unit">หน่วยต้นสังกัด</label>
+              <input type="text" id="military_unit" placeholder="เช่น กองพันทหารราบที่ 1">
+              <span class="hint">กรณีครอบครัวกำลังพล ให้ระบุหน่วยต้นสังกัดของผู้มีสิทธิ (กำลังพล)</span>
+            </div>
           </div>
           <div class="field">
             <label>เขตพื้นที่ (zone)</label>
@@ -214,6 +253,27 @@ textarea{resize:vertical;min-height:96px;}
             </div>
           </div>
         </div>
+        <div class="grid-3">
+          <div class="field">
+            <label for="admit_date">วันที่ Admit</label>
+            <input type="date" id="admit_date">
+          </div>
+          <div class="field">
+            <label for="discharge_date">วันที่จำหน่าย</label>
+            <input type="date" id="discharge_date">
+          </div>
+          <div class="field">
+            <label for="followup_appointment_date">วันที่นัดติดตามอาการ</label>
+            <input type="date" id="followup_appointment_date">
+            <span class="hint">วันนัด OPD/แพทย์เจ้าของไข้ครั้งถัดไป</span>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label for="doctor_name">ชื่อแพทย์เจ้าของไข้</label>
+            <input type="text" id="doctor_name" placeholder="เช่น นพ.สมชาย ตั้งใจ">
+          </div>
+        </div>
       </div>
 
       <div class="section">
@@ -232,18 +292,35 @@ textarea{resize:vertical;min-height:96px;}
             <input type="text" id="patient_name" placeholder="เช่น นางสมหญิง ใจดี" required>
           </div>
           <div class="field">
-            <label for="dob">วันเกิด</label>
-            <input type="date" id="dob">
+            <label for="coverage">สิทธิการรักษา</label>
+            <select id="coverage">
+              <option value="">— เลือกสิทธิการรักษา —</option>
+              <option value="uc">บัตรทอง (สิทธิหลักประกันสุขภาพแห่งชาติ)</option>
+              <option value="sso">ประกันสังคม</option>
+              <option value="civil">ข้าราชการ/รัฐวิสาหกิจ</option>
+              <option value="self_pay">ชำระเงินเอง</option>
+              <option value="private_ins">ประกันเอกชน</option>
+              <option value="other">อื่นๆ</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="dob">วันเดือนปีเกิด</label>
+            <input type="date" id="dob" onchange="var d=this.value?new Date(this.value):null; var out=document.getElementById('age_display'); if(!d){out.value='';return;} var t=new Date(); var age=t.getFullYear()-d.getFullYear(); var m=t.getMonth()-d.getMonth(); if(m<0||(m===0&&t.getDate()<d.getDate())) age--; out.value=age+' ปี';">
+          </div>
+          <div class="field">
+            <label for="age_display">อายุ</label>
+            <input type="text" id="age_display" readonly placeholder="คำนวณอัตโนมัติจากวันเกิด" style="background:var(--color-neutral-200);color:var(--color-neutral-700);">
           </div>
           <div class="field">
             <label for="phone">เบอร์โทร</label>
             <input type="tel" id="phone" placeholder="08X-XXX-XXXX">
           </div>
-          <div class="field"></div>
           <div class="field span-2">
             <label for="address">ที่อยู่</label>
             <input type="text" id="address" placeholder="บ้านเลขที่ / หมู่ / ซอย / ถนน">
           </div>
+        </div>
+        <div class="grid-3">
           <div class="field">
             <label for="sub_district">ตำบล/แขวง</label>
             <input type="text" id="sub_district" placeholder="เช่น บ้านดู่">
@@ -257,10 +334,85 @@ textarea{resize:vertical;min-height:96px;}
             <input type="text" id="province" placeholder="เช่น เชียงราย">
           </div>
         </div>
+        <div class="field" style="margin-top:var(--space-4);margin-bottom:var(--space-2);padding-top:var(--space-2);border-top:1px solid var(--color-neutral-200);">
+          <label style="font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--color-neutral-500);">ผู้ดูแลหลัก <span style="text-transform:none;font-weight:500;">(กรณีผู้ป่วยสื่อสารเองไม่ได้)</span></label>
+        </div>
+        <div class="grid-3">
+          <div class="field">
+            <label for="caregiver_name">ชื่อผู้ดูแลหลัก</label>
+            <input type="text" id="caregiver_name" placeholder="เช่น นายสมชาย ใจดี">
+          </div>
+          <div class="field">
+            <label for="caregiver_relation">ความสัมพันธ์กับผู้ป่วย</label>
+            <select id="caregiver_relation">
+              <option value="">— เลือกความสัมพันธ์ —</option>
+              <option value="child">บุตร/ธิดา</option>
+              <option value="spouse">คู่สมรส</option>
+              <option value="parent">บิดา/มารดา</option>
+              <option value="sibling">พี่/น้อง</option>
+              <option value="relative">ญาติ</option>
+              <option value="caregiver">ผู้ดูแลจ้าง/ไม่ใช่ญาติ</option>
+              <option value="other">อื่นๆ</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="caregiver_phone">เบอร์โทรศัพท์ผู้ดูแลหลัก</label>
+            <input type="tel" id="caregiver_phone" placeholder="08X-XXX-XXXX">
+          </div>
+        </div>
       </div>
 
       <div class="section">
         <div class="section-title">ปัญหา/อาการปัจจุบัน</div>
+        <div class="grid-2" style="margin-bottom:var(--space-4);">
+          <div class="field">
+            <label for="diagnosis">การวินิจฉัยโรค</label>
+            <input type="text" id="diagnosis" required placeholder="เช่น Stroke with right hemiplegia, CKD stage 4">
+          </div>
+          <div class="field">
+            <label for="underlying_disease">โรคประจำตัว (ถ้ามี)</label>
+            <input type="text" id="underlying_disease" placeholder="เช่น เบาหวาน, ความดันโลหิตสูง — เว้นว่างได้หากไม่มี">
+          </div>
+        </div>
+        <div class="field" id="pps_field" style="display:none;margin-bottom:var(--space-4);max-width:220px;">
+          <label for="pps_score">PPS Score (ประเมินโดยพยาบาลหอผู้ป่วย)</label>
+          <input type="number" id="pps_score" min="0" max="100" step="10" placeholder="0-100">
+          <span class="hint">ประเมิน ณ วันที่ส่งต่อ โดยพยาบาลผู้ดูแลที่เห็นสภาพผู้ป่วยจริง — ทีมเยี่ยมบ้านจะตรวจสอบและแก้ไขได้อีกครั้งตอนยืนยันแผน</span>
+        </div>
+        <div class="field" style="margin-bottom:var(--space-4);">
+          <label for="surgery_history">ประวัติการผ่าตัด (ถ้ามี)</label>
+          <input type="text" id="surgery_history" placeholder="เช่น ผ่าตัดไส้ติ่ง 15 ส.ค. 2569 — เว้นว่างได้หากไม่มี">
+        </div>
+        <div class="field span-2" style="margin-bottom:var(--space-4);">
+          <label>อุปกรณ์ของผู้ป่วย (เลือกได้หลายรายการ)</label>
+          <div class="radio-cards" style="grid-template-columns:repeat(3,1fr);" id="equipment_group">
+            <div class="radio-card">
+              <input type="checkbox" name="equipment" id="eq_ng" value="ng_tube" onchange="if(this.checked) document.getElementById('eq_none').checked=false;">
+              <label for="eq_ng">NG-Tube</label>
+            </div>
+            <div class="radio-card">
+              <input type="checkbox" name="equipment" id="eq_tt" value="tt_tube" onchange="if(this.checked) document.getElementById('eq_none').checked=false;">
+              <label for="eq_tt">TT-Tube</label>
+            </div>
+            <div class="radio-card">
+              <input type="checkbox" name="equipment" id="eq_foley" value="foley" onchange="if(this.checked) document.getElementById('eq_none').checked=false;">
+              <label for="eq_foley">Foley cath</label>
+            </div>
+            <div class="radio-card">
+              <input type="checkbox" name="equipment" id="eq_colostomy" value="colostomy" onchange="if(this.checked) document.getElementById('eq_none').checked=false;">
+              <label for="eq_colostomy">Colostomy bag</label>
+            </div>
+            <div class="radio-card">
+              <input type="checkbox" name="equipment" id="eq_o2" value="oxygen" onchange="if(this.checked) document.getElementById('eq_none').checked=false;">
+              <label for="eq_o2">Oxygen</label>
+            </div>
+            <div class="radio-card">
+              <input type="checkbox" name="equipment" id="eq_none" value="none" checked onchange="if(this.checked) document.querySelectorAll('#equipment_group input:not(#eq_none)').forEach(function(el){el.checked=false;});">
+              <label for="eq_none">ไม่มี</label>
+            </div>
+          </div>
+          <input type="text" id="equipment_other" placeholder="อื่นๆ (ระบุ) — เช่น Tracheostomy tube, IV line" style="margin-top:var(--space-2);">
+        </div>
         <div class="field">
           <label for="raw_notes">ข้อความสรุปอาการ / สถานการณ์ผู้ป่วย (raw_notes)</label>
           <textarea id="raw_notes" required placeholder="พิมพ์เป็นข้อความอิสระ — AI จะช่วยอ่านสรุปและประเมินความเสี่ยงในขั้นตอนถัดไป"></textarea>
@@ -278,7 +430,7 @@ textarea{resize:vertical;min-height:96px;}
       </div>
 
       <div class="form-actions">
-        <button type="submit" class="btn btn-primary btn-lg">บันทึกและรับเคส</button>
+        <button type="submit" class="btn btn-primary btn-lg">บันทึกและส่งข้อมูล</button>
         <a class="btn btn-secondary" href="referrals-list.html">ยกเลิก</a>
       </div>
     </form>
