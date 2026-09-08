@@ -196,15 +196,6 @@ textarea{resize:vertical;min-height:96px;}
               <span class="hint">เลือกประเภทที่ตรงกับผู้ป่วยที่สุด — ใช้กำหนดเกณฑ์การเยี่ยม/ติดตาม</span>
             </div>
             <div class="field">
-              <label for="patient_status">สถานะผู้ป่วย</label>
-              <select id="patient_status" onchange="document.getElementById('military_unit_field').style.display = (this.value==='active_duty' || this.value==='active_duty_family') ? 'flex' : 'none';">
-                <option value="">— เลือกสถานะ —</option>
-                <option value="active_duty">กำลังพล</option>
-                <option value="active_duty_family">ครอบครัวกำลังพล</option>
-                <option value="civilian">ประชาชน</option>
-              </select>
-            </div>
-            <div class="field">
               <label for="severity_level">การจำแนกผู้ป่วยตามระดับความรุนแรง</label>
               <select id="severity_level" onchange="
                 var map={
@@ -225,6 +216,15 @@ textarea{resize:vertical;min-height:96px;}
                 <option value="g4">กลุ่ม 4 Palliative Care</option>
               </select>
               <span class="chip" id="severity_chip" style="display:none;margin-top:4px;"></span>
+            </div>
+            <div class="field">
+              <label for="patient_status">สถานะผู้ป่วย</label>
+              <select id="patient_status" onchange="document.getElementById('military_unit_field').style.display = (this.value==='active_duty' || this.value==='active_duty_family') ? 'flex' : 'none';">
+                <option value="">— เลือกสถานะ —</option>
+                <option value="active_duty">กำลังพล</option>
+                <option value="active_duty_family">ครอบครัวกำลังพล</option>
+                <option value="civilian">ประชาชน</option>
+              </select>
             </div>
             <div class="field" id="military_unit_field" style="display:none;">
               <label for="military_unit">หน่วยต้นสังกัด</label>
