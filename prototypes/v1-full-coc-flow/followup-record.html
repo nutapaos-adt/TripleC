@@ -155,6 +155,40 @@
     border-radius:var(--radius-sm);padding:6px 10px;
   }
 
+  .method-toggle{display:flex;gap:10px;}
+  .method-option{flex:1;position:relative;}
+  .method-option input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer;}
+  .method-option .opt-label{
+    display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;
+    border:1px solid var(--color-neutral-300);border-radius:var(--radius-md);
+    background:var(--color-surface);font-size:14px;font-weight:600;color:var(--color-neutral-700);cursor:pointer;
+  }
+  .method-option input:checked + .opt-label{
+    border-color:var(--color-primary-700);border-width:2px;background:var(--color-primary-100);color:var(--color-primary-700);
+  }
+  .method-option input:focus-visible + .opt-label{outline:2px solid var(--color-primary-700);outline-offset:2px;}
+
+  .grid-row{display:grid;gap:14px;}
+  .grid-row.cols-3{grid-template-columns:repeat(3,1fr);}
+  .grid-row.cols-5{grid-template-columns:repeat(5,1fr);}
+  .mini-field .label{font-size:11.5px;margin-bottom:4px;}
+  .mini-field .input{padding:9px 10px;text-align:center;font-variant-numeric:tabular-nums;}
+  .mini-field .unit{font-size:10.5px;color:var(--color-neutral-500);display:block;text-align:center;margin-top:2px;}
+  .bmi-readout{
+    background:var(--color-primary-100);color:var(--color-primary-700);border-radius:var(--radius-sm);
+    padding:9px 10px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums;
+  }
+
+  .adl-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--color-neutral-100);flex-wrap:wrap;}
+  .adl-row:last-of-type{border-bottom:none;}
+  .adl-row .adl-label{font-size:13px;color:var(--color-neutral-900);flex:1;min-width:160px;}
+  .adl-row select{width:auto;min-width:200px;}
+  .adl-total{
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--color-primary-50);border:1px solid var(--color-primary-300);border-radius:var(--radius-md);
+    padding:10px 14px;margin-top:10px;font-weight:700;color:var(--color-primary-700);
+  }
+
   .action-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px;}
   .btn{
     display:inline-flex;align-items:center;justify-content:center;gap:8px;
@@ -196,6 +230,10 @@
     .action-row{flex-direction:column;}
     .action-row .btn{width:100%;}
     .pps-row{gap:8px;}
+    .grid-row.cols-3{grid-template-columns:1fr 1fr;}
+    .grid-row.cols-5{grid-template-columns:1fr 1fr;}
+    .adl-row{flex-direction:column;align-items:stretch;}
+    .adl-row select{width:100%;}
   }
 </style>
 </head>
@@ -251,15 +289,95 @@
             เยี่ยมบ้าน
           </span>
           <span class="chip chip-zone">ในเขต</span>
+          <span class="chip chip-risk">กลุ่ม 3 — บ้านสีแดง</span>
           <span class="chip chip-warning">กำหนด 21 ส.ค. 2569 · รอถึงกำหนด</span>
         </div>
       </section>
 
       <form class="card" id="followupForm" novalidate>
         <div class="field">
+          <label class="label">วิธีการติดตามครั้งนี้</label>
+          <div class="method-toggle">
+            <div class="method-option">
+              <input type="radio" name="method" id="methodVisit" value="home_visit" checked>
+              <label class="opt-label" for="methodVisit">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h5v-6h4v6h5V9.5"/></svg>
+                ลงพื้นที่เยี่ยม
+              </label>
+            </div>
+            <div class="method-option">
+              <input type="radio" name="method" id="methodCall" value="phone_call">
+              <label class="opt-label" for="methodCall">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L14 13l5 2v4a2 2 0 0 1-2 2A15 15 0 0 1 4 6a2 2 0 0 1 2-2z"/></svg>
+                โทรติดตาม
+              </label>
+            </div>
+          </div>
+          <p class="hint">เลือกให้ตรงกับวิธีที่ทำจริงในครั้งนี้ — อาจต่างจากที่วางแผนไว้ได้ (เช่น วางแผนลงพื้นที่แต่ติดสถานการณ์ ต้องเปลี่ยนเป็นโทรแทน)</p>
+        </div>
+
+        <div class="field">
           <label class="label" for="visitedAt">วันเวลาที่เยี่ยม/โทร</label>
           <input type="datetime-local" id="visitedAt" name="visited_at" class="input" value="2026-08-21T14:30" required>
           <p class="hint">ระบบจะบันทึกเวลานี้เป็นเวลาที่ทำการติดตามจริง — แก้ไขได้หากบันทึกย้อนหลัง</p>
+        </div>
+
+        <div class="field">
+          <label class="label" for="generalAppearance">ลักษณะทั่วไป (General Appearance)</label>
+          <input type="text" id="generalAppearance" name="general_appearance" class="input"
+                 placeholder="เช่น รู้สึกตัวดี ไม่ซีด ไม่เหลือง หายใจสม่ำเสมอ นอนบนเตียงตลอดเวลา">
+        </div>
+
+        <div class="field">
+          <label class="label">สัญญาณชีพ (Vital Signs)</label>
+          <div class="grid-row cols-5">
+            <div class="mini-field">
+              <label class="label" for="vsBp">BP</label>
+              <input type="text" id="vsBp" name="vs_bp" class="input" placeholder="120/80">
+              <span class="unit">mmHg</span>
+            </div>
+            <div class="mini-field">
+              <label class="label" for="vsPr">PR</label>
+              <input type="number" id="vsPr" name="vs_pr" class="input" placeholder="80">
+              <span class="unit">ครั้ง/นาที</span>
+            </div>
+            <div class="mini-field">
+              <label class="label" for="vsRr">RR</label>
+              <input type="number" id="vsRr" name="vs_rr" class="input" placeholder="18">
+              <span class="unit">ครั้ง/นาที</span>
+            </div>
+            <div class="mini-field">
+              <label class="label" for="vsTemp">Temp</label>
+              <input type="number" step="0.1" id="vsTemp" name="vs_temp" class="input" placeholder="36.8">
+              <span class="unit">°C</span>
+            </div>
+            <div class="mini-field">
+              <label class="label" for="vsSpo2">SpO2</label>
+              <input type="number" id="vsSpo2" name="vs_spo2" class="input" placeholder="98">
+              <span class="unit">%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">น้ำหนัก / ส่วนสูง / BMI</label>
+          <div class="grid-row cols-3">
+            <div class="mini-field">
+              <label class="label" for="weightKg">น้ำหนัก</label>
+              <input type="number" step="0.1" id="weightKg" name="weight_kg" class="input" placeholder="55" oninput="syncBmi()">
+              <span class="unit">กก.</span>
+            </div>
+            <div class="mini-field">
+              <label class="label" for="heightCm">ส่วนสูง</label>
+              <input type="number" step="0.1" id="heightCm" name="height_cm" class="input" placeholder="160" oninput="syncBmi()">
+              <span class="unit">ซม.</span>
+            </div>
+            <div class="mini-field">
+              <label class="label" for="bmiValue">BMI</label>
+              <div class="bmi-readout" id="bmiValue">—</div>
+              <span class="unit" id="bmiCategory">กรอกน้ำหนัก/ส่วนสูง</span>
+            </div>
+          </div>
         </div>
 
         <div class="field" id="ppsField">
@@ -276,6 +394,51 @@
             <span class="pps-badge" id="ppsValue">60</span>
           </div>
           <p class="hint">Palliative Performance Scale — 100 = ปกติดี, 0 = เสียชีวิต · PPS ช่วง 31–60 ตามแผนคือติดตามทุก 2 สัปดาห์</p>
+        </div>
+
+        <div class="field" id="adlField">
+          <span class="hint-note">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 16v-4M12 8h.01"/><circle cx="12" cy="12" r="9"/></svg>
+            แสดงเฉพาะผู้ป่วยกลุ่ม 3 — บ้านสีแดง (ช่วยเหลือตนเองไม่ได้เลย)
+          </span>
+          <label class="label">การประเมิน ADL (Activities of Daily Living)</label>
+          <div class="adl-row">
+            <span class="adl-label">การรับประทานอาหาร</span>
+            <select class="input adl-item" oninput="syncAdl()">
+              <option value="2">ทำได้เอง</option>
+              <option value="1">ช่วยเหลือบางส่วน</option>
+              <option value="0">ทำไม่ได้เลย</option>
+            </select>
+          </div>
+          <div class="adl-row">
+            <span class="adl-label">การเคลื่อนไหว/ย้ายตัว</span>
+            <select class="input adl-item" oninput="syncAdl()">
+              <option value="2">ทำได้เอง</option>
+              <option value="1">ช่วยเหลือบางส่วน</option>
+              <option value="0" selected>ทำไม่ได้เลย</option>
+            </select>
+          </div>
+          <div class="adl-row">
+            <span class="adl-label">การขับถ่าย/ปัสสาวะ</span>
+            <select class="input adl-item" oninput="syncAdl()">
+              <option value="2">ทำได้เอง</option>
+              <option value="1" selected>ช่วยเหลือบางส่วน</option>
+              <option value="0">ทำไม่ได้เลย</option>
+            </select>
+          </div>
+          <div class="adl-row">
+            <span class="adl-label">การอาบน้ำ/แต่งตัว</span>
+            <select class="input adl-item" oninput="syncAdl()">
+              <option value="2">ทำได้เอง</option>
+              <option value="1">ช่วยเหลือบางส่วน</option>
+              <option value="0" selected>ทำไม่ได้เลย</option>
+            </select>
+          </div>
+          <div class="adl-total">
+            <span>คะแนน ADL รวม</span>
+            <span id="adlTotal">1 / 8</span>
+          </div>
+          <p class="hint">ประเมินแบบย่อ (คล้าย Barthel ADL Index) — ใช้ระบุระดับการช่วยเหลือที่ผู้ดูแล/ทีมเยี่ยมบ้านต้องเตรียมให้ผู้ป่วยกลุ่มพึ่งพาสูง</p>
         </div>
 
         <div class="field" id="findingsField">
@@ -303,6 +466,36 @@
     document.getElementById('ppsNumber').value = val;
     document.getElementById('ppsValue').textContent = val;
   }
+
+  function syncBmi(){
+    var weight = parseFloat(document.getElementById('weightKg').value);
+    var height = parseFloat(document.getElementById('heightCm').value);
+    var bmiEl = document.getElementById('bmiValue');
+    var catEl = document.getElementById('bmiCategory');
+    if (!weight || !height){
+      bmiEl.textContent = '—';
+      catEl.textContent = 'กรอกน้ำหนัก/ส่วนสูง';
+      return;
+    }
+    var h = height / 100;
+    var bmi = weight / (h * h);
+    bmiEl.textContent = bmi.toFixed(1);
+    var cat = 'น้ำหนักปกติ';
+    if (bmi < 18.5) cat = 'ผอม';
+    else if (bmi < 23) cat = 'น้ำหนักปกติ';
+    else if (bmi < 25) cat = 'น้ำหนักเกิน';
+    else if (bmi < 30) cat = 'อ้วนระดับ 1';
+    else cat = 'อ้วนระดับ 2';
+    catEl.textContent = cat;
+  }
+
+  function syncAdl(){
+    var items = document.querySelectorAll('.adl-item');
+    var total = 0;
+    items.forEach(function(el){ total += parseInt(el.value, 10); });
+    document.getElementById('adlTotal').textContent = total + ' / ' + (items.length * 2);
+  }
+  syncAdl();
 
   var form = document.getElementById('followupForm');
   var findingsField = document.getElementById('findingsField');
