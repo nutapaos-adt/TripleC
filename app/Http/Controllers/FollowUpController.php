@@ -16,30 +16,6 @@ use Illuminate\Support\Facades\DB;
 
 class FollowUpController extends Controller
 {
-    public function guide(FollowUpPlan $plan): View
-    {
-        $plan->load(['referral.patient', 'referral.caseType']);
-
-        return view('follow-up.guide', compact('plan'));
-    }
-
-    public function generateGuide(FollowUpPlan $plan, AiService $ai): RedirectResponse
-    {
-        try {
-            $guide = $ai->suggestFollowUpGuide($plan);
-        } catch (\Throwable $e) {
-            report($e);
-
-            return redirect()
-                ->route('follow-up-plans.guide', $plan)
-                ->with('error', $e->getMessage());
-        }
-
-        $plan->update(['ai_guide' => $guide]);
-
-        return redirect()->route('follow-up-plans.guide', $plan);
-    }
-
     public function createRecord(FollowUpPlan $plan): View
     {
         abort_if($plan->record()->exists(), 403, 'บันทึกผลติดตามครั้งนี้ไปแล้ว');

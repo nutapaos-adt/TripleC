@@ -49,7 +49,7 @@
                         <button type="submit" class="inline-flex items-center px-4 py-2 bg-[#2C5166] text-white rounded-md text-sm font-semibold hover:bg-[#3D6B84]">
                             บันทึกผลติดตาม
                         </button>
-                        <a href="{{ route('follow-up-plans.guide', $plan) }}" class="text-sm text-[#7C7863] hover:text-[#4A4739]">กลับไปดูคู่มือติดตาม</a>
+                        <a href="{{ route('referrals.show', $plan->referral) }}" class="text-sm text-[#7C7863] hover:text-[#4A4739]">กลับไปหน้าใบส่งต่อ</a>
                     </div>
                 </form>
             </div>

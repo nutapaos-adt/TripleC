@@ -183,6 +183,19 @@
   .adl-row:last-of-type{border-bottom:none;}
   .adl-row .adl-label{font-size:13px;color:var(--color-neutral-900);flex:1;min-width:160px;}
   .adl-row select{width:auto;min-width:200px;}
+  .file-drop{
+    border:1px dashed var(--color-neutral-300);border-radius:var(--radius-md);
+    padding:16px;background:var(--color-neutral-100);text-align:center;
+  }
+  .file-drop input{width:auto;margin:0 auto;display:block;}
+  .file-drop .hint{margin-top:8px;}
+  .photo-preview-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+  .photo-thumb{
+    width:64px;height:64px;border-radius:var(--radius-sm);background:var(--color-primary-100);
+    color:var(--color-primary-700);display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:600;border:1px solid var(--color-primary-300);flex-direction:column;gap:2px;
+  }
+
   .adl-total{
     display:flex;align-items:center;justify-content:space-between;
     background:var(--color-primary-50);border:1px solid var(--color-primary-300);border-radius:var(--radius-md);
@@ -253,9 +266,9 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="1.5"/><path d="M9 3.5h6v2H9zM9 10h6M9 14h6"/></svg>
         <span>ใบส่งต่อ</span>
       </a>
-      <a class="nav-item active" href="followup-guide.html">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-11.2A7 7 0 1 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.6" r="2.4"/></svg>
-        <span>แผนติดตามวันนี้</span>
+      <a class="nav-item active" href="followup-list.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 4.5v-1M16 4.5v-1"/><path d="M7 13.5h3M7 16.5h6"/></svg>
+        <span>ติดตามการเยี่ยม</span>
       </a>
       <a class="nav-item" href="referral-detail.html">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5l3.2 2"/></svg>
@@ -299,14 +312,14 @@
           <label class="label">วิธีการติดตามครั้งนี้</label>
           <div class="method-toggle">
             <div class="method-option">
-              <input type="radio" name="method" id="methodVisit" value="home_visit" checked>
+              <input type="radio" name="method" id="methodVisit" value="home_visit" checked onchange="syncMethod()">
               <label class="opt-label" for="methodVisit">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h5v-6h4v6h5V9.5"/></svg>
                 ลงพื้นที่เยี่ยม
               </label>
             </div>
             <div class="method-option">
-              <input type="radio" name="method" id="methodCall" value="phone_call">
+              <input type="radio" name="method" id="methodCall" value="phone_call" onchange="syncMethod()">
               <label class="opt-label" for="methodCall">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L14 13l5 2v4a2 2 0 0 1-2 2A15 15 0 0 1 4 6a2 2 0 0 1 2-2z"/></svg>
                 โทรติดตาม
@@ -322,13 +335,21 @@
           <p class="hint">ระบบจะบันทึกเวลานี้เป็นเวลาที่ทำการติดตามจริง — แก้ไขได้หากบันทึกย้อนหลัง</p>
         </div>
 
-        <div class="field">
+        <div class="field" id="examAppearanceField">
+          <span class="hint-note">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 16v-4M12 8h.01"/><circle cx="12" cy="12" r="9"/></svg>
+            แสดงเฉพาะกรณีลงพื้นที่เยี่ยม — ประเมินทางกายภาพไม่ได้ทางโทรศัพท์
+          </span>
           <label class="label" for="generalAppearance">ลักษณะทั่วไป (General Appearance)</label>
           <input type="text" id="generalAppearance" name="general_appearance" class="input"
                  placeholder="เช่น รู้สึกตัวดี ไม่ซีด ไม่เหลือง หายใจสม่ำเสมอ นอนบนเตียงตลอดเวลา">
         </div>
 
-        <div class="field">
+        <div class="field" id="examVsField">
+          <span class="hint-note">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 16v-4M12 8h.01"/><circle cx="12" cy="12" r="9"/></svg>
+            แสดงเฉพาะกรณีลงพื้นที่เยี่ยม — ประเมินทางกายภาพไม่ได้ทางโทรศัพท์
+          </span>
           <label class="label">สัญญาณชีพ (Vital Signs)</label>
           <div class="grid-row cols-5">
             <div class="mini-field">
@@ -359,7 +380,11 @@
           </div>
         </div>
 
-        <div class="field">
+        <div class="field" id="examBmiField">
+          <span class="hint-note">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 16v-4M12 8h.01"/><circle cx="12" cy="12" r="9"/></svg>
+            แสดงเฉพาะกรณีลงพื้นที่เยี่ยม — ประเมินทางกายภาพไม่ได้ทางโทรศัพท์
+          </span>
           <label class="label">น้ำหนัก / ส่วนสูง / BMI</label>
           <div class="grid-row cols-3">
             <div class="mini-field">
@@ -449,9 +474,22 @@
           <p class="error-text" id="findingsError">กรุณากรอกบันทึกผลการติดตามก่อนดำเนินการต่อ — ข้อมูลนี้จำเป็นสำหรับการวิเคราะห์ความเสี่ยงโดย AI</p>
         </div>
 
+        <div class="field" id="examPhotoField">
+          <span class="hint-note">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 16v-4M12 8h.01"/><circle cx="12" cy="12" r="9"/></svg>
+            แสดงเฉพาะกรณีลงพื้นที่เยี่ยม
+          </span>
+          <label class="label" for="visitPhotos">ภาพประกอบการเยี่ยม</label>
+          <div class="file-drop">
+            <input type="file" id="visitPhotos" name="visit_photos[]" accept="image/*" multiple onchange="syncPhotoPreview()">
+            <p class="hint">เช่น ภาพแผล ภาพสภาพแวดล้อมที่บ้าน — รองรับ JPG/PNG หลายไฟล์ ไม่เกิน 10MB ต่อไฟล์</p>
+            <div class="photo-preview-row" id="photoPreviewRow"></div>
+          </div>
+        </div>
+
         <div class="action-row">
           <button type="submit" class="btn btn-primary" id="submitBtn">บันทึกผลและวิเคราะห์ความเสี่ยง →</button>
-          <a class="btn btn-secondary" href="followup-guide.html">กลับไปดูคู่มือติดตาม</a>
+          <a class="btn btn-secondary" href="followup-list.html">กลับไปหน้าติดตามการเยี่ยม</a>
         </div>
       </form>
     </div>
@@ -496,6 +534,28 @@
     document.getElementById('adlTotal').textContent = total + ' / ' + (items.length * 2);
   }
   syncAdl();
+
+  function syncMethod(){
+    var isVisit = document.getElementById('methodVisit').checked;
+    var display = isVisit ? '' : 'none';
+    document.getElementById('examAppearanceField').style.display = display;
+    document.getElementById('examVsField').style.display = display;
+    document.getElementById('examBmiField').style.display = display;
+    document.getElementById('examPhotoField').style.display = display;
+  }
+  syncMethod();
+
+  function syncPhotoPreview(){
+    var files = document.getElementById('visitPhotos').files;
+    var row = document.getElementById('photoPreviewRow');
+    row.innerHTML = '';
+    Array.prototype.forEach.call(files, function(file){
+      var thumb = document.createElement('div');
+      thumb.className = 'photo-thumb';
+      thumb.innerHTML = '&#128247;<span>' + file.name.slice(0, 10) + (file.name.length > 10 ? '…' : '') + '</span>';
+      row.appendChild(thumb);
+    });
+  }
 
   var form = document.getElementById('followupForm');
   var findingsField = document.getElementById('findingsField');

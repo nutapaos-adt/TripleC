@@ -18,7 +18,7 @@ AI วิเคราะห์ความเสี่ยง → **พยาบ�
 | Role (ค่าในคอลัมน์) | ชื่อเรียก | หน้าที่หลักในระบบ | สิทธิ์เข้าถึงที่บังคับด้วยโค้ด |
 |---|---|---|---|
 | `ward_staff` (ค่าเริ่มต้น) | พยาบาล/เจ้าหน้าที่หอผู้ป่วย | **รับเคส (intake)** — กรอกข้อมูลผู้ป่วย สร้าง `Referral` ใหม่ (`referrals.store`), แนบไฟล์ประกอบ, กดให้ AI สรุปข้อมูลเบื้องต้น | เข้าหน้า `referrals.*` และ `follow-up-plans.*` ได้เหมือนผู้ใช้ทุกคนที่ login แล้ว (ระบบยังไม่ล็อกฟีเจอร์เหล่านี้ตาม role ในโค้ดปัจจุบัน — ดูหมายเหตุด้านล่าง) |
-| `home_visit_team` | ทีมเยี่ยมบ้าน (พยาบาลติดตาม) | **ตรวจสอบ/ยืนยันแผนดูแล** จากร่างของ AI (`referrals.care-plan.confirm`), ขอคู่มือเยี่ยมบ้านจาก AI, บันทึกผลเยี่ยม/โทรติดตาม (`follow-up-plans.record.store`), ให้ AI วิเคราะห์ความเสี่ยง แล้ว **ยืนยันการตัดสินใจเอง 100%** (`follow-up-plans.decision`) | เช่นเดียวกับข้างต้น |
+| `home_visit_team` | ทีมเยี่ยมบ้าน (พยาบาลติดตาม) | **ตรวจสอบ/ยืนยันแผนดูแล** จากร่างของ AI (`referrals.care-plan.confirm`), บันทึกผลเยี่ยม/โทรติดตาม (`follow-up-plans.record.store`), ให้ AI วิเคราะห์ความเสี่ยง แล้ว **ยืนยันการตัดสินใจเอง 100%** (`follow-up-plans.decision`) | เช่นเดียวกับข้างต้น |
 | `admin` | แอดมิน/หัวหน้าแผนก | ตั้งค่าประเภทเคสและเกณฑ์จำนวนครั้งเยี่ยม (`admin.case-types.*`), จัดการบัญชีผู้ใช้และกำหนด role (`admin.users.*`) | **บังคับด้วย middleware จริง** — เฉพาะ `role:admin` เท่านั้นที่เข้า `/admin/*` ได้ (`App\Http\Middleware\EnsureUserHasRole`) |
 
 > **หมายเหตุสำคัญ:** ตอนนี้มีแค่กลุ่ม `/admin/*` เท่านั้นที่บังคับสิทธิ์ตาม role ในโค้ดจริง
@@ -47,18 +47,16 @@ AI วิเคราะห์ความเสี่ยง → **พยาบ�
    - `fixed_count` (เยี่ยม N ครั้งทุกช่วงเวลาคงที่) → สร้างครบทุกครั้งตั้งแต่ต้น
    - `score_based` (ช่วงเวลาแปรผันตาม PPS Score สำหรับ Palliative Care) → สร้างแค่ครั้งที่ 1
      ก่อน เพราะยังไม่มีคะแนนสำหรับคำนวณครั้งถัดไป
-5. **เยี่ยมบ้าน/โทรติดตาม พร้อมคู่มือจาก AI** — ทีมเยี่ยมบ้านเปิด `follow-up-plans.guide` ขอคู่มือจาก
-   AI ผ่าน `follow-up-plans.guide.generate` (`AiService::suggestFollowUpGuide()`) ก่อนลงพื้นที่
-6. **บันทึกผล** — หลังเยี่ยม/โทร กรอกแบบฟอร์มที่ `follow-up-plans.record.create` แล้ว submit
+5. **บันทึกผล** — หลังเยี่ยมบ้าน/โทรติดตาม กรอกแบบฟอร์มที่ `follow-up-plans.record.create` แล้ว submit
    `follow-up-plans.record.store` (`FollowUpController::storeRecord`) บันทึก `FollowUpRecord`
    (PPS Score, บันทึกดิบ) และปิดสถานะแผนนี้เป็น `done`
-7. **AI วิเคราะห์ความเสี่ยง** — ที่หน้า `follow-up-plans.review` กดให้ AI วิเคราะห์ผ่าน
+6. **AI วิเคราะห์ความเสี่ยง** — ที่หน้า `follow-up-plans.review` กดให้ AI วิเคราะห์ผ่าน
    `follow-up-plans.analyze` (`AiService::analyzeFollowUpRecord()`) บันทึกลง `ai_analysis` — ยังเป็น
    แค่ข้อเสนอแนะ ไม่ใช่การตัดสินใจ
-8. **พยาบาลยืนยันการตัดสินใจเสมอ 100%** — submit `follow-up-plans.decision`
+7. **พยาบาลยืนยันการตัดสินใจเสมอ 100%** — submit `follow-up-plans.decision`
    (`FollowUpController::confirmDecision`) เลือกหนึ่งใน 3 ทาง: **ติดตามซ้ำ** / **ส่งต่อ** / **ปิดเคส**
    บันทึกลง `nurse_decision` พร้อมผู้ยืนยันและเวลา
-9. **สร้างกำหนดการถัดไปอัตโนมัติ หรือปิดเคส** — ตาม decision ข้อ 8:
+8. **สร้างกำหนดการถัดไปอัตโนมัติ หรือปิดเคส** — ตาม decision ข้อ 7:
    - ปิดเคส → `VisitPlanService::cancelRemainingPlans()` ยกเลิกทุกแผนที่ยังไม่ถึงกำหนด แล้วตั้ง
      `Referral.status = closed` พร้อม `closed_at`
    - ติดตามซ้ำ/ส่งต่อ → `VisitPlanService::generateNextPlan()` สร้าง `FollowUpPlan` รอบถัดไป (no-op

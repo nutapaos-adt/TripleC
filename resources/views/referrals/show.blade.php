@@ -129,7 +129,7 @@
                                         } }}
                                     </span>
                                     @if ($plan->status !== 'done')
-                                        <a href="{{ route('follow-up-plans.guide', $plan) }}" class="text-[#2C5166] hover:underline font-medium">
+                                        <a href="{{ route('follow-up-plans.record.create', $plan) }}" class="text-[#2C5166] hover:underline font-medium">
                                             เริ่มติดตาม →
                                         </a>
                                     @elseif ($plan->record && ! $plan->record->isConfirmed())

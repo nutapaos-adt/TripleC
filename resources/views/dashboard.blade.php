@@ -71,7 +71,7 @@
                                         @endif
                                     </td>
                                     <td class="px-4 py-3 text-right">
-                                        <a href="{{ route('follow-up-plans.guide', $plan) }}" class="text-[#2C5166] hover:underline font-medium">เริ่มติดตาม →</a>
+                                        <a href="{{ route('follow-up-plans.record.create', $plan) }}" class="text-[#2C5166] hover:underline font-medium">เริ่มติดตาม →</a>
                                     </td>
                                 </tr>
                             @empty

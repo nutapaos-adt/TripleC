@@ -17,8 +17,8 @@ scope covering the entire continuity-of-care loop plus admin.
 | `referral-create.html` | New referral intake form | Case intake |
 | `referral-detail.html` | Referral detail hub (patient info, timeline, attachments) | Case intake |
 | `care-plan-confirm.html` | AI-drafted care plan → nurse confirmation | AI care-plan confirmation |
-| `followup-guide.html` | AI-suggested pre-visit/pre-call guide | Home-visit / phone follow-up |
 | `followup-record.html` | Record follow-up outcome | Home-visit / phone follow-up |
+| `followup-list.html` | All follow-up plans across patients, filterable by status (added 2026-09-09) | Home-visit / phone follow-up |
 | `review-decide.html` | AI risk analysis + mandatory nurse decision (repeat/refer/close) | Risk analysis + nurse decision |
 | `admin-case-types-list.html` | Case types list | Admin |
 | `admin-case-type-form.html` | Case type create/edit (fixed-count vs score-based visit rules) | Admin |
@@ -246,6 +246,44 @@ scope covering the entire continuity-of-care loop plus admin.
   หมายเหตุที่ยังไม่ได้ทำ (นอกขอบเขตที่ขอ): ฟิลด์ตรวจร่างกาย (ลักษณะทั่วไป/V-S/น้ำหนัก-ส่วนสูง-BMI) ยังคง
   แสดงเสมอไม่ว่าจะเลือกวิธีไหน ทั้งที่ตามจริงข้อมูลกลุ่มนี้เก็บทางโทรศัพท์ไม่ได้ — ถ้าต้องการให้ซ่อน/แสดง
   ตามวิธีที่เลือก แจ้งได้.
+- 2026-09-09 (รอบ 33): ทำตามที่เสนอไว้ท้ายรอบ 32 — ซ่อนฟิลด์ตรวจร่างกาย (ลักษณะทั่วไป, สัญญาณชีพ,
+  น้ำหนัก/ส่วนสูง/BMI) อัตโนมัติเมื่อเลือกวิธีการติดตามเป็น "โทรติดตาม" (แสดงเฉพาะ "ลงพื้นที่เยี่ยม")
+  เพิ่ม hint-note บนแต่ละฟิลด์อธิบายเหตุผล ("ประเมินทางกายภาพไม่ได้ทางโทรศัพท์") เหมือน pattern เดียวกับ
+  PPS Score/ADL field ที่มีอยู่แล้ว — PPS Score และ ADL ไม่ถูกซ่อนตามวิธีการติดตาม เพราะประเมินทางโทรศัพท์
+  ได้ในระดับหนึ่ง (ซักถามอาการ/functional status) ทดสอบสลับ 2 ตัวเลือกแล้ว exam fields ซ่อน/แสดงถูกต้อง.
+- 2026-09-09 (รอบ 34): เพิ่มช่อง "ภาพประกอบการเยี่ยม" (แนบรูปภาพ เช่น ภาพแผล/ภาพสภาพแวดล้อมที่บ้าน)
+  ตามที่ผู้ใช้ถามระหว่างที่กำลังแก้รอบ 33 — วางไว้หลังน้ำหนัก/ส่วนสูง/BMI ก่อน PPS Score รองรับไฟล์ภาพ
+  หลายไฟล์ (JPG/PNG) พร้อม preview รายชื่อไฟล์ที่เลือกเป็นภาพย่อเล็กๆ อยู่ในกลุ่มฟิลด์ที่แสดงเฉพาะกรณี
+  "ลงพื้นที่เยี่ยม" เดียวกับฟิลด์ตรวจร่างกาย (รอบ 33) เพราะถ่ายภาพประกอบได้เฉพาะตอนอยู่หน้างานจริง.
+- 2026-09-09 (รอบ 35): ย้าย "ภาพประกอบการเยี่ยม" จากตำแหน่งเดิม (หลังน้ำหนัก/ส่วนสูง/BMI) ไปไว้ล่างสุด
+  ของฟอร์ม ต่อจาก "บันทึกผลการติดตาม" ก่อนปุ่มบันทึก ตามที่ผู้ใช้ขอ — เงื่อนไขแสดงเฉพาะกรณีลงพื้นที่เยี่ยม
+  (ผูกกับ syncMethod() เดิม) ยังทำงานถูกต้องแม้ย้ายตำแหน่งแล้ว เพราะอ้างอิงด้วย id ไม่ใช่ตำแหน่งในหน้า.
+- 2026-09-09 (รอบ 36): เพิ่มไฟล์ใหม่ `followup-list.html` — เมนู "ติดตามการเยี่ยม" แยกออกมาจาก
+  "แผนติดตามวันนี้" ตามที่ผู้ใช้ขอ (เลือกตัวเลือก "แยกเมนูสิดบาร์ใหม่" จาก 3 ตัวเลือกที่ถามไปเพื่อกันตีความ
+  ผิด) แสดงรายการแผนติดตาม (เยี่ยมบ้าน/โทรติดตาม) ของผู้ป่วยทุกรายในความรับผิดชอบ ไม่จำกัดเฉพาะวันนี้
+  เหมือน "แผนติดตามวันนี้" เดิม — มี filter chip กรองตามสถานะ (ทั้งหมด/เกินกำหนด/วันนี้/รอถึงกำหนด/
+  เยี่ยมแล้ว) พร้อมตัวนับ, ตารางแสดง ผู้ป่วย/ประเภทเคส/ครั้งที่/วิธีติดตาม/กำหนด/สถานะ และลิงก์ไปหน้าที่
+  เกี่ยวข้อง (บันทึกผล/ดูคู่มือ/ดูรายละเอียด) ตามสถานะของแต่ละแถว เพิ่มเมนูนี้ในหน้า `followup-guide.html`
+  และ `followup-record.html` ที่ใช้ sidebar เดียวกัน (ไม่ได้แตะ `review-decide.html` เพราะใช้ nav คนละแบบ
+  อยู่แล้ว — เป็น known inconsistency เดิมที่เคยตั้งข้อสังเกตไว้) ทดสอบคลิก filter แล้วกรองแถวถูกต้อง.
+- 2026-09-09 (รอบ 37): ลบ `followup-guide.html` (หน้าคู่มือก่อนเยี่ยม) ออกจากชุด prototype ทั้งหมด
+  ตามที่ผู้ใช้ขอ ("เอาคู่มือก่อนเยี่ยมออก เหลือแค่บันทึกผลการเยี่ยมพอ") — ถามยืนยันขอบเขตก่อนแล้วว่าต้องการ
+  ลบไฟล์จริง (ไม่ใช่แค่เอาเมนูออกหรือแก้ลิงก์) แก้ทุกจุดที่เคยลิงก์ไปหน้านี้:
+  - `dashboard.html`: ปุ่ม "เริ่มติดตาม" ทั้ง 6 แถวในตาราง เปลี่ยนไปที่ `followup-record.html` ตรง
+  - `care-plan-confirm.html`: ลิงก์ขั้นตอนถัดไป เปลี่ยนข้อความ+ปลายทางเป็น "บันทึกผลติดตาม" → `followup-record.html`
+  - `followup-list.html`: ลบเมนู sidebar "แผนติดตามวันนี้"; ปุ่ม "ดูคู่มือ →" ในแถวสถานะ "วันนี้" (2 แถว)
+    เปลี่ยนเป็น "บันทึกผล →" ลิงก์ไป `followup-record.html` เหมือนแถว "เกินกำหนด"
+  - `followup-record.html`: ลบเมนู sidebar "แผนติดตามวันนี้" (ย้าย active state ไปที่ "ติดตามการเยี่ยม" แทน
+    เพราะเมนูเดิมที่เคย active ถูกลบไป); ปุ่ม "กลับไปดูคู่มือติดตาม" เปลี่ยนเป็น "กลับไปหน้าติดตามการเยี่ยม"
+    ลิงก์ไป `followup-list.html`
+  - `review-decide.html`: ลบรายการเมนู "คู่มือติดตาม" ออกจากกลุ่ม "ติดตามเยี่ยมบ้าน" เหลือแค่
+    "บันทึกผลติดตาม"/"ตรวจสอบและตัดสินใจ"
+  ยืนยันด้วย grep ทั้งชุดแล้วว่าไม่มีลิงก์ไป `followup-guide.html` หลงเหลืออยู่เลย (นอกจาก log ประวัติใน
+  MANIFEST.md นี้เอง) อัปเดตตาราง "Screens included" ด้านบนลบแถวนี้ออกด้วย.
+  หมายเหตุ: `docs/`/`CLAUDE.md` (ถ้ามี) ยังคงพูดถึง "คู่มือจาก AI" เป็นส่วนหนึ่งของ user journey จริง และ
+  `AiService::suggestFollowUpGuide()` ยังเป็นฟีเจอร์ backend ที่ตั้งใจไว้ — การลบรอบนี้เป็นแค่ระดับ
+  prototype/UI ของ flow นี้เท่านั้น ยังไม่ได้ตัดสินใจเรื่อง backend/สถาปัตยกรรมจริง ถ้าต้องการให้เอกสาร
+  สถาปัตยกรรมสะท้อนการตัดขั้นตอนนี้ออกด้วย แจ้งได้.
 
 **Known prototype simplifications (not bugs):**
 - All referral rows in `referrals-list.html` link to the same `referral-detail.html` (one mock patient),

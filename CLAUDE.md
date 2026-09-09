@@ -31,13 +31,13 @@ follow-up team, replacing the discontinued national "Thai COC" system. The end-t
 closing summary) is:
 
 รับเคส (intake) → AI สรุปข้อมูล → พยาบาลตรวจสอบ/ยืนยันแผนดูแล → สร้างกำหนดการติดตามอัตโนมัติ →
-เยี่ยมบ้าน/โทรติดตาม (พร้อมคู่มือจาก AI) → บันทึกผล → AI วิเคราะห์ความเสี่ยง →
+เยี่ยมบ้าน/โทรติดตาม → บันทึกผล → AI วิเคราะห์ความเสี่ยง →
 **พยาบาลยืนยันการตัดสินใจเสมอ 100%** (ติดตามซ้ำ / ส่งต่อ / ปิดเคส) → สร้างกำหนดการถัดไปอัตโนมัติ หรือปิดเคส
 
 ### The one rule that governs every AI-touching feature
 
 **Human-in-the-loop is non-negotiable** (DESIGN.md §4.1). `AiService` only ever produces a *draft*
-(`ai_summary`, the follow-up guide, `ai_analysis`) — nothing it returns is committed to a decision-bearing
+(`ai_summary`, `ai_analysis`) — nothing it returns is committed to a decision-bearing
 field until a nurse explicitly reviews/edits and confirms it (`confirmed_summary`, `nurse_decision`, etc.).
 When touching any AI-adjacent controller/view, preserve this separation — never wire an AI response directly
 into a field that drives scheduling or case status.
@@ -74,8 +74,8 @@ only `admin` can reach the `/admin/*` routes.
 `App\Services\AiService` is the only thing that talks to the LLM (self-hosted Ollama over HTTP,
 `config/ai.php` → `OLLAMA_URL`/`OLLAMA_MODEL`/`OLLAMA_TIMEOUT`). **The Ollama URL must always be an
 intranet address** — patient data (PHI) must never leave the hospital network, so never point this at a
-public/cloud endpoint. Its three methods (`summarizeReferral`, `suggestFollowUpGuide`,
-`analyzeFollowUpRecord`) each build a Thai prompt demanding a strict-JSON response and parse it via
+public/cloud endpoint. Its two methods (`summarizeReferral`, `analyzeFollowUpRecord`) each build a
+Thai prompt demanding a strict-JSON response and parse it via
 `parseJsonResponse()`, which sets `parse_error: true` and preserves `raw_response` if the model didn't
 return valid JSON — callers/views must handle that fallback state rather than assuming AI output always
 parses.
@@ -83,7 +83,7 @@ parses.
 ### Routes → controllers
 
 See [routes/web.php](routes/web.php) for the full map. Key groupings: `referrals.*` (intake + care-plan
-confirm, `ReferralController`), `follow-up-plans.*` (guide/record/review/decision, `FollowUpController`),
+confirm, `ReferralController`), `follow-up-plans.*` (record/review/decision, `FollowUpController`),
 `admin.case-types.*` / `admin.users.*` (gated by `role:admin`, under `Admin\CaseTypeController` /
 `Admin\UserController`).
 

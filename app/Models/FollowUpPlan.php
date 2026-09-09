@@ -24,7 +24,6 @@ class FollowUpPlan extends Model
         'plan_number',
         'method',
         'due_date',
-        'ai_guide',
         'status',
     ];
 
@@ -32,7 +31,6 @@ class FollowUpPlan extends Model
     {
         return [
             'due_date' => 'date',
-            'ai_guide' => 'array',
         ];
     }
 
