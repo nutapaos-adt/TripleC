@@ -284,6 +284,12 @@ scope covering the entire continuity-of-care loop plus admin.
   `AiService::suggestFollowUpGuide()` ยังเป็นฟีเจอร์ backend ที่ตั้งใจไว้ — การลบรอบนี้เป็นแค่ระดับ
   prototype/UI ของ flow นี้เท่านั้น ยังไม่ได้ตัดสินใจเรื่อง backend/สถาปัตยกรรมจริง ถ้าต้องการให้เอกสาร
   สถาปัตยกรรมสะท้อนการตัดขั้นตอนนี้ออกด้วย แจ้งได้.
+- 2026-09-09 (รอบ 38): เพิ่มตัวกรอง "ปี"/"เดือน" ใน `followup-list.html` ตามที่ผู้ใช้ขอ วางไว้เป็นแถวใหม่
+  ใต้ filter chip สถานะเดิม — เพิ่ม `data-year`/`data-month` ให้ทุกแถวในตาราง แล้วรวม logic การกรองเข้ากับ
+  filter chip สถานะเดิมแบบ AND ทั้งหมด (ต้องผ่านทั้งสถานะ+ปี+เดือนที่เลือกถึงจะแสดง) ตัวเลือกปีมี 2568/2569
+  (ข้อมูล mock มีแค่ 2569 แต่ใส่ 2568 ไว้โชว์ว่ากรองแล้วไม่มีรายการก็ได้เหมือนกัน) ตัวเลือกเดือนใส่ครบ 12
+  เดือนแม้ mock data จะมีแค่ ส.ค./ก.ย. เพื่อให้ใช้กรองข้อมูลจริงในอนาคตได้ครบ ทดสอบกรองเดือนกันยายนแล้ว
+  เหลือแถวเดียวถูกต้อง.
 
 **Known prototype simplifications (not bugs):**
 - All referral rows in `referrals-list.html` link to the same `referral-detail.html` (one mock patient),

@@ -95,6 +95,15 @@
   }
   .filter-chip.active .count{background:rgba(255,255,255,0.25);}
 
+  .date-filter-row{display:flex;gap:8px;align-items:center;margin-bottom:16px;}
+  .date-filter-label{font-size:12px;font-weight:600;color:var(--color-neutral-500);}
+  .input-select{
+    padding:7px 12px;border-radius:var(--radius-md);border:1px solid var(--color-neutral-300);
+    background:var(--color-surface);color:var(--color-neutral-700);font-size:13px;font-weight:600;
+    font-family:inherit;cursor:pointer;
+  }
+  .input-select:focus-visible{outline:2px solid var(--color-primary-700);outline-offset:1px;}
+
   .card{background:var(--color-surface);border:1px solid var(--color-neutral-200);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);}
   table.data{width:100%;border-collapse:collapse;}
   table.data thead th{
@@ -185,6 +194,30 @@
         <button class="filter-chip" data-filter="done">เยี่ยมแล้ว <span class="count">2</span></button>
       </div>
 
+      <div class="date-filter-row">
+        <span class="date-filter-label">กรองตามกำหนด:</span>
+        <select class="input-select" id="yearFilter">
+          <option value="all">ทุกปี</option>
+          <option value="2568">2568</option>
+          <option value="2569">2569</option>
+        </select>
+        <select class="input-select" id="monthFilter">
+          <option value="all">ทุกเดือน</option>
+          <option value="01">มกราคม</option>
+          <option value="02">กุมภาพันธ์</option>
+          <option value="03">มีนาคม</option>
+          <option value="04">เมษายน</option>
+          <option value="05">พฤษภาคม</option>
+          <option value="06">มิถุนายน</option>
+          <option value="07">กรกฎาคม</option>
+          <option value="08">สิงหาคม</option>
+          <option value="09">กันยายน</option>
+          <option value="10">ตุลาคม</option>
+          <option value="11">พฤศจิกายน</option>
+          <option value="12">ธันวาคม</option>
+        </select>
+      </div>
+
       <div class="card">
         <table class="data">
           <thead>
@@ -199,7 +232,7 @@
             </tr>
           </thead>
           <tbody id="followupTableBody">
-            <tr data-status="overdue">
+            <tr data-status="overdue" data-year="2569" data-month="08">
               <td><div class="row-title">คุณสมชาย ใจบุญ</div><div class="row-sub">HN-2026-00087</div></td>
               <td>Palliative Care</td>
               <td class="num">3 / 4</td>
@@ -208,7 +241,7 @@
               <td><span class="chip chip-overdue">เกินกำหนด</span></td>
               <td><a class="action-link" href="followup-record.html">บันทึกผล →</a></td>
             </tr>
-            <tr data-status="today">
+            <tr data-status="today" data-year="2569" data-month="08">
               <td><div class="row-title">นางสมหญิง ใจดี</div><div class="row-sub">HN 660231</div></td>
               <td>Palliative Care</td>
               <td class="num">1 / —</td>
@@ -217,7 +250,7 @@
               <td><span class="chip chip-today">วันนี้</span></td>
               <td><a class="action-link" href="followup-record.html">บันทึกผล →</a></td>
             </tr>
-            <tr data-status="today">
+            <tr data-status="today" data-year="2569" data-month="08">
               <td><div class="row-title">นายประเสริฐ วงศ์สุข</div><div class="row-sub">HN 660198</div></td>
               <td>หลังผ่าตัด</td>
               <td class="num">2 / 3</td>
@@ -226,7 +259,7 @@
               <td><span class="chip chip-today">วันนี้</span></td>
               <td><a class="action-link" href="followup-record.html">บันทึกผล →</a></td>
             </tr>
-            <tr data-status="scheduled">
+            <tr data-status="scheduled" data-year="2569" data-month="09">
               <td><div class="row-title">นางสาวรัตนา ทองดี</div><div class="row-sub">HN 660098</div></td>
               <td>หลังคลอด</td>
               <td class="num">3 / 3</td>
@@ -235,7 +268,7 @@
               <td><span class="chip chip-scheduled">รอถึงกำหนด</span></td>
               <td><a class="action-link" href="referral-detail.html">ดูรายละเอียด →</a></td>
             </tr>
-            <tr data-status="done">
+            <tr data-status="done" data-year="2569" data-month="08">
               <td><div class="row-title">นางสาวพิมพ์ชนก แก้วมณี</div><div class="row-sub">HN 660175</div></td>
               <td>หลังคลอด</td>
               <td class="num">2 / 3</td>
@@ -244,7 +277,7 @@
               <td><span class="chip chip-done">เยี่ยมแล้ว</span></td>
               <td><a class="action-link" href="referral-detail.html">ดูรายละเอียด →</a></td>
             </tr>
-            <tr data-status="done">
+            <tr data-status="done" data-year="2569" data-month="08">
               <td><div class="row-title">นางบัวผัน มั่นคง</div><div class="row-sub">HN 660142</div></td>
               <td>Palliative Care</td>
               <td class="num">1 / —</td>
@@ -265,21 +298,36 @@
   var chips = document.querySelectorAll('.filter-chip');
   var rows = document.querySelectorAll('#followupTableBody tr');
   var emptyNote = document.getElementById('emptyNote');
+  var yearFilter = document.getElementById('yearFilter');
+  var monthFilter = document.getElementById('monthFilter');
+  var currentStatusFilter = 'all';
+
+  function applyFilters(){
+    var year = yearFilter.value;
+    var month = monthFilter.value;
+    var visibleCount = 0;
+    rows.forEach(function(row){
+      var statusOk = (currentStatusFilter === 'all') || (row.getAttribute('data-status') === currentStatusFilter);
+      var yearOk = (year === 'all') || (row.getAttribute('data-year') === year);
+      var monthOk = (month === 'all') || (row.getAttribute('data-month') === month);
+      var show = statusOk && yearOk && monthOk;
+      row.hidden = !show;
+      if (show) visibleCount++;
+    });
+    emptyNote.hidden = visibleCount !== 0;
+  }
 
   chips.forEach(function(chip){
     chip.addEventListener('click', function(){
       chips.forEach(function(c){ c.classList.remove('active'); });
       chip.classList.add('active');
-      var filter = chip.getAttribute('data-filter');
-      var visibleCount = 0;
-      rows.forEach(function(row){
-        var show = (filter === 'all') || (row.getAttribute('data-status') === filter);
-        row.hidden = !show;
-        if (show) visibleCount++;
-      });
-      emptyNote.hidden = visibleCount !== 0;
+      currentStatusFilter = chip.getAttribute('data-filter');
+      applyFilters();
     });
   });
+
+  yearFilter.addEventListener('change', applyFilters);
+  monthFilter.addEventListener('change', applyFilters);
 </script>
 </body>
 </html>
