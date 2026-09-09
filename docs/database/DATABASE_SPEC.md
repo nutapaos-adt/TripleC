@@ -27,9 +27,7 @@ Human-in-the-loop confirmation is non-negotiable across this whole schema. Where
 `ai_*` field and a corresponding confirmed/decision field (`Referral.ai_summary` → `Referral.confirmed_summary`;
 `FollowUpRecord.ai_analysis` → `FollowUpRecord.nurse_decision`/`risk_flag`), the `ai_*` field is written only
 by `AiService` and is always a draft; the confirmed/decision field is written only by an explicit nurse
-action and is the only field scheduling/status logic is allowed to read. `FollowUpPlan.ai_guide` is the one
-exception that has no separate "confirmed" counterpart — it's advisory reading material for the visiting
-staff member, not a decision-bearing field, so it does not feed `VisitPlanService` or any status transition.
+action and is the only field scheduling/status logic is allowed to read.
 
 ## 2. Entity-Relationship Diagram
 
@@ -103,7 +101,6 @@ erDiagram
         integer plan_number
         enum method
         date due_date
-        json ai_guide
         enum status
     }
     FOLLOW_UP_RECORD {
@@ -301,7 +298,7 @@ eventual closure.
 | `raw_notes` | The free-text situation/symptom summary typed in at intake | long_text | Y | | Sole input to the AI summarization prompt |
 | `ai_summary` | AI-drafted structured summary (patient type, main problem, follow-up need, risk signals, suggested case type) | structured/json | N | Written only by `AiService.summarizeReferral()` | **Draft only** — never read by scheduling/status logic; may carry a `parse_error`/`raw_response` fallback shape if the AI response wasn't valid JSON |
 | `ai_summary_generated_at` | When the AI draft summary was produced | datetime | N | | |
-| `confirmed_summary` | The nurse-reviewed/edited/confirmed version of the summary | structured/json | N | Written only through the care-plan confirmation action | This is the field all downstream logic (AI guide/analysis prompts) reads — never `ai_summary` directly, once confirmation has happened |
+| `confirmed_summary` | The nurse-reviewed/edited/confirmed version of the summary | structured/json | N | Written only through the care-plan confirmation action | This is the field all downstream logic (AI analysis prompts) reads — never `ai_summary` directly, once confirmation has happened |
 | `confirmed_by` | Nurse who confirmed the care plan | reference → User (N:1) | N | Reference cleared if that user is removed | |
 | `confirmed_at` | When the care plan was confirmed | datetime | N | Presence of this value is the operational definition of "confirmed" | |
 | `zone` | Catchment zone for this specific referral | enum (`in_area`, `out_area`) | Y | Set at intake from the resolved/overridden patient zone (see §3.2) | Used by `VisitPlanService` to pick each generated plan's default `method` |
@@ -355,7 +352,6 @@ numbered in sequence.
 | `plan_number` | Sequence number of this visit/call within the referral | integer | Y | e.g. 1, 2, 3 | Used to order history and to determine which record is "previous" when building AI prompts |
 | `method` | How this follow-up will be conducted | enum (`home_visit`, `phone_call`) | Y | Defaults from the referral's `zone` at generation time (`in_area` → `home_visit`, `out_area` → `phone_call`) | Carried forward unchanged when `VisitPlanService.generateNextPlan()` creates the next plan |
 | `due_date` | Date this visit/call is due | date | Y | Computed from the governing visit rule's interval | |
-| `ai_guide` | AI-suggested topics/questions to assess before this visit/call | structured/json | N | Written only by `AiService.suggestFollowUpGuide()` | Advisory only — read by staff during the visit, never consumed by scheduling/status logic; has no separate "confirmed" counterpart (see §1.1) |
 | `status` | Lifecycle state of this plan | enum (`scheduled`, `done`, `overdue`, `cancelled`) | Y | Default `scheduled` | See rules below |
 | `created_at` / `updated_at` | Record bookkeeping | datetime | Y | System-managed | |
 

@@ -13,12 +13,12 @@
 1. [INTAKE](#intake--referral-intake--zone-resolution) — 28 test cases
 2. [SUMMARY](#summary--ai-draft-summary--nurse-care-plan-confirmation) — 20 test cases
 3. [SCHED](#sched--visit-scheduling-engine--case-type--visit-rule-admin) — 28 test cases
-4. [RECORD](#record--follow-up-guide--outcome-recording) — 20 test cases
+4. [RECORD](#record--follow-up-outcome-recording) — 13 test cases
 5. [DECISION](#decision--ai-risk-analysis--mandatory-nurse-decision) — 17 test cases
 6. [ADMINRBAC](#adminrbac--user--role-administration-access-control-matrix) — 12 test cases
-7. [DASHNFR](#dashnfr--dashboard-kpis-ai-resilience--design-system-compliance) — 27 test cases
+7. [DASHNFR](#dashnfr--dashboard-kpis-ai-resilience--design-system-compliance) — 26 test cases
 
-**รวมทั้งหมด: 152 test cases**
+**รวมทั้งหมด: 144 test cases**
 
 ---
 
@@ -121,167 +121,111 @@
 
 ---
 
-## RECORD — Follow-Up Guide & Outcome Recording
+## RECORD — Follow-Up Outcome Recording
 
-### TC-RECORD-001 — สร้างคู่มือติดตามสำเร็จ แสดงหัวข้อที่ AI แนะนำ
-- **Preconditions:** ผู้ใช้ล็อกอินแล้ว; `FollowUpPlan.ai_guide = null`; referral มี `confirmed_summary` สมบูรณ์; Ollama ตอบ JSON ถูกต้องตาม schema `{"topics":[...]}`
-- **Role:** home_visit_team
-- **Steps:** 1) เปิด `GET .../guide` 2) ยืนยันข้อความ "ยังไม่มีคู่มือติดตามสำหรับครั้งนี้" 3) กด generate (POST) 4) สังเกตหน้าที่ redirect กลับมา
-- **Test Data:** Mock Ollama ตอบ `{"topics":[{"title":"ประเมินแผลกดทับ","note":"ผู้ป่วยติดเตียง"},{"title":"ถามอาการปวด","note":null}]}`
-- **Expected Result:** Redirect กลับ guide; `ai_guide` = `{topics:[...2 รายการ...], parse_error:false}`; หน้าแสดง box "หัวข้อที่ AI แนะนำ" พร้อม 2 รายการ, ปุ่มเปลี่ยนเป็น "↻ ขอให้ AI แนะนำใหม่"
-- **Type:** Positive | **Priority:** High | **Related AC:** AC-RECORD-01
-
-### TC-RECORD-002 — สร้างคู่มือเมื่อ referral ยังไม่ยืนยัน confirmed_summary (fallback ไปใช้ ai_summary)
-- **Preconditions:** `confirmed_summary = null`, `ai_summary` มีค่า main_problem/follow_up_need/risk_signals
-- **Role:** home_visit_team
-- **Steps:** 1) ตรวจ referral ว่า confirmed_summary=null 2) กดขอคู่มือ AI
-- **Test Data:** `ai_summary = {main_problem: "แผลกดทับระยะ 2", follow_up_need: "ทำแผลสัปดาห์ละครั้ง", risk_signals: ["ภาวะทุพโภชนาการ"]}`
-- **Expected Result:** Prompt ใช้ค่าจาก `ai_summary` แทน ไม่ error; คู่มือถูกบันทึกตามปกติ
-- **Type:** Positive/Edge | **Priority:** Medium | **Related AC:** AC-RECORD-01
-
-### TC-RECORD-003 — สร้างคู่มือเมื่อทั้ง confirmed_summary และ ai_summary เป็น null
-- **Preconditions:** `confirmed_summary = null` และ `ai_summary = null`
-- **Role:** ward_staff
-- **Steps:** 1) เปิดหน้า guide 2) กดขอคู่มือ AI
-- **Test Data:** ทั้งสองเป็น null
-- **Expected Result:** Prompt ใช้ placeholder `-` แทน ไม่ throw exception; เรียก AI และประมวลผลต่อได้ตามปกติ ไม่ 500
-- **Type:** Edge | **Priority:** Medium | **Related AC:** AC-RECORD-01
-
-### TC-RECORD-004 — สร้างคู่มือล้มเหลวเพราะ Ollama ไม่ตอบสนอง
-- **Preconditions:** แผนมี `ai_guide` เดิม (ค่า A) หรือ null; จำลอง Ollama connection ล้มเหลว
-- **Role:** home_visit_team
-- **Steps:** 1) บันทึกค่า ai_guide เดิม 2) กดขอคู่มือ AI ขณะ Ollama ไม่ตอบสนอง
-- **Test Data:** จำลอง `Http::post` throw connection exception
-- **Expected Result:** Redirect กลับ guide พร้อม flash error ("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ AI ได้..."); `ai_guide` ไม่เปลี่ยนแปลง; exception ถูก report()
-- **Type:** Negative | **Priority:** High | **Related AC:** AC-RECORD-02
-
-### TC-RECORD-005 — ขอคู่มือใหม่ซ้ำ (regenerate) แทนที่ค่าเดิมทั้งหมด
-- **Preconditions:** `ai_guide` เดิม = `{topics:[{title:"A", note:"x"}], parse_error:false}`
-- **Role:** home_visit_team
-- **Steps:** 1) เปิดหน้า guide ยืนยันเห็น "A" 2) กด regenerate โดยจำลอง AI ตอบชุดใหม่ไม่มี "A"
-- **Test Data:** ตอบใหม่ `{"topics":[{"title":"B","note":"y"},{"title":"C","note":null}]}`
-- **Expected Result:** `ai_guide` ถูกแทนที่ทั้งหมด (มีเฉพาะ B, C); หน้าแสดงเฉพาะ B, C
-- **Type:** Positive | **Priority:** Medium | **Related AC:** AC-RECORD-03
-
-### TC-RECORD-006 — AI ตอบไม่เป็น JSON ที่ถูกต้อง → แสดง parse_error fallback
-- **Preconditions:** จำลอง Ollama ตอบ `response` เป็นข้อความที่ไม่ใช่ JSON ที่ถูกต้อง
-- **Role:** home_visit_team
-- **Steps:** 1) กดขอคู่มือ AI 2) สังเกตหน้าที่แสดงผลกลับมา
-- **Test Data:** raw response: `"ขออภัย ไม่สามารถประมวลผลได้"`
-- **Expected Result:** `ai_guide` = `{topics:[], parse_error:true, raw_response:"..."}`; หน้าแสดงกล่องเตือนสีเหลืองแทนรายการหัวข้อ; ไม่มี error 500; ปุ่มบันทึกผลติดตามยังใช้งานได้
-- **Type:** Edge | **Priority:** Medium | **Related AC:** AC-RECORD-05
-
-### TC-RECORD-007 — บันทึกผลติดตาม (happy path) พร้อมทุกฟิลด์
+### TC-RECORD-001 — บันทึกผลติดตาม (happy path) พร้อมทุกฟิลด์
 - **Preconditions:** แผนยังไม่มี `FollowUpRecord`
 - **Role:** home_visit_team
 - **Steps:** 1) เปิดหน้าบันทึกผล 2) กรอก visited_at/pps_score/raw_notes 3) POST
 - **Test Data:** `visited_at=2026-08-20 14:30`, `pps_score=60`, `raw_notes="ผู้ป่วยรู้สึกตัวดี แผลเริ่มตกสะเก็ด"`
 - **Expected Result:** สร้าง `FollowUpRecord` ใหม่ (ai_analysis/nurse_decision/confirmed_* เป็น null); `FollowUpPlan.status = done`; redirect ไป review พร้อม flash ชี้ขั้นตอนถัดไป
-- **Type:** Positive | **Priority:** High | **Related AC:** AC-RECORD-08,09,10,11,12
+- **Type:** Positive | **Priority:** High | **Related AC:** AC-RECORD-03,04,05,06,07
 
-### TC-RECORD-008 — บันทึกผลติดตามโดยไม่กรอก pps_score
+### TC-RECORD-002 — บันทึกผลติดตามโดยไม่กรอก pps_score
 - **Preconditions:** แผนยังไม่มี record
 - **Role:** ward_staff
 - **Steps:** 1) เว้น PPS Score ว่าง, กรอก raw_notes 2) บันทึก
 - **Test Data:** `pps_score = ""`
 - **Expected Result:** บันทึกสำเร็จ; `pps_score = null`; `status = done` (ยืนยันว่าเว้น pps_score ไม่บล็อก)
-- **Type:** Positive/Edge | **Priority:** High | **Related AC:** AC-RECORD-08,09
+- **Type:** Positive/Edge | **Priority:** High | **Related AC:** AC-RECORD-03,04
 
-### TC-RECORD-009 — บันทึกผลติดตามด้วย pps_score = 101 (เกินขอบเขตบน) ถูกปฏิเสธ
+### TC-RECORD-003 — บันทึกผลติดตามด้วย pps_score = 101 (เกินขอบเขตบน) ถูกปฏิเสธ
 - **Preconditions:** แผนยังไม่มี record
 - **Role:** home_visit_team
 - **Steps:** กรอก `pps_score=101`, `raw_notes="ทดสอบ"` แล้วบันทึก
 - **Test Data:** `pps_score = 101`
 - **Expected Result:** Validation ล้มเหลว (max:100); ไม่มี record ถูกสร้าง; status ไม่เปลี่ยน
-- **Type:** Negative | **Priority:** High | **Related AC:** AC-RECORD-09
+- **Type:** Negative | **Priority:** High | **Related AC:** AC-RECORD-04
 
-### TC-RECORD-010 — บันทึกผลติดตามด้วย pps_score = -1 ถูกปฏิเสธ
+### TC-RECORD-004 — บันทึกผลติดตามด้วย pps_score = -1 ถูกปฏิเสธ
 - **Preconditions:** แผนยังไม่มี record
 - **Role:** home_visit_team
 - **Steps:** กรอก `pps_score=-1`, `raw_notes="ทดสอบ"` แล้วบันทึก
 - **Test Data:** `pps_score = -1`
 - **Expected Result:** Validation ล้มเหลว (min:0); ไม่มี record ถูกสร้าง; status ไม่เปลี่ยน
-- **Type:** Negative | **Priority:** High | **Related AC:** AC-RECORD-09
+- **Type:** Negative | **Priority:** High | **Related AC:** AC-RECORD-04
 
-### TC-RECORD-011 — บันทึกผลติดตามโดยเว้น raw_notes ว่าง ถูกปฏิเสธ
+### TC-RECORD-005 — บันทึกผลติดตามโดยเว้น raw_notes ว่าง ถูกปฏิเสธ
 - **Preconditions:** แผนยังไม่มี record
 - **Role:** home_visit_team
 - **Steps:** เว้น raw_notes ว่าง, กรอกฟิลด์อื่นตามปกติ แล้วบันทึก
 - **Test Data:** `raw_notes = ""`
 - **Expected Result:** Validation ล้มเหลว (required), error อ้าง "อาการ/ปัญหาที่พบ"; ไม่มี record ถูกสร้าง
-- **Type:** Negative | **Priority:** High | **Related AC:** AC-RECORD-10
+- **Type:** Negative | **Priority:** High | **Related AC:** AC-RECORD-05
 
-### TC-RECORD-012 — เข้าหน้าสร้างบันทึกผล (GET) ซ้ำหลังจากมี record แล้ว → 403
+### TC-RECORD-006 — เข้าหน้าสร้างบันทึกผล (GET) ซ้ำหลังจากมี record แล้ว → 403
 - **Preconditions:** แผนมี `FollowUpRecord` อยู่แล้ว
 - **Role:** home_visit_team
 - **Steps:** เข้า `GET .../record` โดยตรง
 - **Test Data:** แผนที่มี record 1 แถว
 - **Expected Result:** HTTP 403 "บันทึกผลติดตามครั้งนี้ไปแล้ว" — ไม่แสดงฟอร์มแม้แบบอ่านอย่างเดียว
-- **Type:** Negative | **Priority:** High | **Related AC:** AC-RECORD-06
+- **Type:** Negative | **Priority:** High | **Related AC:** AC-RECORD-01
 
-### TC-RECORD-013 — ส่งฟอร์มบันทึกผล (POST) ซ้ำสำหรับแผนที่มี record แล้ว (race condition) → 403
+### TC-RECORD-007 — ส่งฟอร์มบันทึกผล (POST) ซ้ำสำหรับแผนที่มี record แล้ว (race condition) → 403
 - **Preconditions:** 2 sessions เปิดหน้า record ของแผนเดียวกันพร้อมกันตอนยังไม่มี record
 - **Role:** home_visit_team (ทั้งสอง)
 - **Steps:** 1) Session A submit ก่อน (สำเร็จ) 2) Session B submit ตามมาทันที
 - **Test Data:** ฟอร์มต่างกันเล็กน้อยระหว่าง A/B
 - **Expected Result:** A สำเร็จ; B ได้ 403; มี record เพียง 1 แถว (ของ A)
-- **Type:** Negative/Security | **Priority:** High | **Related AC:** AC-RECORD-07
+- **Type:** Negative/Security | **Priority:** High | **Related AC:** AC-RECORD-02
 
-### TC-RECORD-014 — ไม่กรอก visited_at → ใช้เวลาปัจจุบันเป็นค่าตั้งต้น
+### TC-RECORD-008 — ไม่กรอก visited_at → ใช้เวลาปัจจุบันเป็นค่าตั้งต้น
 - **Preconditions:** แผนยังไม่มี record
 - **Role:** home_visit_team
 - **Steps:** ส่ง POST โดยไม่ส่ง key `visited_at` เลย
 - **Test Data:** `visited_at` ไม่อยู่ใน payload
 - **Expected Result:** บันทึกสำเร็จ; `visited_at` = เวลา ณ ขณะประมวลผล request
-- **Type:** Edge | **Priority:** Medium | **Related AC:** AC-RECORD-11
+- **Type:** Edge | **Priority:** Medium | **Related AC:** AC-RECORD-06
 
-### TC-RECORD-015 — บันทึกผลติดตามกับแผนที่ถูกยกเลิกไปแล้ว (cancelled) — ปัจจุบันไม่มีการบล็อก (known gap)
+### TC-RECORD-009 — บันทึกผลติดตามกับแผนที่ถูกยกเลิกไปแล้ว (cancelled) — ปัจจุบันไม่มีการบล็อก (known gap)
 - **Preconditions:** แผน `status = cancelled`, ยังไม่มี record
 - **Role:** home_visit_team
 - **Steps:** เข้า `GET .../record` ของแผน cancelled โดยตรง แล้วบันทึก
 - **Test Data:** raw_notes ใดๆ ที่ผ่าน validation
 - **Expected Result (as-is):** ระบบอนุญาตให้บันทึกได้ตามปกติ และเปลี่ยน status จาก cancelled เป็น done ทับค่าเดิม — **flag เป็น known gap** ในรายงาน QA
-- **Type:** Edge (documented gap) | **Priority:** Medium | **Related AC:** AC-RECORD-14
+- **Type:** Edge (documented gap) | **Priority:** Medium | **Related AC:** AC-RECORD-09
 
-### TC-RECORD-016 — ผู้ใช้ที่ไม่ได้ล็อกอินเข้าถึง route ใดๆ ของโมดูลนี้ → redirect ไปหน้า login
+### TC-RECORD-010 — ผู้ใช้ที่ไม่ได้ล็อกอินเข้าถึง route ใดๆ ของโมดูลนี้ → redirect ไปหน้า login
 - **Preconditions:** guest
 - **Role:** guest
-- **Steps:** เรียกทั้ง 4 route โดยตรง แบบไม่ล็อกอิน
+- **Steps:** เรียกทั้ง 2 route โดยตรง แบบไม่ล็อกอิน
 - **Test Data:** plan ID ใดๆ ที่มีอยู่จริง
 - **Expected Result:** ทุก route redirect ไปหน้า login; ไม่มีการเปลี่ยนแปลงข้อมูลใน DB
-- **Type:** Security | **Priority:** High | **Related AC:** AC-RECORD-15
+- **Type:** Security | **Priority:** High | **Related AC:** AC-RECORD-10
 
-### TC-RECORD-017 — ward_staff เข้าถึงและใช้งานฟีเจอร์ guide/record ได้เต็มสิทธิ์ (ไม่มี role gate — known gap)
+### TC-RECORD-011 — ward_staff เข้าถึงและใช้งานฟีเจอร์บันทึกผลติดตามได้เต็มสิทธิ์ (ไม่มี role gate — known gap)
 - **Preconditions:** ผู้ใช้ role ward_staff
 - **Role:** ward_staff
-- **Steps:** ขอคู่มือ AI + บันทึกผลติดตามครบ flow
+- **Steps:** บันทึกผลติดตามครบ flow
 - **Test Data:** ข้อมูลที่ผ่าน validation ปกติ
 - **Expected Result (as-is):** ทำงานสำเร็จทุกขั้นตอนเหมือน home_visit_team — **flag เป็น known gap** เชิง authorization
-- **Type:** Security (documented gap) | **Priority:** Medium | **Related AC:** AC-RECORD-13
+- **Type:** Security (documented gap) | **Priority:** Medium | **Related AC:** AC-RECORD-08
 
-### TC-RECORD-018 — สถานะแผนเปลี่ยนเป็น done แม้เนื้อหา raw_notes สั้น/ไม่มีสาระ และ pps_score ว่าง
+### TC-RECORD-012 — สถานะแผนเปลี่ยนเป็น done แม้เนื้อหา raw_notes สั้น/ไม่มีสาระ และ pps_score ว่าง
 - **Preconditions:** แผนยังไม่มี record
 - **Role:** home_visit_team
 - **Steps:** กรอก `raw_notes="-"`, เว้น pps_score แล้วบันทึก
 - **Test Data:** `raw_notes="-"`, `pps_score=null`
 - **Expected Result:** บันทึกสำเร็จ; status เปลี่ยนเป็น done ทันที (ไม่มีการตรวจสอบคุณภาพเนื้อหา)
-- **Type:** Edge | **Priority:** Medium | **Related AC:** AC-RECORD-08
+- **Type:** Edge | **Priority:** Medium | **Related AC:** AC-RECORD-03
 
-### TC-RECORD-019 — คู่มือ AI ไม่ถูกเขียนลง Referral/Patient และไม่กระทบกำหนดการแผนอื่น
-- **Preconditions:** referral มีแผน 3 แผน (fixed_count); แผนที่ 2 ยังไม่มี ai_guide
-- **Role:** home_visit_team
-- **Steps:** 1) บันทึกค่าเดิมของ referral และแผน 1/3 2) ขอคู่มือ AI ให้แผน 2 3) ตรวจซ้ำ
-- **Test Data:** referral fixed_count
-- **Expected Result:** referral/patient ไม่เปลี่ยน; แผน 1, 3 เหมือนก่อนหน้าทุกประการ; มีแต่ ai_guide ของแผน 2 ที่เปลี่ยน
-- **Type:** Positive (isolation check) | **Priority:** Medium | **Related AC:** AC-RECORD-04
-
-### TC-RECORD-020 — บันทึกผลติดตามสำเร็จ แล้ว redirect ไปหน้า review พร้อมข้อความชี้ขั้นตอนถัดไป
+### TC-RECORD-013 — บันทึกผลติดตามสำเร็จ แล้ว redirect ไปหน้า review พร้อมข้อความชี้ขั้นตอนถัดไป
 - **Preconditions:** แผนยังไม่มี record
 - **Role:** home_visit_team
 - **Steps:** บันทึกผลติดตามให้สำเร็จ แล้วสังเกต redirect/flash
 - **Test Data:** ข้อมูลถูกต้องตาม happy path
 - **Expected Result:** Redirect ไป `follow-up-plans.review` พร้อม flash ชี้ไปโมดูล DECISION; โมดูล RECORD เองไม่เรียก analyze/เปลี่ยน nurse_decision ใดๆ
-- **Type:** Positive | **Priority:** Medium | **Related AC:** AC-RECORD-08
+- **Type:** Positive | **Priority:** Medium | **Related AC:** AC-RECORD-03
 
 ---
 
@@ -581,43 +525,40 @@ Preconditions: guest | Role: guest | Steps: เข้า `/dashboard` | Expected
 ### กลุ่ม C — ความทนทานของ AI/Ollama
 
 **TC-DASHNFR-016 — ai-summary: จำลอง Ollama timeout/เชื่อมต่อไม่ได้**
-Preconditions: referral พร้อมสรุป, OLLAMA_URL ไม่ตอบสนอง | Role: ward staff | Steps: POST ai-summary ขณะ Ollama ไม่ตอบสนอง | Expected: ไม่ 500, flash error, ai_summary/confirmed_summary ไม่เปลี่ยน, log "Ollama connection failed" | Type: Negative | Priority: High | AC: AC-DASHNFR-09,12
+Preconditions: referral พร้อมสรุป, OLLAMA_URL ไม่ตอบสนอง | Role: ward staff | Steps: POST ai-summary ขณะ Ollama ไม่ตอบสนอง | Expected: ไม่ 500, flash error, ai_summary/confirmed_summary ไม่เปลี่ยน, log "Ollama connection failed" | Type: Negative | Priority: High | AC: AC-DASHNFR-09,11
 
-**TC-DASHNFR-017 — follow-up-plans.guide.generate: จำลอง Ollama timeout**
-Preconditions: plan ไม่มี guide, Ollama ไม่ตอบสนอง | Role: home_visit_team | Steps: POST guide.generate | Expected: ไม่ 500, flash error, ai_guide ไม่ถูกเขียน | Type: Negative | Priority: High | AC: AC-DASHNFR-10,12
+**TC-DASHNFR-017 — follow-up-plans.analyze: จำลอง Ollama ตอบ non-2xx**
+Preconditions: record ยังไม่วิเคราะห์, Ollama ตอบ non-2xx | Role: พยาบาล | Steps: POST analyze | Expected: ไม่ 500, flash error, ai_analysis/nurse_decision ไม่ถูกเขียน, log "Ollama request failed" (ต่างจาก TC-016) | Type: Negative | Priority: High | AC: AC-DASHNFR-10,11
 
-**TC-DASHNFR-018 — follow-up-plans.analyze: จำลอง Ollama ตอบ non-2xx**
-Preconditions: record ยังไม่วิเคราะห์, Ollama ตอบ non-2xx | Role: พยาบาล | Steps: POST analyze | Expected: ไม่ 500, flash error, ai_analysis/nurse_decision ไม่ถูกเขียน, log "Ollama request failed" (ต่างจาก TC-016) | Type: Negative | Priority: High | AC: AC-DASHNFR-11,12
+**TC-DASHNFR-018 — Log message แยกกันระหว่าง connection-failure และ HTTP-failure (service-level)**
+Preconditions: log จาก TC-016/017 | Role: — | Steps: เปรียบเทียบข้อความ log | Expected: ข้อความต่างกันชัดเจนตามสาเหตุจริง | Type: Config-review | Priority: Low | AC: AC-DASHNFR-11
 
-**TC-DASHNFR-019 — Log message แยกกันระหว่าง connection-failure และ HTTP-failure (service-level)**
-Preconditions: log จาก TC-016/018 | Role: — | Steps: เปรียบเทียบข้อความ log | Expected: ข้อความต่างกันชัดเจนตามสาเหตุจริง | Type: Config-review | Priority: Low | AC: AC-DASHNFR-12
-
-**TC-DASHNFR-020 — parseJsonResponse fallback เมื่อ AI ตอบไม่ใช่ JSON ที่ถูกต้อง**
-Preconditions: mock raw response ที่ parse ไม่ได้ | Role: — (service-level) | Steps: เรียก 1 ใน 3 เมธอดของ AiService เป็นตัวแทน | Expected: `parse_error:true`, `raw_response` เก็บครบ, `Log::warning` ถูกเรียก | Type: Edge | Priority: Medium | AC: AC-DASHNFR-13
+**TC-DASHNFR-019 — parseJsonResponse fallback เมื่อ AI ตอบไม่ใช่ JSON ที่ถูกต้อง**
+Preconditions: mock raw response ที่ parse ไม่ได้ | Role: — (service-level) | Steps: เรียก 1 ใน 2 เมธอดของ AiService เป็นตัวแทน | Expected: `parse_error:true`, `raw_response` เก็บครบ, `Log::warning` ถูกเรียก | Type: Edge | Priority: Medium | AC: AC-DASHNFR-12
 
 ### กลุ่ม D — Config-review
 
-**TC-DASHNFR-021 — ตรวจสอบว่า OLLAMA_URL ไม่ใช่ endpoint สาธารณะ**
-Preconditions: `.env` ของสภาพแวดล้อมที่กำลังตรวจ | Role: ผู้ดูแลระบบ | Steps: ตรวจ host ของ `OLLAMA_URL` ว่าเป็น private/intranet | Expected: ผ่านเฉพาะเมื่อเป็น intranet address; block deploy ถ้าเป็น public/cloud | Type: Config-review | Priority: High | AC: AC-DASHNFR-14
+**TC-DASHNFR-020 — ตรวจสอบว่า OLLAMA_URL ไม่ใช่ endpoint สาธารณะ**
+Preconditions: `.env` ของสภาพแวดล้อมที่กำลังตรวจ | Role: ผู้ดูแลระบบ | Steps: ตรวจ host ของ `OLLAMA_URL` ว่าเป็น private/intranet | Expected: ผ่านเฉพาะเมื่อเป็น intranet address; block deploy ถ้าเป็น public/cloud | Type: Config-review | Priority: High | AC: AC-DASHNFR-13
 
 ### กลุ่ม E — Visual/Manual QA
 
-**TC-DASHNFR-022 — Badge สี+ข้อความคู่กันเสมอ** *(Manual/Visual)*
-Preconditions: ข้อมูลตัวอย่างครบทุกสถานะ/zone | Role: Visual QA | Steps: ตรวจ badge ทุกจุดในแดชบอร์ด/รายการ | Expected: ทุก badge มีสี+ข้อความคู่กันเสมอ | Type: Visual | Priority: Medium | AC: AC-DASHNFR-15
+**TC-DASHNFR-021 — Badge สี+ข้อความคู่กันเสมอ** *(Manual/Visual)*
+Preconditions: ข้อมูลตัวอย่างครบทุกสถานะ/zone | Role: Visual QA | Steps: ตรวจ badge ทุกจุดในแดชบอร์ด/รายการ | Expected: ทุก badge มีสี+ข้อความคู่กันเสมอ | Type: Visual | Priority: Medium | AC: AC-DASHNFR-14
 
-**TC-DASHNFR-023 — AI-Draft box สลับสถานะ ร่าง → ยืนยันแล้ว** *(Manual/Visual)*
-Preconditions: 1 เคสยังไม่ยืนยัน, 1 เคสยืนยันแล้ว | Role: Visual QA | Steps: เปิดทั้งสองเคสตรวจกรอบ/ป้าย | Expected: เส้นประ+ป้ายร่าง ↔ เส้นทึบ+ป้ายยืนยันแล้ว ตรงตาม isConfirmed() | Type: Visual | Priority: High | AC: AC-DASHNFR-16
+**TC-DASHNFR-022 — AI-Draft box สลับสถานะ ร่าง → ยืนยันแล้ว** *(Manual/Visual)*
+Preconditions: 1 เคสยังไม่ยืนยัน, 1 เคสยืนยันแล้ว | Role: Visual QA | Steps: เปิดทั้งสองเคสตรวจกรอบ/ป้าย | Expected: เส้นประ+ป้ายร่าง ↔ เส้นทึบ+ป้ายยืนยันแล้ว ตรงตาม isConfirmed() | Type: Visual | Priority: High | AC: AC-DASHNFR-15
 
-**TC-DASHNFR-024 — Nurse-Decision แสดงเป็น radio-card ไม่ใช่ dropdown** *(Manual/Visual)*
-Preconditions: มี record พร้อมตัดสินใจ | Role: Visual QA | Steps: เปิดหน้าตัดสินใจ ตรวจ UI | Expected: radio-card เห็นทั้งหมดพร้อมกัน ไม่มี `<select>` | Type: Visual | Priority: High | AC: AC-DASHNFR-17
+**TC-DASHNFR-023 — Nurse-Decision แสดงเป็น radio-card ไม่ใช่ dropdown** *(Manual/Visual)*
+Preconditions: มี record พร้อมตัดสินใจ | Role: Visual QA | Steps: เปิดหน้าตัดสินใจ ตรวจ UI | Expected: radio-card เห็นทั้งหมดพร้อมกัน ไม่มี `<select>` | Type: Visual | Priority: High | AC: AC-DASHNFR-16
 
-**TC-DASHNFR-025 — KPI tile ใช้สี semantic เฉพาะเมื่อค่าผิดปกติ** *(Manual/Visual)*
-Preconditions: overdueCount=0 กับ >0 สองรอบ | Role: Visual QA | Steps: เปรียบเทียบสีตัวเลขทั้งสองรอบ | Expected: =0 สี neutral, >0 สี risk | Type: Visual | Priority: Low | AC: AC-DASHNFR-18
+**TC-DASHNFR-024 — KPI tile ใช้สี semantic เฉพาะเมื่อค่าผิดปกติ** *(Manual/Visual)*
+Preconditions: overdueCount=0 กับ >0 สองรอบ | Role: Visual QA | Steps: เปรียบเทียบสีตัวเลขทั้งสองรอบ | Expected: =0 สี neutral, >0 สี risk | Type: Visual | Priority: Low | AC: AC-DASHNFR-17
 
-**TC-DASHNFR-026 — บันทึกช่องว่าง sidebar-vs-topnav เป็น known gap ไม่ใช่ defect ใหม่** *(Manual checklist)*
-Preconditions: build ปัจจุบันของ Blade views | Role: Visual QA / compliance reviewer | Steps: เปิดทุกหน้าหลัก สังเกต nav | Expected: ยืนยันยังใช้ top-nav; บันทึกเป็น "known/accepted deviation" ไม่ mark เป็น FAIL ใหม่ | Type: Visual | Priority: Low | AC: AC-DASHNFR-19
+**TC-DASHNFR-025 — บันทึกช่องว่าง sidebar-vs-topnav เป็น known gap ไม่ใช่ defect ใหม่** *(Manual checklist)*
+Preconditions: build ปัจจุบันของ Blade views | Role: Visual QA / compliance reviewer | Steps: เปิดทุกหน้าหลัก สังเกต nav | Expected: ยืนยันยังใช้ top-nav; บันทึกเป็น "known/accepted deviation" ไม่ mark เป็น FAIL ใหม่ | Type: Visual | Priority: Low | AC: AC-DASHNFR-18
 
-**TC-DASHNFR-027 — ai-summary error ไม่ทำให้ข้อมูลเดิมของใบส่งต่อเสียหาย (regression กับ AC-09)**
+**TC-DASHNFR-026 — ai-summary error ไม่ทำให้ข้อมูลเดิมของใบส่งต่อเสียหาย (regression กับ AC-09)**
 Preconditions: referral มี raw_notes กรอกไว้แล้ว | Role: ward staff | Steps: 1) บันทึกใบส่งต่อ 2) ทำ Ollama ล่ม (ตาม TC-016) แล้วกด ai-summary 3) ตรวจฟิลด์เดิม | Expected: ฟิลด์เดิมไม่ถูกแก้ไข/ลบ, มีแค่ flash error ชั่วคราว | Type: Negative | Priority: Medium | AC: AC-DASHNFR-09
 
-**หมายเหตุ:** TC กลุ่ม E (Visual) ทั้งหมดเป็น manual QA ล้วน ไม่ automate — ทำ checklist ซ้ำทุกครั้งที่แก้ Blade view ที่เกี่ยวข้อง TC-DASHNFR-021 (config-review) อยู่ใน deployment checklist แยกจาก regression ปกติ เพราะเป็นเรื่อง compliance ด้าน PHI
+**หมายเหตุ:** TC กลุ่ม E (Visual) ทั้งหมดเป็น manual QA ล้วน ไม่ automate — ทำ checklist ซ้ำทุกครั้งที่แก้ Blade view ที่เกี่ยวข้อง TC-DASHNFR-020 (config-review) อยู่ใน deployment checklist แยกจาก regression ปกติ เพราะเป็นเรื่อง compliance ด้าน PHI

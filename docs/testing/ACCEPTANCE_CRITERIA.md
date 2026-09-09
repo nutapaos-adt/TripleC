@@ -9,7 +9,7 @@
 1. [INTAKE — Referral Intake & Zone Resolution](#intake--referral-intake--zone-resolution)
 2. [SUMMARY — AI Draft Summary & Nurse Care-Plan Confirmation](#summary--ai-draft-summary--nurse-care-plan-confirmation)
 3. [SCHED — Visit Scheduling Engine & Case Type / Visit Rule Admin](#sched--visit-scheduling-engine--case-type--visit-rule-admin)
-4. [RECORD — Follow-Up Guide & Outcome Recording](#record--follow-up-guide--outcome-recording)
+4. [RECORD — Follow-Up Outcome Recording](#record--follow-up-outcome-recording)
 5. [DECISION — AI Risk Analysis & Mandatory Nurse Decision](#decision--ai-risk-analysis--mandatory-nurse-decision)
 6. [ADMINRBAC — User & Role Administration, Access Control Matrix](#adminrbac--user--role-administration-access-control-matrix)
 7. [DASHNFR — Dashboard KPIs, AI Resilience & Design-System Compliance](#dashnfr--dashboard-kpis-ai-resilience--design-system-compliance)
@@ -155,55 +155,40 @@ Rule: `nullable|integer|min:0|max:100` ค่านอกช่วง (เช่
 
 ---
 
-## RECORD — Follow-Up Guide & Outcome Recording
+## RECORD — Follow-Up Outcome Recording
 
-โมดูลนี้ครอบคลุม `FollowUpController@guide/@generateGuide/@createRecord/@storeRecord`,
-`StoreFollowUpRecordRequest`, `AiService::suggestFollowUpGuide`. ทุก route อยู่ใต้ `auth` เท่านั้น ไม่มี `role:` gate
+โมดูลนี้ครอบคลุม `FollowUpController@createRecord/@storeRecord`,
+`StoreFollowUpRecordRequest`. ทุก route อยู่ใต้ `auth` เท่านั้น ไม่มี `role:` gate
 
-**AC-RECORD-01 — สร้างคู่มือติดตามสำเร็จ**
-เมื่อผู้ใช้ที่ล็อกอินแล้วกด "ให้ AI แนะนำหัวข้อประเมิน" บนหน้า guide ของแผนที่ยังไม่มี `ai_guide` ระบบต้องเรียก `AiService::suggestFollowUpGuide($plan)`, บันทึกผลลัพธ์ลง `FollowUpPlan.ai_guide` เป็น `{topics: [{title, note}], parse_error: false}`, และ redirect กลับหน้า guide เดิมพร้อมแสดงหัวข้อที่ AI แนะนำ
-
-**AC-RECORD-02 — สร้างคู่มือติดตามล้มเหลว (Ollama ไม่ตอบสนอง/HTTP error)**
-เมื่อ `AiService::suggestFollowUpGuide` throw `\Throwable` ระบบต้อง `report()` exception, redirect กลับหน้า guide พร้อม flash `error` และ **ต้องไม่แก้ไข** `FollowUpPlan.ai_guide` เดิม
-
-**AC-RECORD-03 — ขอคู่มือใหม่ซ้ำได้ (regenerate) และ overwrite ค่าเดิม**
-เมื่อแผนมี `ai_guide` อยู่แล้ว การกดขอใหม่ต้องเรียก AI ใหม่อีกครั้งและ **แทนที่** ค่า `ai_guide` เดิมทั้งหมดด้วยผลลัพธ์ล่าสุด (ไม่สะสม/ไม่ merge กับของเก่า)
-
-**AC-RECORD-04 — คู่มือ AI เป็นแนวทางเท่านั้น ไม่มีผลต่อการตัดกำหนดการ/ข้อมูลเคส**
-`ai_guide` ต้องถูกบันทึกเฉพาะบน `FollowUpPlan` เท่านั้น ต้อง**ไม่**ถูกเขียนกลับไปยัง `Referral`/`Patient` ใดๆ และการสร้าง/สร้างใหม่ของ `ai_guide` ต้อง**ไม่มีผล**ต่อ `FollowUpPlan.status`, ต่อจำนวน/กำหนดการของแผนติดตามอื่น หรือต่อการตัดสินใจใดๆ
-
-**AC-RECORD-05 — สถานะ parse_error ของคู่มือต้องแสดงผลได้โดยไม่ crash**
-ถ้า AI ตอบกลับไม่เป็น JSON ที่ถูกต้อง ระบบต้องบันทึก `ai_guide = {topics: [], parse_error: true, raw_response: <ข้อความดิบ>}` และหน้า guide ต้องแสดงข้อความแจ้งเตือนแทนรายการหัวข้อ โดยไม่ error/crash แม้ `topics` เป็น array ว่าง
-
-**AC-RECORD-06 — บันทึกผลติดตามได้ครั้งเดียวต่อแผน (GET)**
+**AC-RECORD-01 — บันทึกผลติดตามได้ครั้งเดียวต่อแผน (GET)**
 เมื่อแผนมี `FollowUpRecord` อยู่แล้ว (ไม่ว่าค่าใดๆ) การเข้าหน้า `GET /follow-up-plans/{plan}/record` ต้องตอบ **HTTP 403** พร้อมข้อความ "บันทึกผลติดตามครั้งนี้ไปแล้ว" — ไม่ใช่แสดงหน้าแบบอ่านอย่างเดียว
 
-**AC-RECORD-07 — บันทึกผลติดตามได้ครั้งเดียวต่อแผน (POST, race-condition safe)**
+**AC-RECORD-02 — บันทึกผลติดตามได้ครั้งเดียวต่อแผน (POST, race-condition safe)**
 `storeRecord` ต้อง re-check การมีอยู่ของ `record()` **อีกครั้ง** ที่จุดเริ่มของ action ดังนั้นถ้าสอง request POST ยิงพร้อมกันสำหรับแผนเดียวกัน อย่างน้อยหนึ่งใน request ที่สองต้องได้ 403 และมี `FollowUpRecord` เพียงแถวเดียวต่อแผนเสมอ
 
-**AC-RECORD-08 — การบันทึกผลติดตามทำให้แผนเป็น "done" เสมอ ไม่ว่าเนื้อหาใด**
+**AC-RECORD-03 — การบันทึกผลติดตามทำให้แผนเป็น "done" เสมอ ไม่ว่าเนื้อหาใด**
 เมื่อ `storeRecord` สำเร็จ ระบบต้องตั้ง `FollowUpPlan.status = STATUS_DONE` เสมอ ไม่ขึ้นกับว่า `pps_score` เป็น null หรือมีค่า และไม่ขึ้นกับเนื้อหาใน `raw_notes`
 
-**AC-RECORD-09 — ขอบเขตค่า pps_score**
+**AC-RECORD-04 — ขอบเขตค่า pps_score**
 `pps_score` เป็น nullable integer ที่ต้องอยู่ในช่วง 0–100 (inclusive) เท่านั้น ค่าที่ไม่ใช่ integer, ต่ำกว่า 0, หรือสูงกว่า 100 ต้องถูกปฏิเสธด้วย validation error และไม่มีการสร้าง `FollowUpRecord` หรือเปลี่ยนสถานะแผนใดๆ
 
-**AC-RECORD-10 — raw_notes เป็นฟิลด์บังคับ**
+**AC-RECORD-05 — raw_notes เป็นฟิลด์บังคับ**
 `raw_notes` ต้องเป็น string และห้ามเว้นว่าง/ไม่ส่งมา (ไม่มีการจำกัดความยาวสูงสุด) หากไม่ผ่าน validation ต้อง redirect กลับพร้อม error ที่ label เป็น "อาการ/ปัญหาที่พบ" และไม่มีการสร้างระเบียนหรือเปลี่ยนสถานะแผน
 
-**AC-RECORD-11 — visited_at ไม่บังคับกรอก ใช้เวลาปัจจุบันเป็นค่าตั้งต้น**
+**AC-RECORD-06 — visited_at ไม่บังคับกรอก ใช้เวลาปัจจุบันเป็นค่าตั้งต้น**
 `visited_at` เป็น nullable date; ถ้าไม่ส่งมาหรือส่งเป็นค่าว่าง ระบบต้องใช้ `now()` ณ เวลาที่ประมวลผล request เป็นค่าบันทึกจริงใน `FollowUpRecord.visited_at`
 
-**AC-RECORD-12 — การสร้างระเบียนและการตัดสถานะแผนต้องเป็น atomic**
+**AC-RECORD-07 — การสร้างระเบียนและการตัดสถานะแผนต้องเป็น atomic**
 การสร้าง `FollowUpRecord` และการตั้ง `FollowUpPlan.status = done` ต้องอยู่ใน `DB::transaction` เดียวกัน
 
-**AC-RECORD-13 — ไม่มีการจำกัดบทบาทผู้ใช้ (known gap)**
-ทั้ง 4 route ของโมดูลนี้อยู่ภายใต้ middleware `auth` เท่านั้น ไม่มี `role:` middleware — ผู้ใช้ที่ล็อกอินแล้วไม่ว่า role ใดสามารถสร้าง/ขอคู่มือใหม่ และบันทึกผลติดตามได้ทั้งหมด แม้ product intent จะระบุว่า `home_visit_team` ควรเป็นผู้ใช้หลักของหน้านี้ (ดู [Known Gaps](TEST_PLAN.md#known-gaps--product-decisions-needed))
+**AC-RECORD-08 — ไม่มีการจำกัดบทบาทผู้ใช้ (known gap)**
+ทั้ง 2 route ของโมดูลนี้อยู่ภายใต้ middleware `auth` เท่านั้น ไม่มี `role:` middleware — ผู้ใช้ที่ล็อกอินแล้วไม่ว่า role ใดสามารถบันทึกผลติดตามได้ทั้งหมด แม้ product intent จะระบุว่า `home_visit_team` ควรเป็นผู้ใช้หลักของหน้านี้ (ดู [Known Gaps](TEST_PLAN.md#known-gaps--product-decisions-needed))
 
-**AC-RECORD-14 — ไม่มีการตรวจสอบสถานะแผนก่อนบันทึกผล (known gap)**
+**AC-RECORD-09 — ไม่มีการตรวจสอบสถานะแผนก่อนบันทึกผล (known gap)**
 Controller ไม่ตรวจ `plan->status` ก่อนอนุญาตให้เข้าหน้า/บันทึกผลติดตาม ดังนั้นแผนที่ถูกยกเลิกไปแล้ว (`status = cancelled`) แต่ยังไม่มี record จะยังสามารถถูกบันทึกผลติดตามได้ผ่าน URL ตรง และจะถูกเปลี่ยนสถานะเป็น `done` ทับค่า `cancelled` เดิม
 
-**AC-RECORD-15 — ผู้ใช้ที่ไม่ได้ล็อกอินต้องเข้าถึงไม่ได้**
-การเรียก 4 route ใดๆ ของโมดูลนี้โดยไม่มี session ที่ล็อกอินอยู่ ต้อง redirect ไปหน้า login
+**AC-RECORD-10 — ผู้ใช้ที่ไม่ได้ล็อกอินต้องเข้าถึงไม่ได้**
+การเรียก 2 route ใดๆ ของโมดูลนี้โดยไม่มี session ที่ล็อกอินอยู่ ต้อง redirect ไปหน้า login
 
 ---
 
@@ -319,30 +304,28 @@ Controller ไม่ตรวจ `plan->status` ก่อนอนุญาต�
 
 **AC-DASHNFR-08** — เส้นทาง `/dashboard` ต้องบังคับทั้ง `auth` **และ** `verified` ซึ่งเข้มกว่าทุกเส้นทางอื่นในระบบที่ต้อง login แล้วเข้าได้ทันที ผู้ใช้ที่ login แล้วแต่ยังไม่ยืนยันอีเมลต้องถูกกันไม่ให้เข้า `/dashboard` แต่ยังต้องเข้าเส้นทางอื่นที่ใช้แค่ `auth` ได้ตามปกติ
 
-### กลุ่ม B — ความทนทานของ AI/Ollama (ใช้ร่วมกันทั้ง 3 จุดเรียกใช้งาน)
+### กลุ่ม B — ความทนทานของ AI/Ollama (ใช้ร่วมกันทั้ง 2 จุดเรียกใช้งาน)
 
 **AC-DASHNFR-09** — ที่ `POST /referrals/{referral}/ai-summary` หาก `AiService::summarizeReferral` โยน exception ต้องถูกจับ, `report($e)`, redirect กลับพร้อม flash `error`, ต้อง**ไม่**เกิด HTTP 500 และต้อง**ไม่**มีการเขียนค่าใดๆ ลงฟิลด์ `ai_summary`/`confirmed_summary`
 
-**AC-DASHNFR-10** — ที่ `POST /follow-up-plans/{plan}/guide` ต้องมีการันตีเดียวกันกับ AC-09 สำหรับ `AiService::suggestFollowUpGuide`
+**AC-DASHNFR-10** — ที่ `POST /follow-up-plans/{plan}/analyze` ต้องมีการันตีเดียวกันกับ AC-09 สำหรับ `AiService::analyzeFollowUpRecord`
 
-**AC-DASHNFR-11** — ที่ `POST /follow-up-plans/{plan}/analyze` ต้องมีการันตีเดียวกันกับ AC-09 สำหรับ `AiService::analyzeFollowUpRecord`
+**AC-DASHNFR-11** — ความล้มเหลวสองประเภทที่ `AiService::callOllama` แยกไว้ภายใน (connection exception vs non-2xx response) ต้องถูกบันทึกด้วย `Log::error` คนละข้อความที่ระบุสาเหตุต่างกันอย่างชัดเจน แม้ทั้งสองกรณีจะไปจบที่ catch เดียวกันในทุก controller
 
-**AC-DASHNFR-12** — ความล้มเหลวสองประเภทที่ `AiService::callOllama` แยกไว้ภายใน (connection exception vs non-2xx response) ต้องถูกบันทึกด้วย `Log::error` คนละข้อความที่ระบุสาเหตุต่างกันอย่างชัดเจน แม้ทั้งสองกรณีจะไปจบที่ catch เดียวกันในทุก controller
-
-**AC-DASHNFR-13** — เส้นทาง fallback ของ `parseJsonResponse` เป็นโค้ดร่วมที่ใช้เหมือนกันในทั้ง 3 เมธอดของ `AiService` — ยืนยันครบเพียงครั้งเดียวที่ระดับ service บวกการยืนยันเพิ่มอีก 1 ครั้งต่อจุดเรียกใช้ก็เพียงพอ
+**AC-DASHNFR-12** — เส้นทาง fallback ของ `parseJsonResponse` เป็นโค้ดร่วมที่ใช้เหมือนกันในทั้ง 2 เมธอดของ `AiService` — ยืนยันครบเพียงครั้งเดียวที่ระดับ service บวกการยืนยันเพิ่มอีก 1 ครั้งต่อจุดเรียกใช้ก็เพียงพอ
 
 ### กลุ่ม C — การตั้งค่า/deploy (ตรวจสอบตอน config-review ไม่ใช่ผ่าน UI)
 
-**AC-DASHNFR-14** — ในทุกสภาพแวดล้อมที่ deploy จริง ค่า `OLLAMA_URL` ต้องชี้ไปยังที่อยู่ในเครือข่ายภายในโรงพยาบาลเท่านั้น — ต้อง**ห้ามเด็ดขาด**ที่จะชี้ไปยัง endpoint สาธารณะ/cloud ใดๆ เพราะข้อมูลที่ส่งเข้า prompt เป็นข้อมูลผู้ป่วย (PHI) ข้อกำหนดนี้ตรวจสอบผ่าน config-review checklist ก่อนขึ้นระบบจริงทุกครั้ง
+**AC-DASHNFR-13** — ในทุกสภาพแวดล้อมที่ deploy จริง ค่า `OLLAMA_URL` ต้องชี้ไปยังที่อยู่ในเครือข่ายภายในโรงพยาบาลเท่านั้น — ต้อง**ห้ามเด็ดขาด**ที่จะชี้ไปยัง endpoint สาธารณะ/cloud ใดๆ เพราะข้อมูลที่ส่งเข้า prompt เป็นข้อมูลผู้ป่วย (PHI) ข้อกำหนดนี้ตรวจสอบผ่าน config-review checklist ก่อนขึ้นระบบจริงทุกครั้ง
 
 ### กลุ่ม D — ความสอดคล้องกับ Design System (Visual/Manual QA)
 
-**AC-DASHNFR-15** *(Visual/Manual QA)* — ทุกจุดที่แสดงสถานะของ `Referral.status`, `FollowUpPlan.status`, และ `Patient.zone` ต้องแสดงทั้งสีและข้อความกำกับเสมอ ตาม DESIGN.md §3.2 — ห้ามใช้สีอย่างเดียวสื่อความหมาย
+**AC-DASHNFR-14** *(Visual/Manual QA)* — ทุกจุดที่แสดงสถานะของ `Referral.status`, `FollowUpPlan.status`, และ `Patient.zone` ต้องแสดงทั้งสีและข้อความกำกับเสมอ ตาม DESIGN.md §3.2 — ห้ามใช้สีอย่างเดียวสื่อความหมาย
 
-**AC-DASHNFR-16** *(Visual/Manual QA)* — ทุกฟิลด์ที่มาจาก AI ต้องแสดงด้วยกรอบเส้นประ + ป้าย "ร่างจาก AI — ยังไม่ยืนยัน" ก่อนยืนยัน และเปลี่ยนเป็นกรอบเส้นทึบ + ป้าย "ยืนยันแล้วโดย [ชื่อ] เมื่อ [วันที่-เวลา]" หลังยืนยัน ตาม DESIGN.md §3.3
+**AC-DASHNFR-15** *(Visual/Manual QA)* — ทุกฟิลด์ที่มาจาก AI ต้องแสดงด้วยกรอบเส้นประ + ป้าย "ร่างจาก AI — ยังไม่ยืนยัน" ก่อนยืนยัน และเปลี่ยนเป็นกรอบเส้นทึบ + ป้าย "ยืนยันแล้วโดย [ชื่อ] เมื่อ [วันที่-เวลา]" หลังยืนยัน ตาม DESIGN.md §3.3
 
-**AC-DASHNFR-17** *(Visual/Manual QA)* — จุดตัดสินใจของพยาบาลต้องแสดงเป็น radio-card ที่เห็นตัวเลือกทั้งหมดพร้อมกัน ห้ามใช้ `<select>` dropdown ตาม DESIGN.md §3.4
+**AC-DASHNFR-16** *(Visual/Manual QA)* — จุดตัดสินใจของพยาบาลต้องแสดงเป็น radio-card ที่เห็นตัวเลือกทั้งหมดพร้อมกัน ห้ามใช้ `<select>` dropdown ตาม DESIGN.md §3.4
 
-**AC-DASHNFR-18** *(Visual/Manual QA)* — KPI stat tile บนแดชบอร์ดต้องเป็นการ์ดพื้นขาว, label ขนาด caption สีเทา, ตัวเลขขนาด display, และใช้สี semantic กับตัวเลขเฉพาะเมื่อค่านั้นผิดปกติเท่านั้น ตาม DESIGN.md §3.5
+**AC-DASHNFR-17** *(Visual/Manual QA)* — KPI stat tile บนแดชบอร์ดต้องเป็นการ์ดพื้นขาว, label ขนาด caption สีเทา, ตัวเลขขนาด display, และใช้สี semantic กับตัวเลขเฉพาะเมื่อค่านั้นผิดปกติเท่านั้น ตาม DESIGN.md §3.5
 
-**AC-DASHNFR-19** *(Accepted known gap — ไม่ใช่ defect ใหม่)* — หน้าจอ Blade ปัจจุบันทั้งหมดยังใช้ top-nav แบบ default ของ Breeze แทน sidebar navigation ตาม DESIGN.md §3.7 — ทุกครั้งที่มีการรีวิว compliance ต้องบันทึกช่องว่างนี้ไว้ว่าเป็น "known/accepted deviation" ไม่ใช่ทำเงียบและไม่ใช่รายงานเป็นบั๊กใหม่ซ้ำซ้อน
+**AC-DASHNFR-18** *(Accepted known gap — ไม่ใช่ defect ใหม่)* — หน้าจอ Blade ปัจจุบันทั้งหมดยังใช้ top-nav แบบ default ของ Breeze แทน sidebar navigation ตาม DESIGN.md §3.7 — ทุกครั้งที่มีการรีวิว compliance ต้องบันทึกช่องว่างนี้ไว้ว่าเป็น "known/accepted deviation" ไม่ใช่ทำเงียบและไม่ใช่รายงานเป็นบั๊กใหม่ซ้ำซ้อน

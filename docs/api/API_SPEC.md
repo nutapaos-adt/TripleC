@@ -16,7 +16,7 @@ authenticated hospital staff, independent of transport protocol (no HTTP verbs/s
 exactly five resource groupings, matching what is implemented in code today:
 
 1. **Referrals** — intake, AI-drafted summary, nurse-confirmed care plan, attachments.
-2. **Follow-up Plans** — pre-visit guide, outcome recording, AI risk analysis, nurse decision.
+2. **Follow-up Plans** — outcome recording, AI risk analysis, nurse decision.
 3. **Admin — Case Types** — case-type catalog and its visit-scheduling rule.
 4. **Admin — Users** — role/department administration.
 5. **Dashboard** — read-only KPI/overview aggregation.
@@ -48,13 +48,12 @@ below are stated per this actual enforcement, not per the conceptual division of
 This is the project's non-negotiable rule (CLAUDE.md §"the one rule that governs every AI-touching
 feature"): **`AiService` only ever produces a draft.** Nothing it returns is committed to a
 decision-bearing field until a human explicitly reviews/edits and confirms it through a separate
-operation. Three operations below generate AI drafts; each is paired with the confirmation operation
+operation. Two operations below generate AI drafts; each is paired with the confirmation operation
 required before its content can affect case status or scheduling:
 
 | AI draft operation | Writes only to (draft field) | Required confirmation operation before it can affect case state |
 |---|---|---|
 | Generate AI Draft Summary | `Referral.ai_summary`, `ai_summary_generated_at` | Confirm Care Plan (writes `confirmed_summary` from nurse-submitted form fields, never copies `ai_summary` directly) |
-| Generate AI Draft Guide | `FollowUpPlan.ai_guide` | None — `ai_guide` is advisory-only reference material for staff conducting the visit/call; it never drives status or scheduling, so it has no confirmation step of its own |
 | Generate AI Risk Analysis Draft | `FollowUpRecord.ai_analysis`, `ai_analysis_generated_at` | Confirm Nurse Decision (writes `nurse_decision`, `risk_flag`, `confirmed_by`, `confirmed_at` from the nurse's own submitted choice, never copies `ai_analysis.suggested_decision`/`risk_detected` directly, even when they agree) |
 
 If the AI backend (self-hosted Ollama, intranet-only per CLAUDE.md) is unreachable, times out, or returns a
@@ -241,31 +240,10 @@ care plan, generated follow-up schedule, and eventual closure. Central "case" en
 ## 5. Resource: Follow-up Plans
 
 **Represents:** a single scheduled visit or phone-call touchpoint (`FollowUpPlan`) for a referral, and the
-outcome recorded against it (`FollowUpRecord`), including AI-assisted preparation and risk analysis and the
-mandatory nurse decision that follows.
+outcome recorded against it (`FollowUpRecord`), including AI-assisted risk analysis and the mandatory nurse
+decision that follows.
 
 ### 5.1 Key Operations
-
-#### View Pre-Visit Guide
-- **Trigger:** staff preparing for an upcoming visit/call opens the plan's guide page.
-- **Outputs:** the `FollowUpPlan` with its `Referral` → `Patient`/`CaseType`, and the existing `ai_guide`
-  draft if one has already been generated.
-- **Role:** any authenticated user.
-
-#### Generate AI Draft Guide — *AI draft operation (advisory only)*
-- **Trigger:** staff asks the AI to suggest topics/questions to check before this visit/call.
-- **Inputs:** none beyond the plan identifier — reads the referral's `confirmed_summary` (falling back to
-  `ai_summary` if the care plan hasn't been confirmed yet), the plan's method and sequence number, and prior
-  `FollowUpRecord` history for context.
-- **Outputs (draft only):** `FollowUpPlan.ai_guide` — a structured list of `topics` (each with `title` and
-  `note`), plus `parse_error`/`raw_response` fallback.
-- **Draft-vs-confirmed:** `ai_guide` is reference material for the person conducting the visit/call; it is
-  never treated as recorded patient data, never drives `FollowUpPlan.status` or scheduling, and — unlike the
-  other two AI drafts in this system — has **no separate confirmation step**, because it never feeds a
-  decision-bearing field in the first place.
-- **Business rules:** same failure-handling pattern as the referral AI summary (error surfaced, existing
-  state untouched on failure).
-- **Role:** any authenticated user.
 
 #### View Record Form
 - **Preconditions:** the plan must not already have a `FollowUpRecord` — a plan can only be recorded once;
@@ -365,7 +343,7 @@ mandatory nurse decision that follows.
 - Opening the record form, or submitting a record, for a plan that already has one: blocked with an
   "already recorded" message.
 - Reviewing, analyzing, or confirming a decision for a plan with no record yet: blocked as not found.
-- AI guide/analysis call failures: same resilience pattern as the referral AI summary — error surfaced, no
+- AI analysis call failures: same resilience pattern as the referral AI summary — error surfaced, no
   partial state written.
 - Confirming a decision of `close` while other `FollowUpPlan`s for the same referral are still `scheduled`:
   **allowed** — those plans are automatically cancelled as part of closing, rather than blocking the close.
