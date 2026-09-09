@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แบบฟอร์มสรุปผลงานเยี่ยมบ้านประจำเดือน — Chira Continuity Care</title>
+<style>
+  :root{
+    --color-primary-900:#16232C; --color-primary-800:#1E3644; --color-primary-700:#2C5166;
+    --color-primary-600:#3D6B84; --color-primary-500:#5586A0; --color-primary-300:#A8C4D2;
+    --color-primary-100:#E1EBEF; --color-primary-50:#F4F8FA;
+    --color-neutral-900:#22201A; --color-neutral-700:#4A4739; --color-neutral-500:#7C7863;
+    --color-neutral-300:#C9C4AD; --color-neutral-200:#DEDAC6; --color-neutral-100:#F1EEE0; --color-surface:#FFFFFF;
+    --color-risk:#B23B2C; --color-risk-tint:#F7E7E2;
+    --color-warning:#C2891F; --color-warning-tint:#FBF0DC;
+    --color-success:#3E8E49; --color-success-tint:#E5F2E4;
+    --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px;
+    --space-5:20px; --space-6:24px; --space-8:32px;
+    --radius-sm:4px; --radius-md:8px; --radius-lg:12px; --radius-pill:999px;
+    --shadow-sm:0 1px 2px rgba(34,32,26,0.06);
+    --shadow-md:0 1px 2px rgba(34,32,26,0.06), 0 4px 14px rgba(34,32,26,0.08);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Sarabun','Noto Sans Thai','Leelawadee UI','Segoe UI',system-ui,sans-serif;
+    background:var(--color-primary-50);
+    color:var(--color-neutral-900);
+    font-size:13px;
+    line-height:1.5;
+  }
+  a{color:inherit;}
+  :focus-visible{outline:2px solid var(--color-primary-700);outline-offset:2px;border-radius:var(--radius-sm);}
+
+  .toolbar{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:14px 24px;background:var(--color-primary-800);color:#F4F8FA;
+  }
+  .toolbar .back{color:#F4F8FA;text-decoration:none;font-size:13px;font-weight:600;}
+  .toolbar .back:hover{text-decoration:underline;}
+  .btn-print{
+    background:var(--color-primary-700);color:#fff;border:none;border-radius:8px;
+    padding:9px 18px;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;
+    display:inline-flex;align-items:center;gap:8px;
+  }
+  .btn-print:hover{background:var(--color-primary-600);}
+  .toolbar-right{display:flex;align-items:center;gap:14px;}
+  .month-picker{display:flex;align-items:center;gap:8px;font-size:13px;}
+  .month-picker label{font-weight:600;color:var(--color-primary-100);}
+  .month-picker select{
+    background:var(--color-primary-900);color:#F4F8FA;border:1px solid var(--color-primary-600);
+    border-radius:8px;padding:7px 10px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;
+  }
+
+  .empty-state{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+    gap:10px;padding:64px 24px;color:var(--color-neutral-500);
+  }
+  .empty-state .ico{font-size:40px;}
+  .empty-state h2{margin:0;font-size:16px;color:var(--color-neutral-700);}
+  .empty-state p{margin:0;font-size:12.5px;max-width:440px;}
+
+  .page-wrap{max-width:1180px;margin:24px auto 48px;padding:0 16px;}
+  .sheet{
+    background:var(--color-surface);
+    border:1px solid var(--color-neutral-200);
+    border-radius:10px;
+    box-shadow:var(--shadow-md);
+    padding:28px 34px;
+  }
+
+  .doc-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;border-bottom:2px solid var(--color-primary-700);padding-bottom:12px;margin-bottom:18px;}
+  .doc-header h1{margin:0;font-size:20px;line-height:28px;color:var(--color-primary-800);}
+  .doc-header .sub{font-size:12px;color:var(--color-neutral-500);margin-top:3px;}
+  .doc-header .meta{text-align:right;font-size:11.5px;color:var(--color-neutral-500);flex-shrink:0;}
+  .doc-header .meta strong{display:block;color:var(--color-neutral-900);font-size:14px;}
+
+  .section{margin-bottom:26px;page-break-inside:avoid;}
+  .section-title{
+    display:flex;align-items:baseline;gap:8px;
+    font-size:15px;font-weight:700;color:var(--color-primary-800);
+    border-bottom:1px solid var(--color-neutral-200);
+    padding-bottom:6px;margin-bottom:12px;
+  }
+  .section-title .num{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:22px;height:22px;border-radius:50%;background:var(--color-primary-100);
+    color:var(--color-primary-700);font-size:12px;font-weight:800;flex-shrink:0;
+  }
+
+  /* ===== KPI tiles ===== */
+  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-4);margin-bottom:var(--space-5);}
+  .kpi-tile{
+    background:var(--color-surface);border:1px solid var(--color-neutral-200);border-radius:var(--radius-lg);
+    padding:var(--space-4);box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:4px;
+  }
+  .kpi-tile .cap{font-size:11.5px;font-weight:600;color:var(--color-neutral-500);}
+  .kpi-value{font-size:30px;line-height:36px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--color-neutral-900);}
+  .kpi-value.risk{color:var(--color-risk);}
+  .kpi-tile .hint{font-size:11px;color:var(--color-neutral-500);}
+  .kpi-tile.alert{border-color:var(--color-risk-tint);background:linear-gradient(180deg,#fff 0%, var(--color-risk-tint) 260%);}
+
+  /* ===== Tables ===== */
+  .table-wrap{overflow-x:auto;}
+  table.report-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  table.report-table thead th{
+    text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;
+    color:var(--color-neutral-500);padding:8px 10px;border-bottom:1px solid var(--color-neutral-200);white-space:nowrap;
+  }
+  table.report-table tbody td{
+    padding:8px 10px;border-bottom:1px solid var(--color-neutral-200);vertical-align:middle;
+  }
+  table.report-table tbody tr:last-child td{border-bottom:none;}
+  table.report-table td.num, table.report-table th.num{font-variant-numeric:tabular-nums;text-align:right;}
+  table.report-table tr.total-row td{font-weight:700;background:var(--color-primary-50);}
+  .table-note{margin-top:8px;font-size:11px;color:var(--color-neutral-500);}
+  .table-note p{margin:2px 0;}
+  .val-good{color:var(--color-success);font-weight:600;}
+  .val-muted{color:var(--color-neutral-500);font-style:italic;}
+  .val-dash{color:var(--color-neutral-300);}
+
+  /* ===== Narrative list (section 2) ===== */
+  .narrative-list{margin:0;padding-left:20px;font-size:12.5px;}
+  .narrative-list > li{margin-bottom:10px;}
+  .narrative-list > li > strong{color:var(--color-neutral-900);}
+  .narrative-list ul{margin:4px 0 0;padding-left:18px;color:var(--color-neutral-700);}
+  .narrative-list ul li{margin-bottom:2px;}
+
+  /* ===== Photo gallery ===== */
+  .photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-4);}
+  .photo-tile{display:flex;flex-direction:column;gap:6px;align-items:center;}
+  .photo-box{
+    width:100%;aspect-ratio:4/3;background:var(--color-neutral-100);border:1px dashed var(--color-neutral-300);
+    border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;
+    color:var(--color-neutral-500);font-size:34px;
+  }
+  .photo-cap{font-size:11.5px;color:var(--color-neutral-500);font-weight:600;}
+
+  /* ===== Case log cards ===== */
+  .case-card{
+    border:1px solid var(--color-neutral-200);border-radius:var(--radius-lg);padding:var(--space-4) var(--space-5);
+    margin-bottom:var(--space-4);page-break-inside:avoid;background:var(--color-surface);
+  }
+  .case-card:last-child{margin-bottom:0;}
+  .case-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px;}
+  .case-head-left{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
+  .case-no{
+    display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;
+    background:var(--color-primary-700);color:#fff;font-size:12px;font-weight:800;flex-shrink:0;
+  }
+  .case-name{font-size:14.5px;font-weight:700;color:var(--color-neutral-900);}
+  .case-age{font-size:12px;color:var(--color-neutral-500);}
+  .case-badges{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+  .badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:var(--radius-pill);font-size:11px;font-weight:700;white-space:nowrap;}
+  .badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
+  .badge-ward{background:var(--color-neutral-100);color:var(--color-neutral-700);}
+  .badge-ontime{background:var(--color-success-tint);color:var(--color-success);}
+  .badge-late{background:var(--color-risk-tint);color:var(--color-risk);}
+  .case-dates{font-size:11.5px;color:var(--color-neutral-500);font-variant-numeric:tabular-nums;margin-bottom:8px;}
+  .case-dx{font-size:12.5px;margin-bottom:10px;}
+  .case-dx .l{color:var(--color-neutral-500);font-weight:600;}
+  .case-block{margin-bottom:8px;}
+  .case-block:last-child{margin-bottom:0;}
+  .case-block .l{display:block;font-size:11px;font-weight:700;color:var(--color-primary-700);text-transform:uppercase;letter-spacing:.02em;margin-bottom:3px;}
+  .case-block ul{margin:0;padding-left:18px;font-size:12.5px;}
+  .case-block ul li{margin-bottom:2px;}
+  .case-note{font-size:12px;color:var(--color-neutral-500);}
+
+  /* ===== Signature block ===== */
+  .sign-block{
+    display:flex;justify-content:space-between;align-items:flex-end;gap:24px;
+    margin-top:8px;padding-top:16px;border-top:1px solid var(--color-neutral-200);
+    font-size:12px;color:var(--color-neutral-700);
+  }
+  .sign-block .memo{flex:1;}
+  .sign-block .memo .line{border-bottom:1px solid var(--color-neutral-300);height:20px;width:220px;}
+  .sign-block .approve{text-align:center;min-width:260px;}
+  .sign-block .approve .line{border-bottom:1px solid var(--color-neutral-300);height:36px;margin-bottom:6px;}
+  .sign-block .approve strong{display:block;font-size:13px;color:var(--color-neutral-900);margin-top:2px;}
+
+  footer.credit{margin-top:18px;color:var(--color-neutral-500);font-size:11.5px;}
+
+  @media (max-width:860px){
+    .kpi-grid{grid-template-columns:repeat(2,1fr);}
+    .photo-grid{grid-template-columns:repeat(2,1fr);}
+    .sheet{padding:20px 16px;}
+    .sign-block{flex-direction:column;align-items:stretch;}
+  }
+  @media (max-width:520px){
+    .kpi-grid{grid-template-columns:1fr;}
+    table.report-table{min-width:640px;}
+  }
+
+  @media print{
+    body{background:#fff;font-size:11px;}
+    .toolbar{display:none;}
+    .page-wrap{margin:0;padding:0;max-width:none;}
+    .sheet{box-shadow:none;border:none;border-radius:0;padding:4mm 6mm;}
+    @page{size:A4 landscape;margin:10mm;}
+    .kpi-grid{grid-template-columns:repeat(7,1fr);gap:8px;}
+    .kpi-value{font-size:22px;line-height:28px;}
+    .photo-grid{grid-template-columns:repeat(3,1fr);}
+    .section{margin-bottom:14px;}
+    .case-card{margin-bottom:8px;padding:10px 12px;}
+  }
+  [hidden]{display:none!important;}
+</style>
+</head>
+<body>
+
+<div class="toolbar no-print">
+  <a class="back" href="dashboard.html">&larr; กลับไปแดชบอร์ด</a>
+  <div class="toolbar-right">
+    <div class="month-picker">
+      <label for="monthSelect">เดือนที่ต้องการดู/พิมพ์</label>
+      <select id="monthSelect" onchange="onMonthChange()">
+        <option value="2568-10">ตุลาคม 2568</option>
+        <option value="2568-11">พฤศจิกายน 2568</option>
+        <option value="2568-12">ธันวาคม 2568</option>
+        <option value="2569-01">มกราคม 2569</option>
+        <option value="2569-02">กุมภาพันธ์ 2569</option>
+        <option value="2569-03">มีนาคม 2569</option>
+        <option value="2569-04">เมษายน 2569</option>
+        <option value="2569-05">พฤษภาคม 2569</option>
+        <option value="2569-06">มิถุนายน 2569</option>
+        <option value="2569-07">กรกฎาคม 2569</option>
+        <option value="2569-08" selected>สิงหาคม 2569</option>
+        <option value="2569-09">กันยายน 2569</option>
+      </select>
+    </div>
+    <button class="btn-print" onclick="window.print()">&#128424; พิมพ์รายงานนี้</button>
+  </div>
+</div>
+
+<div class="page-wrap">
+  <div class="sheet">
+
+    <div class="doc-header">
+      <div>
+        <h1>แบบฟอร์มสรุปผลงานเยี่ยมบ้านประจำเดือน <span id="titleMonth">สิงหาคม 2569</span></h1>
+        <div class="sub">รายงานสรุปผลงานทีมเยี่ยมบ้าน — Chira Continuity Care (Triple C)</div>
+      </div>
+      <div class="meta">
+        <strong>รพ.ค่ายตัวอย่าง</strong>
+        พิมพ์เมื่อ <span id="printDate"></span>
+      </div>
+    </div>
+
+    <div id="reportContent">
+
+    <!-- ============ Section 1: KPI + timeliness breakdown ============ -->
+    <div class="section">
+      <div class="section-title"><span class="num">1</span> สรุปจำนวนการส่งเยี่ยมและความทันเวลา</div>
+
+      <div class="kpi-grid" aria-label="สรุปตัวเลขการส่งเยี่ยมบ้านประจำเดือน">
+        <div class="kpi-tile">
+          <span class="cap">จำนวนการส่งเยี่ยมทั้งหมด</span>
+          <span class="kpi-value">62</span>
+          <span class="hint">ราย</span>
+        </div>
+        <div class="kpi-tile">
+          <span class="cap">ในเขต</span>
+          <span class="kpi-value">6</span>
+          <span class="hint">ราย</span>
+        </div>
+        <div class="kpi-tile">
+          <span class="cap">นอกเขต</span>
+          <span class="kpi-value">56</span>
+          <span class="hint">ราย</span>
+        </div>
+        <div class="kpi-tile">
+          <span class="cap">ทันใน 5 วัน (ด่วน)</span>
+          <span class="kpi-value">0</span>
+          <span class="hint">ราย</span>
+        </div>
+        <div class="kpi-tile">
+          <span class="cap">ทันใน 14 วัน</span>
+          <span class="kpi-value">8</span>
+          <span class="hint">ราย</span>
+        </div>
+        <div class="kpi-tile">
+          <span class="cap">ทันใน 30 วัน</span>
+          <span class="kpi-value">0</span>
+          <span class="hint">ราย</span>
+        </div>
+        <div class="kpi-tile alert">
+          <span class="cap">เยี่ยมเดือนหน้า (ยังไม่ทัน)</span>
+          <span class="kpi-value risk">54</span>
+          <span class="hint">ราย — ส่วนใหญ่เป็นเคสนอกเขต</span>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th>ประเภท</th>
+              <th class="num">จำนวนการส่งเยี่ยม</th>
+              <th class="num">รับใน COC</th>
+              <th class="num">ทันใน 5 วัน (ด่วน)</th>
+              <th class="num">ไม่ทัน (ด่วน)</th>
+              <th class="num">รวม (ด่วน)</th>
+              <th class="num">ทันใน 14 วัน (ทั่วไป)</th>
+              <th class="num">ทันใน 30 วัน (ทั่วไป)</th>
+              <th class="num">เยี่ยมเดือนหน้า (ทั่วไป)</th>
+              <th class="num">รวม (ทั่วไป)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ในเขต</td>
+              <td class="num">6</td><td class="num">6</td><td class="num">0</td><td class="num">0</td><td class="num">0</td>
+              <td class="num">6</td><td class="num">0</td><td class="num">0</td><td class="num">6</td>
+            </tr>
+            <tr>
+              <td>นอกเขต</td>
+              <td class="num">56</td><td class="num">56</td><td class="num">0</td><td class="num">0</td><td class="num">0</td>
+              <td class="num">2</td><td class="num">0</td><td class="num">54</td><td class="num">56</td>
+            </tr>
+            <tr class="total-row">
+              <td>รวม</td>
+              <td class="num">62</td><td class="num">62</td><td class="num">0</td><td class="num">0</td><td class="num">0</td>
+              <td class="num">8</td><td class="num">0</td><td class="num">54</td><td class="num">62</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table-note">
+        <p>ด่วน = บ้านแดง, ทั่วไป = บ้านเหลืองและเขียว</p>
+        <p>นอกเขต หมายถึงผู้ป่วยที่ต้องการเยี่ยมบ้านและพักอาศัยนอกเขตพื้นที่รับผิดชอบ</p>
+        <p>รับใน COC หมายถึงจำนวนการส่งเยี่ยมผ่านระบบในเดือนนั้นๆ</p>
+        <p>ทันใน 14 วัน หมายถึงเยี่ยมเคสที่ขึ้นทะเบียนในเดือนนั้นทันภายใน 14 วัน (ตัดยอดไม่เกินวันที่ 15 ของเดือนถัดไป)</p>
+        <p>ทันใน 30 วัน หมายถึงเยี่ยมไม่ทันใน 14 วัน แต่ทันภายใน 30 วัน</p>
+      </div>
+    </div>
+
+    <!-- ============ Section 2: narrative summary ============ -->
+    <div class="section">
+      <div class="section-title"><span class="num">2</span> สรุปผลการเยี่ยมบ้านและรับส่งต่อ</div>
+      <ul class="narrative-list">
+        <li><strong>สรุปผลการเยี่ยมบ้าน</strong>
+          <ul>
+            <li>ในเขต 6 ราย</li>
+            <li>นอกเขต 2 ราย มีการตอบกลับ</li>
+            <li>นอกเขต 54 ราย ไม่พบการตอบกลับในระบบ</li>
+          </ul>
+        </li>
+        <li><strong>รับส่งต่อเยี่ยมบ้าน จำนวน 6 ราย</strong> แบ่งตามหอผู้ป่วยต้นทาง
+          <ul>
+            <li>หอผู้ป่วยชาย 5 ราย</li>
+            <li>หอผู้ป่วยหนัก 1 ราย</li>
+            <li>หอผู้ป่วยหญิง 0 ราย</li>
+            <li>ห้องตรวจโรคผู้ป่วยนอก 0 ราย</li>
+            <li>ห้องฉุกเฉิน 0 ราย</li>
+          </ul>
+        </li>
+        <li><strong>เยี่ยมตาม tracer จำนวน 3 ราย</strong>
+          <ul>
+            <li>Pneumonia tracer 1 ราย (นายเล็ก แสงทอง)</li>
+            <li>Stroke 0 ราย</li>
+            <li>Heat stroke 0 ราย</li>
+            <li>Pneumonia 2 ราย (นายสมพงษ์ ศรีสุวรรณ, นายเล็ก แสงทอง)</li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+
+    <!-- ============ Section 3: DM/COPD incidents ============ -->
+    <div class="section">
+      <div class="section-title"><span class="num">3</span> ภาวะแทรกซ้อน/อุบัติการณ์ โรค DM และ COPD ประจำเดือน <span id="sec3Month">สิงหาคม 2569</span></div>
+      <div class="table-wrap">
+        <table class="report-table">
+          <thead>
+            <tr><th>ลำดับ</th><th>DM</th><th>COPD</th><th>รายละเอียด</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-note"><p>ไม่พบภาวะแทรกซ้อน/อุบัติการณ์ในเดือนนี้</p></div>
+    </div>
+
+    <!-- ============ Section 4: satisfaction trend ============ -->
+    <div class="section">
+      <div class="section-title"><span class="num">4</span> ความพึงพอใจในงานเยี่ยมบ้าน ปีงบประมาณ 2569</div>
+      <div class="table-wrap">
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th>หัวข้อการประเมิน</th>
+              <th class="num">เป้าหมาย (ร้อยละ)</th>
+              <th class="num">ต.ค.68</th><th class="num">พ.ย.68</th><th class="num">ธ.ค.68</th>
+              <th class="num">ม.ค.69</th><th class="num">ก.พ.69</th><th class="num">มี.ค.69</th>
+              <th class="num">เม.ย.69</th><th class="num">พ.ค.69</th><th class="num">มิ.ย.69</th>
+              <th class="num">ก.ค.69</th><th class="num">ส.ค.69</th><th class="num">ก.ย.69</th>
+              <th class="num">ค่าเฉลี่ย</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ความพึงพอใจของผู้รับบริการในชุมชน (ในเขต)</td>
+              <td class="num">80</td>
+              <td class="num val-good">97</td><td class="num val-good">98</td><td class="num val-good">97</td>
+              <td class="num val-good">100</td><td class="num val-good">100</td><td class="num val-good">100</td>
+              <td class="num val-good">100</td><td class="num val-good">100</td><td class="num val-good">100</td>
+              <td class="num val-good">100</td><td class="num val-good">100</td>
+              <td class="num val-dash">–</td><td class="num val-dash">–</td>
+            </tr>
+            <tr>
+              <td>ความพึงพอใจของผู้ป่วยและญาติต่อการดูแลผู้ป่วยแบบประคับประคอง</td>
+              <td class="num">80</td>
+              <td class="num val-muted">ไม่มี case</td><td class="num val-muted">ไม่มี case</td><td class="num val-muted">ไม่มี case</td>
+              <td class="num val-good">100</td><td class="num val-good">100</td><td class="num val-good">100</td>
+              <td class="num val-good">100</td><td class="num val-good">100</td><td class="num val-good">100</td>
+              <td class="num val-good">100</td><td class="num val-muted">ไม่มี case</td>
+              <td class="num val-dash">–</td><td class="num val-dash">–</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-note"><p>ตัวเลขที่ ≥ เป้าหมายแสดงด้วยสีเขียว (สำเร็จตามเป้า) — "ไม่มี case" หมายถึงเดือนนั้นไม่มีผู้รับบริการกลุ่มนี้ให้ประเมิน</p></div>
+    </div>
+
+    <!-- ============ Section 5: photo gallery ============ -->
+    <div class="section">
+      <div class="section-title"><span class="num">5</span> ภาพการปฏิบัติงาน</div>
+      <div class="photo-grid" aria-label="ภาพประกอบการปฏิบัติงานเยี่ยมบ้าน (ตัวอย่าง)">
+        <div class="photo-tile"><div class="photo-box">&#128247;</div><span class="photo-cap">ภาพที่ 1</span></div>
+        <div class="photo-tile"><div class="photo-box">&#128247;</div><span class="photo-cap">ภาพที่ 2</span></div>
+        <div class="photo-tile"><div class="photo-box">&#128247;</div><span class="photo-cap">ภาพที่ 3</span></div>
+        <div class="photo-tile"><div class="photo-box">&#128247;</div><span class="photo-cap">ภาพที่ 4</span></div>
+        <div class="photo-tile"><div class="photo-box">&#128247;</div><span class="photo-cap">ภาพที่ 5</span></div>
+        <div class="photo-tile"><div class="photo-box">&#128247;</div><span class="photo-cap">ภาพที่ 6</span></div>
+      </div>
+    </div>
+
+    <!-- ============ Section 6: case log ============ -->
+    <div class="section">
+      <div class="section-title"><span class="num">6</span> ทะเบียนตอบกลับเยี่ยมบ้าน ประจำเดือน <span id="sec6Month">สิงหาคม 2569</span></div>
+
+      <div class="case-card">
+        <div class="case-head">
+          <div class="case-head-left">
+            <span class="case-no">1</span>
+            <span class="case-name">นาย สมพงษ์ ศรีสุวรรณ</span>
+            <span class="case-age">อายุ 57 ปี</span>
+          </div>
+          <div class="case-badges">
+            <span class="badge badge-ward">หอผู้ป่วยชาย</span>
+            <span class="badge badge-ontime">ทันเวลา</span>
+          </div>
+        </div>
+        <div class="case-dates">กำหนดเยี่ยม 14 ส.ค. 69 &middot; เยี่ยมจริง 6 ส.ค. 69</div>
+        <div class="case-dx"><span class="l">วินิจฉัย/โรคประจำตัว:</span> Pneumonia c E'lyte imbalance &middot; HT, DM &middot; D/C 14 ก.ค. 69</div>
+        <div class="case-block">
+          <span class="l">ประเด็นที่หอผู้ป่วยต้องการติดตาม</span>
+          <ul>
+            <li>ผู้ป่วย refer รพ.รร.6 เพื่อเข้ารับการรักษาเรื่อง severe AR เมื่อ 14 ก.ค. 69 เดิมบ้านอยู่ไผ่ล้อม พักอาศัยอยู่คนเดียว บุตรทำงานที่ศูนย์วิทยาศาสตร์ และผู้ป่วยขาดยาโรคประจำตัว HT, DM</li>
+            <li>ติดตามการปฏิบัติตนและการรักษาต่อเนื่อง</li>
+          </ul>
+        </div>
+        <div class="case-block">
+          <span class="l">ผลการเยี่ยม</span>
+          <ul>
+            <li>Phone visit 5 ส.ค. 69 ญาติแจ้งว่าวันนี้ผู้ป่วยจะได้รับการผ่าตัดสมองที่ รพ.รร.6 และจะแจ้งความคืบหน้าของอาการเป็นระยะ</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="case-card">
+        <div class="case-head">
+          <div class="case-head-left">
+            <span class="case-no">2</span>
+            <span class="case-name">นาย เล็ก แสงทอง</span>
+            <span class="case-age">อายุ 86 ปี</span>
+          </div>
+          <div class="case-badges">
+            <span class="badge badge-ward">หอผู้ป่วยชาย</span>
+            <span class="badge badge-ontime">ทันเวลา</span>
+          </div>
+        </div>
+        <div class="case-dates">กำหนดเยี่ยม 17 ส.ค. 69 &middot; เยี่ยมจริง 6 ส.ค. 69</div>
+        <div class="case-dx"><span class="l">วินิจฉัย:</span> Aspirate pneumonia c sepsis &middot; D/C 17 ก.ค. 69</div>
+        <div class="case-block">
+          <span class="l">ประเด็นที่หอผู้ป่วยต้องการติดตาม</span>
+          <ul>
+            <li>ติดตามการดูแลผู้ป่วยติดเตียงที่บ้าน เช่น การจัดศีรษะสูงก่อนและหลัง feed / งดให้อาหารทางปาก / การ suction clear airway q 2-4 hr.</li>
+            <li>พลิกตะแคงตัวทุก 2 ชม. เฝ้าระวังการเกิดแผลกดทับเพิ่ม เดิมมีแผลกดทับที่สะโพกขวา ให้ D/S wound OD</li>
+            <li>passive exercise ป้องกันข้อติดแข็ง</li>
+          </ul>
+        </div>
+        <div class="case-block">
+          <span class="l">ผลการเยี่ยม</span>
+          <ul>
+            <li>ผู้ป่วยติดเตียง รู้สึกตัวดี หายใจ room-air on O2 cannular 2 lit/min prn จะใช้เมื่อวัด O2 sat ได้น้อยกว่า 95%</li>
+            <li>ผู้ป่วย on NG-tube feed BD 350 ml x3 มื้อ มีนมเสริมบางมื้อ feed รับได้ทุกมื้อ ไม่มี content เกิน ญาติดูแลจัดท่านอนศีรษะสูงขณะ feed และหลัง feed อาหาร 2-3 ชม. ญาติสามารถให้อาหารทางสายยางได้อย่างถูกต้อง เน้นย้ำงดให้อาหารทางปาก แนะนำสังเกตอาการสำลักขณะ feed อาหาร เช่น ไอ หายใจเร็ว และกระสับกระส่าย</li>
+            <li>ผู้ป่วยมีแผลกดทับระดับ 2 ที่สะโพกข้างขวา ญาติดูแลทำแผลให้ทุกวัน และจะพามาให้ห้องหัตถการ รพ.ค่ายฯ ประเมินแผลสัปดาห์ละ 1 ครั้ง</li>
+            <li>ญาติทำ passive exercise หลังอาบน้ำเช็ดตัวตอนเย็นทุกวัน</li>
+            <li>ผู้ป่วย void by condom ผู้ป่วยไม่ค่อยถ่ายอุจจาระ ผายลมได้ ไม่มีท้องอืด แนะนำ feed ยาระบายตามแพทย์สั่ง</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="case-card">
+        <div class="case-head">
+          <div class="case-head-left">
+            <span class="case-no">3</span>
+            <span class="case-name">นาย ประดิษฐ์ วงศ์เจริญ</span>
+            <span class="case-age">อายุ 47 ปี</span>
+          </div>
+          <div class="case-badges">
+            <span class="badge badge-ward">หอผู้ป่วยชาย</span>
+            <span class="badge badge-ontime">ทันเวลา</span>
+          </div>
+        </div>
+        <div class="case-dates">กำหนดเยี่ยม 17 ส.ค. 69 &middot; เยี่ยมจริง 13 ส.ค. 69</div>
+        <div class="case-dx"><span class="l">วินิจฉัย/โรคประจำตัว:</span> NSTEMI &middot; ESRD ล้างไต รพ.ร่มฉัตร &middot; D/C 17 ก.ค. 69</div>
+        <div class="case-block">
+          <span class="l">ประเด็นที่หอผู้ป่วยต้องการติดตาม</span>
+          <ul>
+            <li>สังเกตอาการผิดปกติ เช่น แน่นหน้าอก หายใจเหนื่อย ใจสั่น ให้มาพบแพทย์ก่อนนัด</li>
+            <li>F/U 6 ส.ค. 69 +EKG พ.สมชาย</li>
+            <li>ผู้ป่วย case ESRD มี HD อังคาร, เสาร์ ที่ รพ.ร่มฉัตร เน้นย้ำการเข้ารับการ HD และ advice ญาติจัดยาและการรับประทานยาให้แก่ผู้ป่วย</li>
+          </ul>
+        </div>
+        <div class="case-block">
+          <span class="l">ผลการเยี่ยม</span>
+          <ul>
+            <li>ผู้ป่วยไม่มีอาการหายใจเหนื่อย/แน่นหน้าอก/ใจสั่น/ปวดท้อง ขณะเยี่ยม แพทย์แนะนำให้ดื่มน้ำไม่เกิน 1,000 ml./day ผู้ป่วยยังจำกัดน้ำได้ไม่ดี</li>
+            <li>ผู้ป่วยมาพบ พ.สมชาย ตามนัด มีนัดครั้งต่อไป 22 ส.ค. 69</li>
+            <li>ผู้ป่วยไปล้างไตที่ รพ.ร่มฉัตรทุกวันอังคาร, พฤหัส, เสาร์ น้าของผู้ป่วยเป็นคนดูแลเรื่องการรับประทานยา และพาไปล้างไต</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="case-card">
+        <div class="case-head">
+          <div class="case-head-left">
+            <span class="case-no">4</span>
+            <span class="case-name">พลฯ ธนากร ใจเพชร</span>
+            <span class="case-age">อายุ 20 ปี</span>
+          </div>
+          <div class="case-badges">
+            <span class="badge badge-ward">หอผู้ป่วยชาย</span>
+            <span class="badge badge-ontime">ทันเวลา</span>
+          </div>
+        </div>
+        <div class="case-dates">กำหนดเยี่ยม 27 ส.ค. 69 &middot; เยี่ยมจริง 13 ส.ค. 69</div>
+        <div class="case-dx"><span class="l">วินิจฉัย:</span> Cfx. Lt. patellar &middot; D/C 27 ก.ค. 69</div>
+        <div class="case-block">
+          <span class="l">ประเด็นที่หอผู้ป่วยต้องการติดตาม</span>
+          <ul>
+            <li>ทำแผลวันละครั้ง ห้ามแผลเปียกน้ำ</li>
+            <li>F/U 7 ส.ค. 69 พ.ธีระ</li>
+            <li>สังเกตอาการผิดปกติที่ควรมาพบแพทย์ เช่น แผลบวมแดงร้อน คลำอุ่น มีไข้ ให้มาพบแพทย์ก่อนนัดได้</li>
+          </ul>
+        </div>
+        <div class="case-block">
+          <span class="l">ผลการเยี่ยม</span>
+          <ul>
+            <li>ผู้ป่วยลากลับบ้านเพื่อไปพักฟื้นที่ จ.อุทัยธานี ไปรับบริการทำแผลที่อนามัยใกล้บ้าน แผลแห้งดี ไม่มีหนอง</li>
+            <li>เคลื่อนไหวโดยใช้รถเข็นนั่ง มีอาการปวดบ้างเวลางอเข่า PS=5 คะแนน มียารับประทานแก้ปวด</li>
+            <li>ผู้ป่วยมาตรวจตามนัด พ.ธีระ เมื่อ 7 ส.ค. 69 เน้นย้ำให้ F/U ครั้งต่อไป 18 ก.ย. 69</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="case-card">
+        <div class="case-head">
+          <div class="case-head-left">
+            <span class="case-no">5</span>
+            <span class="case-name">พลฯ อภิสิทธิ์ แก้วมณี</span>
+            <span class="case-age">อายุ 21 ปี</span>
+          </div>
+          <div class="case-badges">
+            <span class="badge badge-ward">หอผู้ป่วยชาย</span>
+            <span class="badge badge-ontime">ทันเวลา</span>
+          </div>
+        </div>
+        <div class="case-dates">กำหนดเยี่ยม 8 ก.ย. 69 &middot; เยี่ยมจริง 26 ส.ค. 69</div>
+        <div class="case-dx"><span class="l">วินิจฉัย:</span> Acute Cholecystitis &middot; D/C 8 ส.ค. 69</div>
+        <div class="case-block">
+          <span class="l">ประเด็นที่หอผู้ป่วยต้องการติดตาม</span>
+          <ul>
+            <li>เน้นย้ำการทำแผลผ่าตัดทุกวัน หลีกเลี่ยงแผลโดนน้ำ</li>
+            <li>เน้นย้ำการงดอาหารไขมันสูง</li>
+            <li>มีนัด F/U พบ พ.วิรัตน์ 14 ส.ค. 69</li>
+          </ul>
+        </div>
+        <div class="case-block">
+          <span class="l">ผลการเยี่ยม</span>
+          <ul>
+            <li>ผู้ป่วยพักอาศัยอยู่นอกเขต</li>
+            <li>แผลแห้งดี มาตรวจตามนัด เมื่อ 14 ส.ค. 69 แพทย์ให้ยาฆ่าเชื้อไปรับประทานต่อ เน้นย้ำให้รับประทานยาจนครบ ไม่หยุดยาเอง ไม่มีนัดต่อ</li>
+            <li>แนะนำหากแผลบวมแดง มีหนอง มีไข้ ให้มาพบแพทย์</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="case-card">
+        <div class="case-head">
+          <div class="case-head-left">
+            <span class="case-no">6</span>
+            <span class="case-name">นาง สำรวย ทองอินทร์</span>
+            <span class="case-age">อายุ 77 ปี</span>
+          </div>
+          <div class="case-badges">
+            <span class="badge badge-ward">หอผู้ป่วยหนัก</span>
+            <span class="badge badge-ontime">ทันเวลา</span>
+          </div>
+        </div>
+        <div class="case-dates">กำหนดเยี่ยม 13 ก.ย. 69 &middot; เยี่ยมจริง 26 ส.ค. 69</div>
+        <div class="case-dx"><span class="l">วินิจฉัย/โรคประจำตัว:</span> Asthmatic attack &middot; U/D: HT, DLP, Old CVA &middot; D/C 13 ส.ค. 69</div>
+        <div class="case-block">
+          <span class="l">ประเด็นที่หอผู้ป่วยต้องการติดตาม</span>
+          <ul>
+            <li>ผู้ป่วย case Asthmatic attack on T-tube เดิมที่บ้าน on Ventilator ที่บ้าน on ตอนกลางคืน พ.สมชาย ให้ใส่ได้เหมือนเดิม</li>
+            <li>ให้พ่นยาตาม Rx.</li>
+            <li>Pt. E4V4M6 อ่อนแรงข้างซ้ายเดิม on NG feed ระวังสำลัก</li>
+            <li>ผู้ป่วยเป็นมารดาพยาบาล ทบ.รุ่น 22</li>
+          </ul>
+        </div>
+        <div class="case-block">
+          <span class="l">ผลการเยี่ยม</span>
+          <ul>
+            <li>ผู้ป่วย bed ridden เดิม พูดคุยรู้เรื่อง ไม่มีหอบเหนื่อย</li>
+            <li>มี secretion ไอ ขับเสมหะได้ไม่หมด ญาติช่วย suction ให้ no sign infection</li>
+            <li>Feed BD 350 x 4 feed รับได้ไม่มี content เกิน no aspirate</li>
+            <li>ผู้ป่วย On TT-Tube c home Ventilator (Bipap mode) ไม่มีอาการเหนื่อย</li>
+            <li>ไม่มีแผลกดทับ void on pad ญาติดูแลได้ดี ไม่มีปัญหาสุขภาพจิต</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ============ Signature block ============ -->
+    <div class="sign-block">
+      <div class="memo">
+        <div>ที่ .......................................</div>
+        <div class="line" style="margin-top:20px;"></div>
+      </div>
+      <div class="approve">
+        <div class="line"></div>
+        <div>ตรวจถูกต้อง</div>
+        <strong>ร.อ.หญิง (วิภาวรรณ ศรีสมบูรณ์)</strong>
+        <div>หน.ผสวป.รพ.ค่ายตัวอย่าง</div>
+      </div>
+    </div>
+
+    <footer class="credit">Chira Continuity Care (Triple C) — ต้นแบบใช้งานสำหรับสาธิตเท่านั้น ชื่อผู้ป่วย เจ้าหน้าที่ และหน่วยงานทั้งหมดเป็นข้อมูลสมมติ ไม่ใช่ข้อมูลจริง</footer>
+
+    </div>
+
+    <div id="emptyState" class="empty-state" hidden>
+      <span class="ico">&#128197;</span>
+      <h2>ยังไม่มีข้อมูลรายงานสำหรับเดือน<span id="emptyMonth">กันยายน 2569</span></h2>
+      <p>ระบบจะรวบรวมข้อมูลสรุปผลงานเยี่ยมบ้านให้อัตโนมัติเมื่อสิ้นเดือนนั้นๆ — ลองเลือก "สิงหาคม 2569" เพื่อดูตัวอย่างรายงานที่มีข้อมูลครบ</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  document.getElementById('printDate').textContent = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  var MONTH_LABELS = {
+    '2568-10':'ตุลาคม 2568', '2568-11':'พฤศจิกายน 2568', '2568-12':'ธันวาคม 2568',
+    '2569-01':'มกราคม 2569', '2569-02':'กุมภาพันธ์ 2569', '2569-03':'มีนาคม 2569',
+    '2569-04':'เมษายน 2569', '2569-05':'พฤษภาคม 2569', '2569-06':'มิถุนายน 2569',
+    '2569-07':'กรกฎาคม 2569', '2569-08':'สิงหาคม 2569', '2569-09':'กันยายน 2569'
+  };
+  var MONTHS_WITH_DATA = ['2569-08']; // mock data only exists for สิงหาคม 2569
+
+  function onMonthChange(){
+    var value = document.getElementById('monthSelect').value;
+    var label = MONTH_LABELS[value];
+    var hasData = MONTHS_WITH_DATA.indexOf(value) !== -1;
+
+    document.getElementById('titleMonth').textContent = label;
+
+    if (hasData) {
+      document.getElementById('sec3Month').textContent = label;
+      document.getElementById('sec6Month').textContent = label;
+      document.getElementById('reportContent').hidden = false;
+      document.getElementById('emptyState').hidden = true;
+    } else {
+      document.getElementById('emptyMonth').textContent = label;
+      document.getElementById('reportContent').hidden = true;
+      document.getElementById('emptyState').hidden = false;
+    }
+  }
+</script>
+</body>
+</html>
