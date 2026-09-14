@@ -22,10 +22,11 @@ No build step — every page is a plain `.html` file importing its matching `js/
 
 | Collection | Doc ID scheme | Purpose |
 |---|---|---|
-| `referrals` | auto-id | The case entity — see status list below. Fields: `patientId`, `caseTypeId`, `sourceType`, `sourceDetail`, `createdBy` (uid), `createdByName`, `rawNotes`, `aiSummary` (map/null — AI draft, never written by client code, seeded/null only), `confirmedSummary` (map/null), `confirmedBy` (uid/null), `confirmedAt` (Timestamp/null), `zone`, `status`, `closedAt` (Timestamp/null), `createdAt` (Timestamp) |
+| `referrals` | auto-id | The case entity — see status list below. Fields: `patientId`, `caseTypeId`, `sourceType`, `sourceDetail`, `createdBy` (uid), `createdByName`, `rawNotes`, `aiSummary` (map/null — AI draft; seeded statically for demo data, and since week 8 also written live by the "ให้ AI ช่วยสรุปเคส" button in `referral-detail.js`, always paired with `aiSummaryGeneratedAt`), `aiSummaryGeneratedAt` (Timestamp/null), `confirmedSummary` (map/null), `confirmedBy` (uid/null), `confirmedAt` (Timestamp/null), `zone`, `status`, `closedAt` (Timestamp/null), `createdAt` (Timestamp) |
 | `patients` | auto-id (seed data uses `patient_00N`) | `fullName`, `hn`, `zone` |
 | `caseTypes` | auto-id (seed data uses `ct_*` slugs) | `name`, `slug`, `isActive` |
 | `users` | **Firebase Auth uid** for real accounts (seed data also has legacy arbitrary ids like `user_ward01` — display-only, never referenced by new writes) | `name`, `role`, `email` — **this doc is the source of truth for role**, see below |
+| `referrals/{id}/aiLogs` | auto-id | Week 8 homework: one immutable doc per "ให้ AI ช่วยสรุปเคส" call — `triggeredBy` (uid), `triggeredByName`, `model`, `generatedAt` (Timestamp), `input`, `output`. Written by `referral-detail.js` right after the `aiSummary` update; never updated/deleted (`firestore.rules` sets `allow update, delete: if false`). |
 
 There is no `followUpPlans`/`followUpRecords` collection — the "follow-up rounds" shown on the case detail
 page are illustrative UI only (see the comment in `js/referral-detail.js`), not backed by their own
@@ -65,8 +66,22 @@ scope here). Three roles: `ward_staff`, `home_visit_team`, `admin`. Full capabil
 - After creation, a `users/{uid}` doc cannot be edited by its own owner (`update`/`delete` require
   `myRole() == 'admin'`) — a self-registered user can never later rewrite their own role.
 
+## AI assist (week 8 homework)
+
+`js/ai-service.js` is the one place that calls the AI (OpenRouter, model `google/gemini-2.5-flash-lite`,
+key in the gitignored `js/ai-config.js` — see `js/ai-config.example.js` for the template). Two callers:
+`referral-create.js` (level 1: case-type suggestion, never persisted — the user must click "ใช้คำแนะนำนี้"
+to apply it to the form's dropdown, then still submit the form normally) and `referral-detail.js` (level 2,
+agentic: reads `rawNotes` + the patient doc + the case-type doc, writes the result as a *draft* to
+`aiSummary`/`aiSummaryGeneratedAt` only, then logs the call to `referrals/{id}/aiLogs`). Neither path ever
+writes `confirmedSummary` or `status` — that stays exclusively behind the nurse's "ยืนยันแผนดูแล" button,
+same human-in-the-loop rule as the rest of this project.
+
 ## Prohibitions — do not do these
 
+- **Never commit `js/ai-config.js`** (already in the root `.gitignore`) — it holds the course-issued
+  OpenRouter API key (limited budget, shared across the class). Use `js/ai-config.example.js` as the
+  checked-in template instead.
 - **Never commit `serviceAccountKey.json`** (already in the root `.gitignore`) — it is a Firebase Admin
   SDK credential with full project access, distinct from the public web `apiKey` in
   `js/firebase-config.js` (that one is meant to be public; security is enforced by `firestore.rules`, not

@@ -56,6 +56,16 @@
           <textarea id="raw-notes" rows="4" required></textarea>
         </label>
 
+        <div class="ai-assist">
+          <button type="button" class="btn btn-secondary btn-sm" id="ai-suggest-btn">🤖 ให้ AI ช่วยแนะนำประเภทเคส (จากบันทึกดิบด้านบน)</button>
+          <div class="ai-suggest-box" id="ai-suggest-box" hidden>
+            <span class="tag tag-ai">ร่างจาก AI — ยังไม่ยืนยัน</span>
+            <div class="ai-suggest-text" id="ai-suggest-text"></div>
+            <button type="button" class="btn btn-primary btn-sm" id="ai-suggest-apply">ใช้คำแนะนำนี้</button>
+          </div>
+          <div class="ai-suggest-error form-error" id="ai-suggest-error" hidden></div>
+        </div>
+
         <div class="form-error" id="form-error" hidden></div>
         <button class="btn btn-primary" type="submit" id="submit-btn">บันทึกเคส</button>
       </form>

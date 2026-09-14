@@ -30,3 +30,6 @@ yarn-error.log
 /firestore-lesson/serviceAccountKey.json
 /firestore-lesson/node_modules
 /firestore-lesson/.firebase
+
+# Firestore lesson coursework — OpenRouter AI key (week 8 homework), never commit
+/firestore-lesson/js/ai-config.js

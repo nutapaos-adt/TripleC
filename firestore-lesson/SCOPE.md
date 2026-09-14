@@ -74,6 +74,19 @@
 - **การสมัครสมาชิกด้วยตนเอง** (`register.html`) — จำกัดเลือกได้เฉพาะ `ward_staff`/`home_visit_team`
   (ห้ามสมัครเป็น `admin` เอง ป้องกันการยกระดับสิทธิ์ตัวเอง — บัญชี admin สร้างทางเดียวคือ `setup-users.js`)
 
+## อัปเดตสัปดาห์ที่ 8: เพิ่มผู้ช่วย AI 2 ระดับ
+
+ตามเทมเพลตของใบงาน ("aiSuggestion · aiReason · aiLog") — คำตอบของ Triple C คือ:
+
+| งาน | ระดับ | ที่ทำงาน | ชื่อฟิลด์/collection ที่เก็บผล |
+|---|---|---|---|
+| แนะนำประเภทเคส (`caseType`) จากบันทึกดิบ | 1 (single-task) | `referral-create.html` | ไม่บันทึกลง Firestore — เป็นค่าชั่วคราวในฟอร์มก่อนกด "ใช้คำแนะนำนี้" ไปตั้งค่า dropdown เอง (การบันทึกจริงเกิดตอนกด "บันทึกเคส" ตามปกติ) |
+| สรุปเคส (อ่านบันทึกดิบ + ผู้ป่วย + ประเภทเคสหลายที่) | 2 (agentic) | `referral-detail.html` | ร่าง: `referrals.aiSummary` / `referrals.aiSummaryGeneratedAt` (ฟิลด์เดิมที่มีอยู่แล้วในสคีมา) · เหตุผล: `aiSummary.reasoning` · บันทึกการทำงาน: subcollection `referrals/{id}/aiLogs` |
+
+ทั้งสองระดับไม่เขียนผลลงฟิลด์ที่มีผลต่อสถานะเคสโดยตรง — ระดับ 1 ต้องกดยืนยันก่อนแม้แต่จะ apply ลง dropdown,
+ระดับ 2 เขียนได้แค่ `aiSummary` (ร่าง) เท่านั้น ส่วน `confirmedSummary`/`status` ยังคงเปลี่ยนได้จากการกด
+"ยืนยันแผนดูแล" ของพยาบาลเพียงทางเดียว ตามกฎ human-in-the-loop เดิม
+
 ## ไม่อยู่ในขอบเขต (ไม่ได้ทำ)
 
 - `VisitRule`, `FollowUpPlan`, `FollowUpRecord`, `ReferralAttachment` — ยังไม่ได้แปลงเป็น Firestore
