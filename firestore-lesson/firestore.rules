@@ -79,11 +79,14 @@ service cloud.firestore {
       // Status-change only: confirming a plan / advancing a follow-up round may
       // touch status-related fields, nothing else — and never by the case's own
       // creator, no exceptions (no self-approval, not even for admin).
+      // aiSummary/aiSummaryGeneratedAt (week 8 homework: AI-generated draft) are
+      // included here too — generating a draft never touches status/confirmedSummary,
+      // it's still gated the same way (non-owner nurse/admin only).
       allow update: if isSignedIn()
         && myRole() in ['admin', 'home_visit_team']
         && !isOwner(resource.data)
         && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['status', 'confirmedSummary', 'confirmedBy', 'confirmedAt', 'closedAt']);
+             .hasOnly(['status', 'confirmedSummary', 'confirmedBy', 'confirmedAt', 'closedAt', 'aiSummary', 'aiSummaryGeneratedAt']);
 
       // Delete: admin any time, or the ward_staff creator retracting their own
       // case before a nurse has acted on it.
@@ -91,6 +94,18 @@ service cloud.firestore {
         myRole() == 'admin' ||
         (myRole() == 'ward_staff' && isOwner(resource.data) && resource.data.status == 'pending_review')
       );
+
+      // AI operation log (week 8 homework) — one doc per AI-summary generation.
+      // Same non-owner nurse/admin gate as the aiSummary write above; immutable once
+      // written (no update/delete) so it stays a trustworthy audit trail.
+      match /aiLogs/{logId} {
+        allow read: if isSignedIn() && myRole() in ['admin', 'home_visit_team'];
+        allow create: if isSignedIn()
+          && myRole() in ['admin', 'home_visit_team']
+          && !isOwner(get(/databases/$(database)/documents/referrals/$(referralId)).data)
+          && request.resource.data.triggeredBy == request.auth.uid;
+        allow update, delete: if false;
+      }
     }
   }
 }

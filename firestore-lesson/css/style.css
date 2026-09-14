@@ -546,3 +546,32 @@ body {
 .round-item.pending {
   border-style: dashed;
 }
+
+/* ---- AI assist (week 8 homework: level 1 + level 2 buttons) ---- */
+.ai-assist {
+  margin-bottom: 14px;
+}
+
+.ai-suggest-box {
+  margin-top: 10px;
+  border: 1.5px dashed var(--color-border);
+  border-radius: 8px;
+  padding: 12px;
+  background: #fafafa;
+}
+
+.ai-suggest-text {
+  font-size: 13px;
+  color: var(--color-text);
+  margin: 8px 0 10px;
+}
+
+.ai-generate-panel {
+  margin-top: 12px;
+}
+
+.ai-suggest-error,
+.ai-generate-error {
+  margin-top: 10px;
+  margin-bottom: 0;
+}

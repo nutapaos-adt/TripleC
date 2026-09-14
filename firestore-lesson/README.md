@@ -35,6 +35,21 @@
 | `patients` | ผู้ป่วยที่ `referrals.patientId` อ้างอิง | ข้อมูลจำลอง 5 คน + ที่สร้างใหม่จากฟอร์ม |
 | `caseTypes` | ประเภทเคสที่ `referrals.caseTypeId` อ้างอิง | 5 ประเภท: Palliative Care / ผู้ป่วยติดเตียง / COPD / โรคหลอดเลือดสมอง / แผลเบาหวาน |
 | `users` | เจ้าหน้าที่/พยาบาลที่ `createdBy` / `confirmedBy` อ้างอิง | doc id = Firebase Auth uid สำหรับบัญชีจริง (ดูตารางด้านบน) + ข้อมูลเก่าจาก seed ไว้แสดงผลย้อนหลัง |
+| `referrals/{id}/aiLogs` | บันทึกการทำงานของผู้ช่วย AI ระดับ 2 (สัปดาห์ที่ 8) | 1 doc ต่อการกด "ให้ AI ช่วยสรุปเคส" 1 ครั้ง — เก็บ `triggeredBy`/`triggeredByName`, `model`, `generatedAt`, `input`, `output` เขียนได้เฉพาะพยาบาล/แอดมินที่ไม่ใช่เจ้าของเคส และแก้ไข/ลบไม่ได้ (immutable log) |
+
+## ผู้ช่วย AI (อัปเดตสัปดาห์ที่ 8)
+
+ใช้โมเดล `google/gemini-2.5-flash-lite` ผ่าน [OpenRouter](https://openrouter.ai/) (คีย์ของหลักสูตร) เรียกตรงจากฝั่ง client
+ผ่าน `js/ai-service.js` — คีย์อยู่ในไฟล์ `js/ai-config.js` ที่ **ไม่ commit เข้า git** (ดูหัวข้อ "วิธีรันในเครื่อง" ด้านล่าง)
+
+- **ระดับ 1 — "ให้ AI ช่วยแนะนำประเภทเคส"** (`referral-create.html`): อ่านบันทึกดิบที่เจ้าหน้าที่พิมพ์
+  แล้วแนะนำประเภทเคสที่ตรงที่สุดพร้อมเหตุผล แสดงเป็นกล่อง "ร่างจาก AI — ยังไม่ยืนยัน" — เจ้าหน้าที่ต้องกด
+  "ใช้คำแนะนำนี้" เองจึงจะตั้งค่าลง dropdown ไม่มีการบันทึกอัตโนมัติ
+- **ระดับ 2 (agentic) — "ให้ AI ช่วยสรุปเคส"** (`referral-detail.html`): อ่านข้อมูลจากหลายแหล่ง (บันทึกดิบ +
+  ข้อมูลผู้ป่วย + ประเภทเคส) แล้วสรุปเป็นร่างเขียนกลับลงฟิลด์ `aiSummary`/`aiSummaryGeneratedAt` ที่มีอยู่แล้ว
+  ในสคีมา (ไม่แตะ `confirmedSummary`/`status`) จากนั้นบันทึกการทำงานลง `referrals/{id}/aiLogs` — พยาบาลยังต้อง
+  ตรวจ/แก้ไข แล้วกด "ยืนยันแผนดูแล" เองเสมอ (กฎ human-in-the-loop เดิมของระบบ) ปุ่มนี้แสดงเฉพาะพยาบาล/แอดมิน
+  ที่ไม่ใช่ผู้สร้างเคสเท่านั้น (กฎห้ามอนุมัติของตัวเอง)
 
 ## วิธีรันในเครื่อง (local)
 
@@ -67,13 +82,20 @@
 
    บัญชี `ward_staff`/`home_visit_team` ไม่ต้องใช้สคริปต์นี้ — สมัครเองได้ที่หน้า `register.html`
 
-6. รันเว็บในเครื่อง:
+6. คัดลอกไฟล์ตั้งค่าคีย์ AI แล้วใส่คีย์ของคุณเอง (**ห้าม commit ไฟล์นี้** — อยู่ใน `.gitignore` แล้ว):
+
+   ```bash
+   cp js/ai-config.example.js js/ai-config.js
+   # แล้วแก้ OPENROUTER_API_KEY ในไฟล์ที่คัดลอกมาให้เป็นคีย์จริงของคุณ
+   ```
+
+7. รันเว็บในเครื่อง:
 
    ```bash
    powershell -File server.ps1   # http://localhost:8080
    ```
 
-7. Deploy ขึ้น Firebase Hosting พร้อม Security Rules **ในรอบเดียว** (ห้าม deploy hosting โดยไม่มี rules):
+8. Deploy ขึ้น Firebase Hosting พร้อม Security Rules **ในรอบเดียว** (ห้าม deploy hosting โดยไม่มี rules):
 
    ```bash
    firebase deploy --only hosting,firestore:rules

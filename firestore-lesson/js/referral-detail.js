@@ -1,8 +1,9 @@
 import {
-  doc, getDoc, updateDoc, deleteDoc, serverTimestamp,
+  doc, getDoc, updateDoc, deleteDoc, serverTimestamp, collection, addDoc,
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 import { db } from "./firebase-config.js";
 import { requireLogin, renderNav } from "./session.js";
+import { callAiJson, AI_MODEL } from "./ai-service.js";
 
 const REFERRAL_ID = new URLSearchParams(location.search).get("id");
 
@@ -56,6 +57,9 @@ const el = {
   actionHint: document.querySelector(".action-panel .hint"),
   roundsCard: document.getElementById("rounds-card"),
   roundList: document.getElementById("round-list"),
+  aiGeneratePanel: document.getElementById("ai-generate-panel"),
+  aiGenerateBtn: document.getElementById("ai-generate-btn"),
+  aiGenerateError: document.getElementById("ai-generate-error"),
 };
 
 function renderStepper() {
@@ -162,11 +166,18 @@ function renderDeleteButton() {
   el.deleteBtn.hidden = !canDelete;
 }
 
+// ผู้ช่วย AI ระดับ 2 (agentic) โชว์ปุ่มเฉพาะพยาบาล/แอดมินที่มีสิทธิ์ยืนยันเคสนี้
+// (เงื่อนไขเดียวกับปุ่มยืนยันแผนดูแล — ห้ามอนุมัติของตัวเอง) และเฉพาะก่อนยืนยันแผนแล้วเท่านั้น
+function renderAiGenerateButton() {
+  el.aiGeneratePanel.hidden = !(referral.status === "pending_review" && canConfirm());
+}
+
 function render() {
   renderHeader();
   renderStepper();
   renderSummaries();
   renderConfirmButton();
+  renderAiGenerateButton();
   renderRounds();
   renderDeleteButton();
 }
@@ -186,6 +197,7 @@ function formatSummary(summary) {
   const parts = [];
   if (summary.keyIssues?.length) parts.push(`ปัญหาหลัก: ${summary.keyIssues.join(", ")}`);
   if (summary.riskSignals?.length) parts.push(`สัญญาณเสี่ยง: ${summary.riskSignals.join(", ")}`);
+  if (summary.reasoning) parts.push(`เหตุผลจาก AI: ${summary.reasoning}`);
   if (summary.nurseNote) parts.push(`บันทึกพยาบาล: ${summary.nurseNote}`);
   return parts.join("\n");
 }
@@ -215,6 +227,7 @@ async function loadReferral() {
     createdByName: data.createdByName ?? data.createdBy,
     createdAt: formatDate(data.createdAt),
     status: data.status,
+    zone: data.zone,
     rawNotes: data.rawNotes,
     aiSummary: formatSummary(data.aiSummary),
     confirmedSummary: data.confirmedSummary ? formatSummary(data.confirmedSummary) : null,
@@ -248,6 +261,59 @@ async function onConfirmPlan() {
     console.error(err);
     alert(`ยืนยันไม่สำเร็จ: ${err.message}`);
     el.confirmBtn.disabled = false;
+  }
+}
+
+const ZONE_TEXT = { in_area: "ในเขตพื้นที่รับผิดชอบ", out_area: "นอกเขตพื้นที่รับผิดชอบ" };
+
+// ผู้ช่วย AI ระดับ 2 (agentic): อ่านข้อมูลจากหลายแหล่ง (บันทึกดิบ + ผู้ป่วย + ประเภทเคส) ที่โหลดไว้แล้วใน
+// loadReferral() -> สรุปเป็นร่างเดียว -> เขียนกลับเป็น "ร่าง" ในฟิลด์ aiSummary เท่านั้น (ไม่แตะ
+// confirmedSummary/status) -> จดบันทึกการทำงานลง subcollection aiLogs ให้ตรวจสอบย้อนหลังได้
+// พยาบาลยังต้องกด "ยืนยันแผนดูแล" เองเสมอ — ปุ่มนี้ไม่ตัดสินใจแทน
+async function onGenerateAiSummary() {
+  el.aiGenerateError.hidden = true;
+  el.aiGenerateBtn.disabled = true;
+  el.aiGenerateBtn.textContent = "🤖 กำลังอ่านข้อมูลและสรุป...";
+
+  const promptInput = {
+    rawNotes: referral.rawNotes || "(ไม่มีบันทึกดิบ)",
+    patientName: referral.patientName,
+    caseType: referral.caseType,
+    zone: ZONE_TEXT[referral.zone] || referral.zone || "ไม่ระบุ",
+  };
+
+  try {
+    const prompt = `คุณเป็นผู้ช่วยของทีมเยี่ยมบ้าน/ติดตามอาการในโรงพยาบาล อ่านข้อมูลเคสต่อไปนี้จากหลายแหล่งแล้วสรุปเป็นร่างให้พยาบาลตรวจสอบก่อนยืนยัน ตอบกลับเป็น JSON เท่านั้น เขียนทุกฟิลด์เป็นภาษาไทยทั้งหมด ห้ามใช้ภาษาอังกฤษปนแม้แต่คำเดียว รูปแบบ {"patientType": "คำสั้นๆ ภาษาไทย บอกประเภทผู้ป่วย", "keyIssues": ["ปัญหาหลักเป็นภาษาไทย...", "..."], "riskSignals": ["สัญญาณเสี่ยงเป็นภาษาไทย...", "..."], "reasoning": "อธิบายสั้นๆ เป็นภาษาไทย ว่าทำไมถึงสรุปแบบนี้"} ห้ามมีข้อความอื่นนอกจาก JSON ถ้าไม่มีสัญญาณเสี่ยงให้ตอบเป็น array ว่าง
+
+ข้อมูลผู้ป่วย: ${promptInput.patientName} (${promptInput.zone})
+ประเภทเคส: ${promptInput.caseType}
+บันทึกดิบจากผู้ส่งเคส: "${promptInput.rawNotes}"`;
+
+    const summary = await callAiJson(prompt);
+
+    await updateDoc(doc(db, "referrals", REFERRAL_ID), {
+      aiSummary: summary,
+      aiSummaryGeneratedAt: serverTimestamp(),
+    });
+
+    await addDoc(collection(db, "referrals", REFERRAL_ID, "aiLogs"), {
+      triggeredBy: session.user.uid,
+      triggeredByName: session.name,
+      model: AI_MODEL,
+      generatedAt: serverTimestamp(),
+      input: promptInput,
+      output: summary,
+    });
+
+    await loadReferral();
+    render();
+  } catch (err) {
+    console.error(err);
+    el.aiGenerateError.textContent = err.message;
+    el.aiGenerateError.hidden = false;
+  } finally {
+    el.aiGenerateBtn.disabled = false;
+    el.aiGenerateBtn.textContent = "🤖 ให้ AI ช่วยสรุปเคส (อ่านบันทึกดิบ + ข้อมูลผู้ป่วย + ประเภทเคส)";
   }
 }
 
@@ -287,6 +353,7 @@ async function onDelete() {
 
 el.confirmBtn.addEventListener("click", onConfirmPlan);
 el.deleteBtn.addEventListener("click", onDelete);
+el.aiGenerateBtn.addEventListener("click", onGenerateAiSummary);
 
 requireLogin().then(async (loggedInSession) => {
   session = loggedInSession;
