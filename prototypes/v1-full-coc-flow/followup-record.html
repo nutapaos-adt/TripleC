@@ -179,6 +179,22 @@
     padding:9px 10px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums;
   }
 
+  .choice-group{margin-bottom:14px;}
+  .choice-group:last-of-type{margin-bottom:0;}
+  .choice-group .glabel{display:block;font-size:13px;font-weight:600;color:var(--color-neutral-900);margin-bottom:8px;}
+  .choice-row{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;}
+  .choice-opt{display:flex;align-items:center;gap:6px;font-size:13.5px;color:var(--color-neutral-900);cursor:pointer;white-space:nowrap;}
+  .choice-opt input{accent-color:var(--color-primary-700);width:16px;height:16px;cursor:pointer;flex-shrink:0;}
+  .choice-opt .inline-input{width:72px;padding:6px 8px;font-size:13px;display:inline-block;}
+  .choice-opt .inline-input-wide{width:180px;padding:6px 8px;font-size:13px;display:inline-block;}
+  .choice-group.phone-locked .choice-row{opacity:.45;pointer-events:none;}
+  .phone-note{
+    display:none;align-items:center;gap:6px;margin-bottom:8px;
+    font-size:11.5px;font-weight:600;color:var(--color-neutral-500);
+    background:var(--color-neutral-100);padding:4px 10px;border-radius:var(--radius-pill);width:fit-content;
+  }
+  .choice-group.phone-locked .phone-note{display:inline-flex;}
+
   .adl-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--color-neutral-100);flex-wrap:wrap;}
   .adl-row:last-of-type{border-bottom:none;}
   .adl-row .adl-label{font-size:13px;color:var(--color-neutral-900);flex:1;min-width:160px;}
@@ -409,6 +425,102 @@
           </div>
         </div>
 
+        <div class="field" id="tkaField">
+          <span class="hint-note">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 16v-4M12 8h.01"/><circle cx="12" cy="12" r="9"/></svg>
+            แสดงเฉพาะเคสศัลยกรรมกระดูกที่ได้รับการผ่าตัด TKR/UKA — ติดตามอาการภายใน 14 วันหลังจำหน่าย (หัวข้อที่ต้องเห็นแผล/วัดองศาเข่าจะประเมินไม่ได้ทางโทรศัพท์ — มีข้อความกำกับไว้)
+          </span>
+          <label class="label">การประเมินหลังผ่าตัดเปลี่ยนข้อเข่า (TKR/UKA)</label>
+          <p class="hint" style="margin:0 0 12px;">ผ่าตัด: TKR / UKA</p>
+
+          <div class="choice-group" id="tkaWoundGroup">
+            <span class="glabel">แผลผ่าตัด</span>
+            <span class="phone-note" id="tkaWoundPhoneNote">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L14 13l5 2v4a2 2 0 0 1-2 2A15 15 0 0 1 4 6a2 2 0 0 1 2-2z"/></svg>
+              โทรเยี่ยม — ต้องเห็นแผลจึงประเมินไม่ได้
+            </span>
+            <div class="choice-row">
+              <label class="choice-opt"><input type="checkbox" name="tka_wound" value="dry"> แห้งดี</label>
+              <label class="choice-opt"><input type="checkbox" name="tka_wound" value="swollen"> บวม</label>
+              <label class="choice-opt"><input type="checkbox" name="tka_wound" value="red"> แดง</label>
+            </div>
+          </div>
+
+          <div class="choice-group">
+            <span class="glabel">ทำแผลโดย</span>
+            <div class="choice-row">
+              <label class="choice-opt"><input type="radio" name="tka_wound_care"> ทำแผลสถานพยาบาล</label>
+              <label class="choice-opt"><input type="radio" name="tka_wound_care"> ทำแผลเอง</label>
+              <label class="choice-opt"><input type="radio" name="tka_wound_care"> ปิดแผลไว้ <input type="number" min="0" class="input inline-input" placeholder="0"> วัน</label>
+            </div>
+          </div>
+
+          <div class="grid-row cols-3" style="margin-bottom:14px;">
+            <div class="mini-field">
+              <label class="label" for="tkaPainScore">Pain score</label>
+              <input type="number" min="0" max="10" id="tkaPainScore" name="tka_pain_score" class="input" placeholder="0">
+              <span class="unit">คะแนน</span>
+            </div>
+            <div class="mini-field">
+              <label class="label" for="tkaAdlScore">ADL</label>
+              <input type="number" min="0" id="tkaAdlScore" name="tka_adl_score" class="input" placeholder="0">
+              <span class="unit">คะแนน</span>
+            </div>
+          </div>
+
+          <div class="choice-group">
+            <span class="glabel">การเดินด้วย Walker</span>
+            <div class="choice-row">
+              <label class="choice-opt"><input type="radio" name="tka_walker"> เดิน By walk</label>
+              <label class="choice-opt"><input type="radio" name="tka_walker"> เดินไม่ใช้ Walker</label>
+              <label class="choice-opt"><input type="radio" name="tka_walker"> ไม่ยอมเดิน <input type="text" class="input inline-input-wide" placeholder="ระบุเหตุผล"></label>
+            </div>
+          </div>
+
+          <div class="choice-group" id="tkaFlexionGroup">
+            <span class="glabel">การงอข้อเข่า 0-90 องศา</span>
+            <span class="phone-note" id="tkaFlexionPhoneNote">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L14 13l5 2v4a2 2 0 0 1-2 2A15 15 0 0 1 4 6a2 2 0 0 1 2-2z"/></svg>
+              โทรเยี่ยม — ต้องวัดองศาจริงจึงประเมินไม่ได้
+            </span>
+            <div class="choice-row">
+              <label class="choice-opt"><input type="radio" name="tka_flexion"> &gt;90 องศา</label>
+              <label class="choice-opt"><input type="radio" name="tka_flexion"> =90 องศา</label>
+              <label class="choice-opt"><input type="radio" name="tka_flexion"> &lt;90 องศา</label>
+            </div>
+          </div>
+
+          <div class="choice-group">
+            <span class="glabel">ประวัติหกล้มหลังผ่าตัด</span>
+            <div class="choice-row">
+              <label class="choice-opt"><input type="radio" name="tka_fall"> ไม่เคยหกล้ม</label>
+              <label class="choice-opt"><input type="radio" name="tka_fall"> หกล้ม <input type="number" min="0" class="input inline-input" placeholder="0"> ครั้ง</label>
+            </div>
+          </div>
+
+          <div class="choice-group">
+            <span class="glabel">สภาพสิ่งแวดล้อม/บ้าน</span>
+            <div class="choice-row">
+              <label class="choice-opt"><input type="radio" name="tka_home"> ไม่เสี่ยงอุบัติเหตุ</label>
+              <label class="choice-opt"><input type="radio" name="tka_home"> เสี่ยงอุบัติเหตุ <input type="text" class="input inline-input-wide" placeholder="ระบุจุดเสี่ยง"></label>
+            </div>
+          </div>
+
+          <div class="choice-group">
+            <span class="glabel">การบริหารร่างกาย</span>
+            <div class="choice-row">
+              <label class="choice-opt"><input type="radio" name="tka_exercise"> บริหารสม่ำเสมอ</label>
+              <label class="choice-opt"><input type="radio" name="tka_exercise"> บริหารไม่สม่ำเสมอ</label>
+              <label class="choice-opt"><input type="radio" name="tka_exercise"> ไม่บริหาร</label>
+            </div>
+          </div>
+
+          <div class="choice-group">
+            <label class="label" for="tkaOtherFindings">อาการผิดปกติอื่นๆ ที่พบ</label>
+            <input type="text" id="tkaOtherFindings" name="tka_other_findings" class="input" placeholder="ระบุ (ถ้ามี)">
+          </div>
+        </div>
+
         <div class="field" id="ppsField">
           <span class="hint-note">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 16v-4M12 8h.01"/><circle cx="12" cy="12" r="9"/></svg>
@@ -546,6 +658,14 @@
     document.getElementById('examVsField').style.display = display;
     document.getElementById('examBmiField').style.display = display;
     document.getElementById('examPhotoField').style.display = display;
+
+    // TKR/UKA assessment: most items can be asked over the phone —
+    // only wound appearance and knee-flexion angle need a physical look, so just those two lock.
+    ['tkaWoundGroup', 'tkaFlexionGroup'].forEach(function(groupId){
+      var group = document.getElementById(groupId);
+      group.classList.toggle('phone-locked', !isVisit);
+      group.querySelectorAll('input').forEach(function(input){ input.disabled = !isVisit; });
+    });
   }
   syncMethod();
 
