@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ติดตามผลการเยี่ยม — Chira Continuity Care</title>
+<style>
+:root{
+  --color-primary-900:#16232C; --color-primary-800:#1E3644; --color-primary-700:#2C5166;
+  --color-primary-600:#3D6B84; --color-primary-500:#5586A0; --color-primary-300:#A8C4D2;
+  --color-primary-100:#E1EBEF; --color-primary-50:#F4F8FA;
+  --color-neutral-900:#22201A; --color-neutral-700:#4A4739; --color-neutral-500:#7C7863;
+  --color-neutral-300:#C9C4AD; --color-neutral-200:#DEDAC6; --color-neutral-100:#F1EEE0; --color-surface:#FFFFFF;
+  --color-accent-blue:#3E7CA6; --color-accent-gold:#C9932E;
+  --color-risk:#B23B2C; --color-risk-tint:#F7E7E2;
+  --color-warning:#C2891F; --color-warning-tint:#FBF0DC;
+  --color-success:#3E8E49; --color-success-tint:#E5F2E4;
+  --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-5:20px; --space-6:24px; --space-8:32px; --space-10:40px; --space-12:48px;
+  --radius-sm:4px; --radius-md:8px; --radius-lg:12px; --radius-pill:999px;
+  --shadow-sm:0 1px 2px rgba(34,32,26,0.06);
+  --shadow-md:0 1px 2px rgba(34,32,26,0.06), 0 4px 14px rgba(34,32,26,0.08);
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:'Sarabun','Noto Sans Thai','Leelawadee UI','Segoe UI',system-ui,sans-serif;background:var(--color-primary-50);color:var(--color-neutral-900);font-size:14px;line-height:22px;}
+h1{font-size:24px;line-height:32px;font-weight:700;margin:0;}
+p{margin:0;}
+a{color:var(--color-primary-700);text-decoration:none;}
+a:hover{text-decoration:underline;}
+:focus-visible{outline:3px solid var(--color-primary-700);outline-offset:2px;}
+
+.app-shell{display:flex;min-height:100vh;}
+
+/* Sidebar (ward-staff variant, same as referrals-list.html / dashboard-ward.html) */
+.sidebar{width:248px;flex-shrink:0;background:linear-gradient(180deg,var(--color-primary-900),var(--color-primary-800));color:#F4F8FA;display:flex;flex-direction:column;padding:var(--space-5) 0;}
+.sidebar-brand{display:flex;align-items:center;gap:var(--space-3);padding:0 var(--space-5) var(--space-5);border-bottom:1px solid rgba(255,255,255,0.14);margin-bottom:var(--space-4);}
+.brand-mark{position:relative;width:30px;height:26px;flex-shrink:0;}
+.brand-mark span{position:absolute;top:0;width:16px;height:16px;border-radius:50%;border:2.5px solid;background:transparent;}
+.brand-mark span.b1{left:0;border-color:var(--color-accent-blue);}
+.brand-mark span.b2{left:7px;border-color:var(--color-primary-500);}
+.brand-mark span.b3{left:14px;border-color:var(--color-accent-gold);}
+.brand-text{display:flex;flex-direction:column;line-height:1.2;}
+.brand-name{font-weight:800;font-size:15px;letter-spacing:0.02em;color:#F4F8FA;}
+.brand-sub{font-size:10.5px;color:var(--color-primary-300);}
+
+.sidebar-nav{display:flex;flex-direction:column;gap:2px;padding:0 var(--space-3);flex:1;}
+.nav-item{display:flex;align-items:center;gap:var(--space-2);padding:var(--space-3) var(--space-3);border-radius:var(--radius-md);color:#EDEFE4;font-size:14px;font-weight:600;border-left:3px solid transparent;}
+.nav-item:hover{background:rgba(255,255,255,0.08);text-decoration:none;}
+.nav-item.active{background:rgba(233,237,223,0.16);border-left-color:var(--color-primary-300);color:#ffffff;}
+.nav-icon{width:18px;text-align:center;flex-shrink:0;opacity:0.9;}
+.nav-group-label{padding:var(--space-3) var(--space-3) var(--space-1);font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--color-primary-300);font-weight:700;margin-top:var(--space-2);}
+.nav-sub{padding-left:var(--space-8);font-weight:500;font-size:13.5px;}
+
+.sidebar-footer{padding:var(--space-4) var(--space-5) 0;border-top:1px solid rgba(255,255,255,0.14);margin-top:var(--space-4);}
+.user-name{font-weight:700;font-size:13.5px;color:#fff;}
+.user-role{font-size:11.5px;color:var(--color-primary-300);}
+.logout-link{display:inline-block;margin-top:var(--space-2);font-size:12.5px;color:#EDEFE4;opacity:0.9;}
+
+/* Main */
+.main-content{flex:1;padding:var(--space-8);max-width:1180px;}
+.page-head{margin-bottom:var(--space-5);}
+.page-sub{font-size:12.5px;color:var(--color-neutral-500);margin-top:2px;max-width:70ch;}
+
+.filter-row{display:flex;gap:var(--space-2);flex-wrap:wrap;margin-bottom:var(--space-4);}
+.filter-chip{
+  display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius-pill);
+  font-size:13px;font-weight:600;border:1px solid var(--color-neutral-300);background:var(--color-surface);
+  color:var(--color-neutral-700);cursor:pointer;font-family:inherit;
+}
+.filter-chip.active{background:var(--color-primary-700);color:#fff;border-color:var(--color-primary-700);}
+.filter-chip .count{background:rgba(0,0,0,0.08);border-radius:var(--radius-pill);padding:1px 7px;font-size:11px;}
+.filter-chip.active .count{background:rgba(255,255,255,0.25);}
+
+.date-filter-row{display:flex;gap:var(--space-2);align-items:center;margin-bottom:var(--space-5);flex-wrap:wrap;}
+.date-filter-label{font-size:12px;font-weight:600;color:var(--color-neutral-500);}
+.input-select{
+  padding:7px 12px;border-radius:var(--radius-md);border:1px solid var(--color-neutral-300);
+  background:var(--color-surface);color:var(--color-neutral-700);font-size:13px;font-weight:600;
+  font-family:inherit;cursor:pointer;
+}
+.search-box{
+  position:relative;flex:1;min-width:220px;max-width:320px;
+}
+.search-box svg{
+  position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;
+  color:var(--color-neutral-500);pointer-events:none;
+}
+.search-box input{
+  width:100%;padding:7px 12px 7px 34px;border-radius:var(--radius-md);border:1px solid var(--color-neutral-300);
+  background:var(--color-surface);color:var(--color-neutral-900);font-size:13px;font-family:inherit;
+}
+.search-box input:focus-visible{outline:2px solid var(--color-primary-700);outline-offset:1px;}
+.search-box input::placeholder{color:var(--color-neutral-500);font-weight:500;}
+
+.card{background:var(--color-surface);border:1px solid var(--color-neutral-200);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);}
+table{width:100%;border-collapse:collapse;}
+thead th{text-transform:uppercase;font-size:11.5px;color:var(--color-neutral-500);font-weight:700;text-align:left;padding:var(--space-3) var(--space-4);border-bottom:1px solid var(--color-neutral-200);background:var(--color-neutral-100);}
+tbody td{padding:var(--space-4);border-bottom:1px solid var(--color-neutral-200);font-size:14px;vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:var(--color-primary-50);}
+.tabular{font-variant-numeric:tabular-nums;}
+.patient-name{font-weight:600;color:var(--color-neutral-900);}
+.patient-hn{font-size:11.5px;color:var(--color-neutral-500);font-variant-numeric:tabular-nums;}
+
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:var(--radius-pill);font-size:12.5px;font-weight:600;white-space:nowrap;}
+.chip-primary{background:var(--color-primary-100);color:var(--color-primary-700);}
+.chip-risk{background:var(--color-risk-tint);color:var(--color-risk);}
+.chip-success{background:var(--color-success-tint);color:var(--color-success);}
+.chip-closed{background:var(--color-neutral-200);color:var(--color-neutral-700);}
+
+.action-link{font-size:13px;font-weight:600;}
+.empty-note{padding:var(--space-10);text-align:center;color:var(--color-neutral-500);font-size:13px;}
+
+@media (max-width:860px){
+  .app-shell{flex-direction:column;}
+  .sidebar{width:100%;flex-direction:row;align-items:center;overflow-x:auto;padding:var(--space-3) var(--space-4);gap:var(--space-4);}
+  .sidebar-brand{border-bottom:none;border-right:1px solid rgba(255,255,255,0.14);margin-bottom:0;padding:0 var(--space-4) 0 0;flex-shrink:0;}
+  .sidebar-nav{flex-direction:row;flex:0 0 auto;padding:0;}
+  .nav-group-label{display:none;}
+  .nav-item{border-left:none;border-bottom:3px solid transparent;white-space:nowrap;}
+  .nav-item.active{border-left:none;border-bottom-color:var(--color-primary-300);}
+  .nav-sub{padding-left:var(--space-3);}
+  .sidebar-footer{display:none;}
+  .main-content{padding:var(--space-5);}
+  table{display:block;overflow-x:auto;white-space:nowrap;}
+}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-mark"><span class="b1"></span><span class="b2"></span><span class="b3"></span></div>
+      <div class="brand-text">
+        <span class="brand-name">TRIPLE C</span>
+        <span class="brand-sub">Chira Continuity Care</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item" href="dashboard-ward.html"><span class="nav-icon">&#9635;</span> Dashboard</a>
+      <a class="nav-item" href="referrals-list.html"><span class="nav-icon">&#128203;</span> รายการเคส</a>
+      <a class="nav-item active" href="ward-visit-results.html"><span class="nav-icon">&#128101;</span> ติดตามผลการเยี่ยม</a>
+      <a class="nav-item" href="monthly-visit-report.html"><span class="nav-icon">&#128202;</span> สรุปรายงานประจำเดือน</a>
+      <div class="nav-group-label">จัดการระบบ</div>
+      <a class="nav-item nav-sub" href="admin-case-types-list.html">ประเภทเคส</a>
+      <a class="nav-item nav-sub" href="admin-users-list.html">ผู้ใช้งาน</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-name">กัลยา เจ้าหน้าที่ธุรการ</div>
+      <div class="user-role">ward_staff · หอผู้ป่วยอายุรกรรม</div>
+      <a class="logout-link" href="#">ออกจากระบบ</a>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div class="page-head">
+      <h1>ติดตามผลการเยี่ยม</h1>
+      <p class="page-sub">เคสที่หอผู้ป่วยอายุรกรรมส่งเยี่ยมบ้าน และทีมเยี่ยมบ้านลงพื้นที่/ติดตามแล้วอย่างน้อย 1 ครั้ง — แสดงทุกเคสรวมทั้งเคสที่ปกติดีไม่พบความเสี่ยง ไม่ใช่แค่เคสที่มีสัญญาณผิดปกติ</p>
+    </div>
+
+    <div class="filter-row" id="filterRow">
+      <button class="filter-chip active" data-filter="all">ทั้งหมด <span class="count">11</span></button>
+      <button class="filter-chip" data-filter="risk">พบความเสี่ยง <span class="count">2</span></button>
+      <button class="filter-chip" data-filter="normal">ปกติ ไม่พบความเสี่ยง <span class="count">5</span></button>
+      <button class="filter-chip" data-filter="closed">ปิดเคสแล้ว <span class="count">4</span></button>
+    </div>
+
+    <div class="date-filter-row">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="searchInput" placeholder="ค้นหาชื่อผู้ป่วยหรือ HN...">
+      </div>
+      <span class="date-filter-label">กรองตามวันที่เยี่ยมล่าสุด:</span>
+      <select class="input-select" id="yearFilter">
+        <option value="all">ทุกปี</option>
+        <option value="2568">2568</option>
+        <option value="2569" selected>2569</option>
+      </select>
+      <select class="input-select" id="monthFilter">
+        <option value="all">ทุกเดือน</option>
+        <option value="01">มกราคม</option>
+        <option value="02">กุมภาพันธ์</option>
+        <option value="03">มีนาคม</option>
+        <option value="04">เมษายน</option>
+        <option value="05">พฤษภาคม</option>
+        <option value="06">มิถุนายน</option>
+        <option value="07">กรกฎาคม</option>
+        <option value="08" selected>สิงหาคม</option>
+        <option value="09">กันยายน</option>
+        <option value="10">ตุลาคม</option>
+        <option value="11">พฤศจิกายน</option>
+        <option value="12">ธันวาคม</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>ผู้ป่วย</th>
+            <th>ประเภทเคส</th>
+            <th>วันที่เยี่ยมล่าสุด</th>
+            <th>สถานะ/ผล</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="resultsBody">
+          <tr data-filter="risk" data-year="2569" data-month="08">
+            <td><div class="patient-name">นายสมชาย ศรีสุวรรณ</div><div class="patient-hn">HN 660076</div></td>
+            <td><span class="chip chip-primary">อายุรกรรม</span></td>
+            <td class="tabular">20/08/2569</td>
+            <td><span class="chip chip-risk">พบความเสี่ยง</span></td>
+            <td><a class="action-link" href="review-decide.html">ดูรายละเอียด →</a></td>
+          </tr>
+          <tr data-filter="risk" data-year="2569" data-month="08">
+            <td><div class="patient-name">นางบุญมี แสงจันทร์</div><div class="patient-hn">HN 660055</div></td>
+            <td><span class="chip chip-primary">Palliative Care</span></td>
+            <td class="tabular">19/08/2569</td>
+            <td><span class="chip chip-risk">พบความเสี่ยง</span></td>
+            <td><a class="action-link" href="review-decide.html">ดูรายละเอียด →</a></td>
+          </tr>
+          <tr data-filter="normal" data-year="2569" data-month="08">
+            <td><div class="patient-name">นายประเสริฐ วงศ์สุข</div><div class="patient-hn">HN 660060</div></td>
+            <td><span class="chip chip-primary">อายุรกรรม</span></td>
+            <td class="tabular">18/08/2569</td>
+            <td><span class="chip chip-success">ปกติ ไม่พบความเสี่ยง</span></td>
+            <td><a class="action-link" href="referral-detail.html">ดูรายละเอียด →</a></td>
+          </tr>
+          <tr data-filter="normal" data-year="2569" data-month="08">
+            <td><div class="patient-name">นางสาวกัญญา ทองดี</div><div class="patient-hn">HN 660081</div></td>
+            <td><span class="chip chip-primary">อื่นๆ</span></td>
+            <td class="tabular">17/08/2569</td>
+            <td><span class="chip chip-success">ปกติ ไม่พบความเสี่ยง</span></td>
+            <td><a class="action-link" href="referral-detail.html">ดูรายละเอียด →</a></td>
+          </tr>
+          <tr data-filter="normal" data-year="2569" data-month="08">
+            <td><div class="patient-name">นายวิชัย พูลสวัสดิ์</div><div class="patient-hn">HN 660092</div></td>
+            <td><span class="chip chip-primary">อายุรกรรม</span></td>
+            <td class="tabular">16/08/2569</td>
+            <td><span class="chip chip-success">ปกติ ไม่พบความเสี่ยง</span></td>
+            <td><a class="action-link" href="referral-detail.html">ดูรายละเอียด →</a></td>
+          </tr>
+          <tr data-filter="normal" data-year="2569" data-month="08">
+            <td><div class="patient-name">นางสาวรัตนา ใจงาม</div><div class="patient-hn">HN 660101</div></td>
+            <td><span class="chip chip-primary">Palliative Care</span></td>
+            <td class="tabular">15/08/2569</td>
+            <td><span class="chip chip-success">ปกติ ไม่พบความเสี่ยง</span></td>
+            <td><a class="action-link" href="referral-detail.html">ดูรายละเอียด →</a></td>
+          </tr>
+          <tr data-filter="normal" data-year="2569" data-month="08">
+            <td><div class="patient-name">นายอนุชา ศรีสุวรรณ</div><div class="patient-hn">HN 660115</div></td>
+            <td><span class="chip chip-primary">อื่นๆ</span></td>
+            <td class="tabular">14/08/2569</td>
+            <td><span class="chip chip-success">ปกติ ไม่พบความเสี่ยง</span></td>
+            <td><a class="action-link" href="referral-detail.html">ดูรายละเอียด →</a></td>
+          </tr>
+          <tr data-filter="closed" data-year="2569" data-month="08">
+            <td><div class="patient-name">นางพิกุล แจ่มใส</div><div class="patient-hn">HN 660050</div></td>
+            <td><span class="chip chip-primary">อายุรกรรม</span></td>
+            <td class="tabular">10/08/2569</td>
+            <td><span class="chip chip-closed">ปิดเคสแล้ว</span></td>
+            <td><a class="action-link" href="referral-detail.html">ดูรายละเอียด →</a></td>
+          </tr>
+          <tr data-filter="closed" data-year="2569" data-month="08">
+            <td><div class="patient-name">นายสุเทพ ทองสุข</div><div class="patient-hn">HN 660048</div></td>
+            <td><span class="chip chip-primary">อายุรกรรม</span></td>
+            <td class="tabular">08/08/2569</td>
+            <td><span class="chip chip-closed">ปิดเคสแล้ว</span></td>
+            <td><a class="action-link" href="referral-detail.html">ดูรายละเอียด →</a></td>
+          </tr>
+          <tr data-filter="closed" data-year="2569" data-month="08">
+            <td><div class="patient-name">นางสาวปิยะดา คำแก้ว</div><div class="patient-hn">HN 660040</div></td>
+            <td><span class="chip chip-primary">Palliative Care</span></td>
+            <td class="tabular">05/08/2569</td>
+            <td><span class="chip chip-closed">ปิดเคสแล้ว</span></td>
+            <td><a class="action-link" href="referral-detail.html">ดูรายละเอียด →</a></td>
+          </tr>
+          <tr data-filter="closed" data-year="2569" data-month="08">
+            <td><div class="patient-name">นายกิตติ ศรีสมบูรณ์</div><div class="patient-hn">HN 660033</div></td>
+            <td><span class="chip chip-primary">อายุรกรรม</span></td>
+            <td class="tabular">02/08/2569</td>
+            <td><span class="chip chip-closed">ปิดเคสแล้ว</span></td>
+            <td><a class="action-link" href="referral-detail.html">ดูรายละเอียด →</a></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="empty-note" id="emptyNote" hidden>ไม่มีรายการในหมวดนี้</div>
+    </div>
+  </main>
+</div>
+
+<script>
+  var chips = document.querySelectorAll('.filter-chip');
+  var rows = document.querySelectorAll('#resultsBody tr');
+  var emptyNote = document.getElementById('emptyNote');
+  var yearFilter = document.getElementById('yearFilter');
+  var monthFilter = document.getElementById('monthFilter');
+  var searchInput = document.getElementById('searchInput');
+  var currentStatusFilter = 'all';
+
+  function applyFilters(){
+    var year = yearFilter.value;
+    var month = monthFilter.value;
+    var query = searchInput.value.trim().toLowerCase();
+    var visibleCount = 0;
+    rows.forEach(function(row){
+      var statusOk = (currentStatusFilter === 'all') || (row.getAttribute('data-filter') === currentStatusFilter);
+      var yearOk = (year === 'all') || (row.getAttribute('data-year') === year);
+      var monthOk = (month === 'all') || (row.getAttribute('data-month') === month);
+      var patientCell = row.querySelector('td:first-child');
+      var searchOk = query === '' || (patientCell && patientCell.textContent.toLowerCase().indexOf(query) !== -1);
+      var show = statusOk && yearOk && monthOk && searchOk;
+      row.hidden = !show;
+      if (show) visibleCount++;
+    });
+    emptyNote.hidden = visibleCount !== 0;
+  }
+
+  chips.forEach(function(chip){
+    chip.addEventListener('click', function(){
+      chips.forEach(function(c){ c.classList.remove('active'); });
+      chip.classList.add('active');
+      currentStatusFilter = chip.getAttribute('data-filter');
+      applyFilters();
+    });
+  });
+
+  yearFilter.addEventListener('change', applyFilters);
+  monthFilter.addEventListener('change', applyFilters);
+  searchInput.addEventListener('input', applyFilters);
+</script>
+</body>
+</html>

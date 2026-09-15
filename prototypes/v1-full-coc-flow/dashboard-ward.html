@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แดชบอร์ดหอผู้ป่วย — Chira Continuity Care</title>
+<style>
+:root{
+  --color-primary-900:#16232C; --color-primary-800:#1E3644; --color-primary-700:#2C5166;
+  --color-primary-600:#3D6B84; --color-primary-500:#5586A0; --color-primary-300:#A8C4D2;
+  --color-primary-100:#E1EBEF; --color-primary-50:#F4F8FA;
+  --color-neutral-900:#22201A; --color-neutral-700:#4A4739; --color-neutral-500:#7C7863;
+  --color-neutral-300:#C9C4AD; --color-neutral-200:#DEDAC6; --color-neutral-100:#F1EEE0; --color-surface:#FFFFFF;
+  --color-accent-blue:#3E7CA6; --color-accent-gold:#C9932E;
+  --color-risk:#B23B2C; --color-risk-tint:#F7E7E2;
+  --color-warning:#C2891F; --color-warning-tint:#FBF0DC;
+  --color-success:#3E8E49; --color-success-tint:#E5F2E4;
+  --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-5:20px; --space-6:24px; --space-8:32px; --space-10:40px; --space-12:48px;
+  --radius-sm:4px; --radius-md:8px; --radius-lg:12px; --radius-pill:999px;
+  --shadow-sm:0 1px 2px rgba(34,32,26,0.06);
+  --shadow-md:0 1px 2px rgba(34,32,26,0.06), 0 4px 14px rgba(34,32,26,0.08);
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:'Sarabun','Noto Sans Thai','Leelawadee UI','Segoe UI',system-ui,sans-serif;background:var(--color-primary-50);color:var(--color-neutral-900);font-size:14px;line-height:22px;}
+h1{font-size:24px;line-height:32px;font-weight:700;margin:0;}
+h2{font-size:18px;line-height:26px;font-weight:700;margin:0;}
+h3{font-size:16px;line-height:24px;font-weight:600;margin:0;}
+p{margin:0;}
+a{color:var(--color-primary-700);text-decoration:none;}
+a:hover{text-decoration:underline;}
+:focus-visible{outline:3px solid var(--color-primary-700);outline-offset:2px;}
+
+.app-shell{display:flex;min-height:100vh;}
+
+/* Sidebar (same variant as referrals-list.html / referral-create.html / referral-detail.html) */
+.sidebar{width:248px;flex-shrink:0;background:linear-gradient(180deg,var(--color-primary-900),var(--color-primary-800));color:#F4F8FA;display:flex;flex-direction:column;padding:var(--space-5) 0;}
+.sidebar-brand{display:flex;align-items:center;gap:var(--space-3);padding:0 var(--space-5) var(--space-5);border-bottom:1px solid rgba(255,255,255,0.14);margin-bottom:var(--space-4);}
+.brand-mark{position:relative;width:30px;height:26px;flex-shrink:0;}
+.brand-mark span{position:absolute;top:0;width:16px;height:16px;border-radius:50%;border:2.5px solid;background:transparent;}
+.brand-mark span.b1{left:0;border-color:var(--color-accent-blue);}
+.brand-mark span.b2{left:7px;border-color:var(--color-primary-500);}
+.brand-mark span.b3{left:14px;border-color:var(--color-accent-gold);}
+.brand-text{display:flex;flex-direction:column;line-height:1.2;}
+.brand-name{font-weight:800;font-size:15px;letter-spacing:0.02em;color:#F4F8FA;}
+.brand-sub{font-size:10.5px;color:var(--color-primary-300);}
+
+.sidebar-nav{display:flex;flex-direction:column;gap:2px;padding:0 var(--space-3);flex:1;}
+.nav-item{display:flex;align-items:center;gap:var(--space-2);padding:var(--space-3) var(--space-3);border-radius:var(--radius-md);color:#EDEFE4;font-size:14px;font-weight:600;border-left:3px solid transparent;}
+.nav-item:hover{background:rgba(255,255,255,0.08);text-decoration:none;}
+.nav-item.active{background:rgba(233,237,223,0.16);border-left-color:var(--color-primary-300);color:#ffffff;}
+.nav-icon{width:18px;text-align:center;flex-shrink:0;opacity:0.9;}
+.nav-group-label{padding:var(--space-3) var(--space-3) var(--space-1);font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--color-primary-300);font-weight:700;margin-top:var(--space-2);}
+.nav-sub{padding-left:var(--space-8);font-weight:500;font-size:13.5px;}
+
+.sidebar-footer{padding:var(--space-4) var(--space-5) 0;border-top:1px solid rgba(255,255,255,0.14);margin-top:var(--space-4);}
+.user-name{font-weight:700;font-size:13.5px;color:#fff;}
+.user-role{font-size:11.5px;color:var(--color-primary-300);}
+.logout-link{display:inline-block;margin-top:var(--space-2);font-size:12.5px;color:#EDEFE4;opacity:0.9;}
+
+/* Main */
+.main-content{flex:1;padding:var(--space-8);max-width:1180px;display:flex;flex-direction:column;gap:var(--space-6);}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap;}
+.page-lead{margin-top:var(--space-1);color:var(--color-neutral-700);font-size:14px;max-width:60ch;}
+
+.btn{display:inline-flex;align-items:center;gap:var(--space-2);border-radius:var(--radius-md);font-weight:700;font-size:14px;padding:var(--space-3) var(--space-5);border:1px solid transparent;cursor:pointer;line-height:1;white-space:nowrap;}
+.btn-primary{background:var(--color-primary-700);color:#fff;}
+.btn-primary:hover{background:var(--color-primary-600);text-decoration:none;}
+.btn-secondary{background:#fff;color:var(--color-neutral-900);border:1px solid var(--color-neutral-300);}
+.btn-secondary:hover{background:var(--color-neutral-100);text-decoration:none;}
+.btn-sm{padding:var(--space-2) var(--space-3);font-size:13px;}
+
+.card{background:var(--color-surface);border:1px solid var(--color-neutral-200);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);}
+.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-4);padding:var(--space-5) var(--space-5) var(--space-4);flex-wrap:wrap;}
+.card-head .sub{color:var(--color-neutral-500);font-size:12.5px;margin-top:2px;}
+
+.section-title{font-size:15px;font-weight:700;color:var(--color-neutral-900);margin-bottom:2px;}
+.section-sub{font-size:12.5px;color:var(--color-neutral-500);}
+
+/* ===== Section 1: case-type distribution ===== */
+.dist-list{display:flex;flex-direction:column;gap:var(--space-4);padding:0 var(--space-5) var(--space-5);}
+.dist-row{display:grid;grid-template-columns:180px 1fr 48px;align-items:center;gap:var(--space-3);}
+.dist-label{font-size:13.5px;font-weight:600;color:var(--color-neutral-900);}
+.dist-track{height:10px;border-radius:var(--radius-pill);background:var(--color-primary-100);overflow:hidden;}
+.dist-fill{height:100%;border-radius:var(--radius-pill);background:var(--color-primary-700);}
+.dist-count{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;text-align:right;color:var(--color-neutral-900);}
+
+/* ===== Section 2: status KPI tiles ===== */
+.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-4);}
+.kpi-tile{
+  background:var(--color-surface);border:1px solid var(--color-neutral-200);border-radius:var(--radius-lg);
+  padding:var(--space-5);box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:var(--space-2);
+}
+.kpi-tile .caption{font-size:11.5px;font-weight:600;color:var(--color-neutral-500);}
+.kpi-value{font-size:32px;line-height:40px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--color-neutral-900);}
+.kpi-tile .hint{font-size:12px;color:var(--color-neutral-500);}
+.kpi-tile .hint a{font-weight:600;}
+
+/* ===== Table (Section 3) ===== */
+table{width:100%;border-collapse:collapse;}
+thead th{text-transform:uppercase;font-size:11.5px;color:var(--color-neutral-500);font-weight:700;text-align:left;padding:var(--space-3) var(--space-4);border-bottom:1px solid var(--color-neutral-200);background:var(--color-neutral-100);}
+tbody td{padding:var(--space-4);border-bottom:1px solid var(--color-neutral-200);font-size:14px;vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+.tabular{font-variant-numeric:tabular-nums;}
+.patient-name{font-weight:600;color:var(--color-neutral-900);}
+.patient-hn{font-size:11.5px;color:var(--color-neutral-500);font-variant-numeric:tabular-nums;}
+.row-actions{display:flex;gap:var(--space-2);flex-wrap:wrap;}
+
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:var(--radius-pill);font-size:12.5px;font-weight:600;white-space:nowrap;}
+.chip-primary{background:var(--color-primary-100);color:var(--color-primary-700);}
+.chip-warning{background:var(--color-warning-tint);color:var(--color-warning);}
+
+@media (max-width:860px){
+  .app-shell{flex-direction:column;}
+  .sidebar{width:100%;flex-direction:row;align-items:center;overflow-x:auto;padding:var(--space-3) var(--space-4);gap:var(--space-4);}
+  .sidebar-brand{border-bottom:none;border-right:1px solid rgba(255,255,255,0.14);margin-bottom:0;padding:0 var(--space-4) 0 0;flex-shrink:0;}
+  .sidebar-nav{flex-direction:row;flex:0 0 auto;padding:0;}
+  .nav-group-label{display:none;}
+  .nav-item{border-left:none;border-bottom:3px solid transparent;white-space:nowrap;}
+  .nav-item.active{border-left:none;border-bottom-color:var(--color-primary-300);}
+  .nav-sub{padding-left:var(--space-3);}
+  .sidebar-footer{display:none;}
+  .main-content{padding:var(--space-5);}
+  .kpi-grid{grid-template-columns:1fr;}
+  .dist-row{grid-template-columns:120px 1fr 40px;}
+  table{font-size:13px;}
+  thead{display:none;}
+  tbody td{display:block;border-bottom:none;padding:2px var(--space-4);}
+  tbody tr{display:block;padding:var(--space-3) 0;border-bottom:1px solid var(--color-neutral-200);}
+  .row-actions{padding-top:var(--space-2);}
+}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-mark"><span class="b1"></span><span class="b2"></span><span class="b3"></span></div>
+      <div class="brand-text">
+        <span class="brand-name">TRIPLE C</span>
+        <span class="brand-sub">Chira Continuity Care</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item active" href="dashboard-ward.html"><span class="nav-icon">&#9635;</span> Dashboard</a>
+      <a class="nav-item" href="referrals-list.html"><span class="nav-icon">&#128203;</span> รายการเคส</a>
+      <a class="nav-item" href="ward-visit-results.html"><span class="nav-icon">&#128101;</span> ติดตามผลการเยี่ยม</a>
+      <a class="nav-item" href="monthly-visit-report.html"><span class="nav-icon">&#128202;</span> สรุปรายงานประจำเดือน</a>
+      <div class="nav-group-label">จัดการระบบ</div>
+      <a class="nav-item nav-sub" href="admin-case-types-list.html">ประเภทเคส</a>
+      <a class="nav-item nav-sub" href="admin-users-list.html">ผู้ใช้งาน</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-name">กัลยา เจ้าหน้าที่ธุรการ</div>
+      <div class="user-role">ward_staff · หอผู้ป่วยอายุรกรรม</div>
+      <a class="logout-link" href="#">ออกจากระบบ</a>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h1>แดชบอร์ดหอผู้ป่วย</h1>
+        <p class="page-lead">ภาพรวมเคสที่หอผู้ป่วยอายุรกรรมส่งเยี่ยมบ้าน — เดือนสิงหาคม 2569</p>
+      </div>
+      <a class="btn btn-primary" href="referral-create.html">+ ส่งข้อมูลเยี่ยมบ้าน</a>
+    </div>
+
+    <!-- ============ Section 1: case-type breakdown ============ -->
+    <section class="card" aria-label="สรุปเคสแยกตามประเภทที่ส่งเยี่ยมในเดือนนี้">
+      <div class="card-head">
+        <div>
+          <div class="section-title">สรุปเคสแยกตามประเภท</div>
+          <div class="section-sub">จำนวนเคสที่ส่งข้อมูลเยี่ยมบ้านทั้งหมด 18 ราย ในเดือนสิงหาคม 2569</div>
+        </div>
+      </div>
+      <div class="dist-list">
+        <div class="dist-row">
+          <span class="dist-label">อายุรกรรม</span>
+          <div class="dist-track"><div class="dist-fill" style="width:50%;"></div></div>
+          <span class="dist-count">9</span>
+        </div>
+        <div class="dist-row">
+          <span class="dist-label">Palliative Care</span>
+          <div class="dist-track"><div class="dist-fill" style="width:27.8%;"></div></div>
+          <span class="dist-count">5</span>
+        </div>
+        <div class="dist-row">
+          <span class="dist-label">อื่นๆ</span>
+          <div class="dist-track"><div class="dist-fill" style="width:22.2%;"></div></div>
+          <span class="dist-count">4</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Section 2: status summary ============ -->
+    <section aria-label="สถานะเคสที่ส่งเยี่ยมในเดือนนี้">
+      <div class="kpi-grid">
+        <div class="kpi-tile">
+          <span class="caption">ส่งข้อมูลแล้ว</span>
+          <span class="kpi-value">18</span>
+          <span class="hint">ราย — เดือนสิงหาคม 2569 ทั้งหมด</span>
+        </div>
+        <div class="kpi-tile">
+          <span class="caption">รอยืนยัน</span>
+          <span class="kpi-value">4</span>
+          <span class="hint">ราย — <a href="#pending-list">ดูรายชื่อด้านล่าง ↓</a></span>
+        </div>
+        <div class="kpi-tile">
+          <span class="caption">ได้รับการเยี่ยมแล้ว</span>
+          <span class="kpi-value">11</span>
+          <span class="hint">ราย — <a href="ward-visit-results.html">ดูผลการเยี่ยมทุกเคส →</a></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Section 3: pending-confirmation list (still editable) ============ -->
+    <section class="card" id="pending-list" aria-label="รายชื่อผู้ป่วยที่รอยืนยันแผน แก้ไขข้อมูลได้">
+      <div class="card-head">
+        <div>
+          <div class="section-title">ผู้ป่วยรอยืนยันแผน (แก้ไขข้อมูลได้)</div>
+          <div class="section-sub">ทีมเยี่ยมบ้านยังไม่ยืนยันแผนดูแล — หอผู้ป่วยยังแก้ไขข้อมูลที่ส่งไปได้จนกว่าจะยืนยัน</div>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>ผู้ป่วย</th>
+            <th>ประเภทเคส</th>
+            <th>วันที่ส่งข้อมูล</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div class="patient-name">นายบุญเลิศ ศรีสมบัติ</div><div class="patient-hn">HN 660210</div></td>
+            <td><span class="chip chip-primary">Palliative Care</span></td>
+            <td class="tabular">28/08/2569</td>
+            <td>
+              <div class="row-actions">
+                <a class="btn btn-secondary btn-sm" href="referral-create.html">แก้ไขข้อมูล</a>
+                <a class="btn btn-secondary btn-sm" href="referral-detail.html">ดูรายละเอียด</a>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td><div class="patient-name">นางสาวอรพรรณ ใจสุข</div><div class="patient-hn">HN 660215</div></td>
+            <td><span class="chip chip-primary">อายุรกรรม</span></td>
+            <td class="tabular">29/08/2569</td>
+            <td>
+              <div class="row-actions">
+                <a class="btn btn-secondary btn-sm" href="referral-create.html">แก้ไขข้อมูล</a>
+                <a class="btn btn-secondary btn-sm" href="referral-detail.html">ดูรายละเอียด</a>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td><div class="patient-name">นายไพโรจน์ แสนดี</div><div class="patient-hn">HN 660219</div></td>
+            <td><span class="chip chip-primary">อื่นๆ</span></td>
+            <td class="tabular">30/08/2569</td>
+            <td>
+              <div class="row-actions">
+                <a class="btn btn-secondary btn-sm" href="referral-create.html">แก้ไขข้อมูล</a>
+                <a class="btn btn-secondary btn-sm" href="referral-detail.html">ดูรายละเอียด</a>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td><div class="patient-name">นางสมศรี ทองคำ</div><div class="patient-hn">HN 660222</div></td>
+            <td><span class="chip chip-primary">อายุรกรรม</span></td>
+            <td class="tabular">31/08/2569</td>
+            <td>
+              <div class="row-actions">
+                <a class="btn btn-secondary btn-sm" href="referral-create.html">แก้ไขข้อมูล</a>
+                <a class="btn btn-secondary btn-sm" href="referral-detail.html">ดูรายละเอียด</a>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+  </main>
+</div>
+</body>
+</html>
