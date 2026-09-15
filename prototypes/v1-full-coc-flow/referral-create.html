@@ -106,6 +106,15 @@ textarea{resize:vertical;min-height:96px;}
 .chip-severity-red{background:var(--color-risk-tint);color:var(--color-risk);}
 .chip-severity-palliative{background:var(--color-primary-100);color:var(--color-primary-700);}
 
+.suggest-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:var(--space-2);}
+.suggest-chip{
+  display:inline-flex;align-items:center;padding:4px 12px;border-radius:var(--radius-pill);
+  font-size:12px;font-weight:600;border:1px solid var(--color-neutral-300);background:var(--color-surface);
+  color:var(--color-neutral-700);cursor:pointer;font-family:inherit;
+}
+.suggest-chip:hover{background:var(--color-neutral-100);}
+.suggest-chip.selected{background:var(--color-primary-100);border-color:var(--color-primary-700);color:var(--color-primary-700);}
+
 .file-drop{border:1px dashed var(--color-neutral-300);border-radius:var(--radius-md);padding:var(--space-5);background:var(--color-neutral-100);text-align:center;}
 .file-drop input{width:auto;margin-top:var(--space-2);}
 
@@ -230,7 +239,26 @@ textarea{resize:vertical;min-height:96px;}
             </div>
             <div class="field" id="military_unit_field" style="display:none;">
               <label for="military_unit">หน่วยต้นสังกัด</label>
-              <input type="text" id="military_unit" placeholder="เช่น กองพันทหารราบที่ 1">
+              <select id="military_unit" onchange="document.getElementById('military_unit_other').style.display = (this.value==='other') ? 'block' : 'none';">
+                <option value="">— เลือกหน่วยต้นสังกัด —</option>
+                <option value="มทบ.31">มทบ.31</option>
+                <option value="ร้อย.มทบ.31">ร้อย.มทบ.31</option>
+                <option value="ร้อย.สห.มทบ.31">ร้อย.สห.มทบ.31</option>
+                <option value="ศฝ.นศท.มทบ.31">ศฝ.นศท.มทบ.31</option>
+                <option value="รพ.ค่ายจิรประวัติ">รพ.ค่ายจิรประวัติ</option>
+                <option value="ร.4">ร.4</option>
+                <option value="ร.4 พัน.1">ร.4 พัน.1</option>
+                <option value="ร.4 พัน.2">ร.4 พัน.2</option>
+                <option value="ข.พัน.4 พล.ร.4">ข.พัน.4 พล.ร.4</option>
+                <option value="ป.4 พัน.4">ป.4 พัน.4</option>
+                <option value="คลังแสง3.คส.สพ.ทบ.">คลังแสง3.คส.สพ.ทบ.</option>
+                <option value="ผอส.กษส.3 กส.ทบ.">ผอส.กษส.3 กส.ทบ.</option>
+                <option value="มว.ขบร.สน.3 กอง สพ.พล.ร.4">มว.ขบร.สน.3 กอง สพ.พล.ร.4</option>
+                <option value="สง.สด.จว.นว.">สง.สด.จว.นว.</option>
+                <option value="สง.สด.จว.อน.">สง.สด.จว.อน.</option>
+                <option value="other">อื่นๆ (ระบุ)</option>
+              </select>
+              <input type="text" id="military_unit_other" placeholder="ระบุหน่วยต้นสังกัด" style="display:none;margin-top:var(--space-2);">
               <span class="hint">กรณีครอบครัวกำลังพล ให้ระบุหน่วยต้นสังกัดของผู้มีสิทธิ (กำลังพล)</span>
             </div>
           </div>
@@ -373,8 +401,49 @@ textarea{resize:vertical;min-height:96px;}
           </div>
           <div class="field">
             <label for="underlying_disease">โรคประจำตัว (ถ้ามี)</label>
-            <input type="text" id="underlying_disease" placeholder="เช่น เบาหวาน, ความดันโลหิตสูง — เว้นว่างได้หากไม่มี">
+            <input type="text" id="underlying_disease" placeholder="เช่น เบาหวาน, ความดันโลหิตสูง — เว้นว่างได้หากไม่มี"
+                   oninput="var parts=this.value.split(',').map(function(s){return s.trim();}); document.querySelectorAll('#underlying_chip_group .suggest-chip').forEach(function(btn){btn.classList.toggle('selected', parts.indexOf(btn.getAttribute('data-value'))!==-1);});">
+            <div class="suggest-chips" id="underlying_chip_group">
+              <button type="button" class="suggest-chip" data-value="เบาหวาน (DM)" onclick="var inp=document.getElementById('underlying_disease'); var val=this.getAttribute('data-value'); var parts=inp.value.split(',').map(function(s){return s.trim();}).filter(function(s){return s;}); var idx=parts.indexOf(val); if(idx===-1){parts.push(val); this.classList.add('selected');} else {parts.splice(idx,1); this.classList.remove('selected');} inp.value=parts.join(', ');">เบาหวาน (DM)</button>
+              <button type="button" class="suggest-chip" data-value="ความดันโลหิตสูง (HT)" onclick="var inp=document.getElementById('underlying_disease'); var val=this.getAttribute('data-value'); var parts=inp.value.split(',').map(function(s){return s.trim();}).filter(function(s){return s;}); var idx=parts.indexOf(val); if(idx===-1){parts.push(val); this.classList.add('selected');} else {parts.splice(idx,1); this.classList.remove('selected');} inp.value=parts.join(', ');">ความดันโลหิตสูง (HT)</button>
+              <button type="button" class="suggest-chip" data-value="ไขมันในเลือดสูง (DLP)" onclick="var inp=document.getElementById('underlying_disease'); var val=this.getAttribute('data-value'); var parts=inp.value.split(',').map(function(s){return s.trim();}).filter(function(s){return s;}); var idx=parts.indexOf(val); if(idx===-1){parts.push(val); this.classList.add('selected');} else {parts.splice(idx,1); this.classList.remove('selected');} inp.value=parts.join(', ');">ไขมันในเลือดสูง (DLP)</button>
+              <button type="button" class="suggest-chip" data-value="โรคปอดอุดกั้นเรื้อรัง (COPD)" onclick="var inp=document.getElementById('underlying_disease'); var val=this.getAttribute('data-value'); var parts=inp.value.split(',').map(function(s){return s.trim();}).filter(function(s){return s;}); var idx=parts.indexOf(val); if(idx===-1){parts.push(val); this.classList.add('selected');} else {parts.splice(idx,1); this.classList.remove('selected');} inp.value=parts.join(', ');">โรคปอดอุดกั้นเรื้อรัง (COPD)</button>
+              <button type="button" class="suggest-chip" data-value="โรคไตเรื้อรัง (CKD)" onclick="var inp=document.getElementById('underlying_disease'); var val=this.getAttribute('data-value'); var parts=inp.value.split(',').map(function(s){return s.trim();}).filter(function(s){return s;}); var idx=parts.indexOf(val); if(idx===-1){parts.push(val); this.classList.add('selected');} else {parts.splice(idx,1); this.classList.remove('selected');} inp.value=parts.join(', ');">โรคไตเรื้อรัง (CKD)</button>
+              <button type="button" class="suggest-chip" data-value="โรคหัวใจ" onclick="var inp=document.getElementById('underlying_disease'); var val=this.getAttribute('data-value'); var parts=inp.value.split(',').map(function(s){return s.trim();}).filter(function(s){return s;}); var idx=parts.indexOf(val); if(idx===-1){parts.push(val); this.classList.add('selected');} else {parts.splice(idx,1); this.classList.remove('selected');} inp.value=parts.join(', ');">โรคหัวใจ</button>
+              <button type="button" class="suggest-chip" onclick="var inp=document.getElementById('underlying_disease'); if(inp.value.trim() &amp;&amp; !/,\s*$/.test(inp.value)){inp.value=inp.value.replace(/\s*$/, '') + ', ';} inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length);">+ อื่นๆ (ระบุเอง)</button>
+            </div>
+            <span class="hint">กดเลือกจากตัวเลือกด่วนด้านบนเพื่อเติมลงในช่องอัตโนมัติ (แก้ไขข้อความเองเพิ่มเติมได้) — การระบุ DM/COPD ที่นี่จะใช้เชื่อมโยงกับการเก็บข้อมูลภาวะแทรกซ้อน DM/COPD ในรายงานสรุปประจำเดือนด้วย</span>
           </div>
+        </div>
+        <div class="field span-2" style="margin-bottom:var(--space-4);">
+          <label>การติดตามต่อเนื่องตาม clinical tracer (เลือกได้หลายรายการ หากเข้าเงื่อนไข)</label>
+          <div class="radio-cards" style="grid-template-columns:repeat(3,1fr);" id="tracer_group">
+            <div class="radio-card">
+              <input type="checkbox" name="tracer" id="tr_sepsis" value="sepsis" onchange="if(this.checked) document.getElementById('tr_none').checked=false;">
+              <label for="tr_sepsis">Sepsis</label>
+            </div>
+            <div class="radio-card">
+              <input type="checkbox" name="tracer" id="tr_stroke" value="stroke" onchange="if(this.checked) document.getElementById('tr_none').checked=false;">
+              <label for="tr_stroke">Stroke</label>
+            </div>
+            <div class="radio-card">
+              <input type="checkbox" name="tracer" id="tr_heatstroke" value="heat_stroke" onchange="if(this.checked) document.getElementById('tr_none').checked=false;">
+              <label for="tr_heatstroke">Heat stroke</label>
+            </div>
+            <div class="radio-card">
+              <input type="checkbox" name="tracer" id="tr_stemi" value="stemi" onchange="if(this.checked) document.getElementById('tr_none').checked=false;">
+              <label for="tr_stemi">STEMI</label>
+            </div>
+            <div class="radio-card">
+              <input type="checkbox" name="tracer" id="tr_pneumonia" value="pneumonia" onchange="if(this.checked) document.getElementById('tr_none').checked=false;">
+              <label for="tr_pneumonia">Pneumonia</label>
+            </div>
+            <div class="radio-card">
+              <input type="checkbox" name="tracer" id="tr_none" value="none" checked onchange="if(this.checked) document.querySelectorAll('#tracer_group input:not(#tr_none)').forEach(function(el){el.checked=false;});">
+              <label for="tr_none">ไม่เข้าเงื่อนไข</label>
+            </div>
+          </div>
+          <span class="hint">ใช้สำหรับติดตามอุบัติการณ์เฉพาะโรคในรายงานสรุปประจำเดือน — เลือกตามการวินิจฉัยจริง ไม่ได้ผูกอัตโนมัติกับช่อง "การวินิจฉัยโรค" ด้านบน</span>
         </div>
         <div class="field" id="pps_field" style="display:none;margin-bottom:var(--space-4);max-width:220px;">
           <label for="pps_score">PPS Score (ประเมินโดยพยาบาลหอผู้ป่วย)</label>
