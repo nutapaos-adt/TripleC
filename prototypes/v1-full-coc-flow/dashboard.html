@@ -236,6 +236,14 @@
   .kpi-tile.alert{border-color:var(--color-risk-tint);background:linear-gradient(180deg,#fff 0%, var(--color-risk-tint) 220%);}
   .kpi-tile.warn{border-color:var(--color-warning-tint);}
 
+  .kpi-split-row{display:flex;flex-direction:column;}
+  .kpi-split-item{padding:var(--space-2) 0;}
+  .kpi-split-item + .kpi-split-item{border-top:1px solid var(--color-neutral-200);}
+  .kpi-split-top{display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-2);}
+  .kpi-split-label{font-size:13px;font-weight:600;color:var(--color-neutral-700);}
+  .kpi-split-value{font-size:20px;line-height:26px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--color-neutral-900);}
+  .kpi-split-sub{display:block;font-size:11px;color:var(--color-neutral-500);margin-top:1px;}
+
   /* ============ Banner ============ */
   .banner{
     display:flex;
@@ -466,9 +474,22 @@
           <span class="hint">อยู่ระหว่างติดตามต่อเนื่อง</span>
         </div>
         <div class="kpi-tile">
-          <span class="caption">นัดวันนี้</span>
-          <span class="kpi-value">6</span>
-          <span class="hint">ครบกำหนดติดตามภายในวันนี้</span>
+          <span class="caption">นัดวันนี้ &middot; 6 ราย</span>
+          <div class="kpi-split-row">
+            <div class="kpi-split-item">
+              <div class="kpi-split-top">
+                <span class="kpi-split-label">เยี่ยมบ้าน</span>
+                <span class="kpi-split-value">4</span>
+              </div>
+              <span class="kpi-split-sub">ในเขต 3 &middot; นอกเขต 1</span>
+            </div>
+            <div class="kpi-split-item">
+              <div class="kpi-split-top">
+                <span class="kpi-split-label">โทรติดตาม</span>
+                <span class="kpi-split-value">2</span>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="kpi-tile warn">
           <span class="caption">เกินกำหนด</span>
