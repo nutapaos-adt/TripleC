@@ -27,6 +27,8 @@ scope covering the entire continuity-of-care loop plus admin.
 | `monthly-visit-report.html` | Printable monthly home-visit performance report (KPI tiles, timeliness breakdown, satisfaction trend, photo gallery, case log) — no sidebar itself, standalone document like `care-plan-print.html`, but reachable via a "สรุปรายงานประจำเดือน" sidebar item from every other screen (added 2026-09-09) | Reporting |
 | `dashboard-ward.html` | Ward-staff dashboard: case-type breakdown, status funnel (submitted/pending-confirm/visited), and an editable pending-confirmation patient list, all scoped to this ward's referrals for the month (added 2026-09-15) | Dashboard |
 | `ward-visit-results.html` | Full, filterable list of every one of the ward's referred cases that has been visited/followed-up at least once — includes normal-outcome cases, not just risk-flagged ones (added 2026-09-15) | Dashboard |
+| `satisfaction-survey-list.html` | List of in-area, already-visited patients for the home-visit team to administer (or QR-hand-off) the community satisfaction survey — status per patient (evaluated/pending) (added 2026-09-15) | Satisfaction survey |
+| `satisfaction-survey-form.html` | The satisfaction survey itself (based on the hospital's real paper form), reached either staff-assisted from the list or via a patient-facing QR code; also renders a read-only "already evaluated" view (added 2026-09-15) | Satisfaction survey |
 
 **Design decisions confirmed with user:**
 - Full 12-screen scope in one pass (not split into smaller batches).
@@ -566,6 +568,39 @@ scope covering the entire continuity-of-care loop plus admin.
   บังคับ print CSS ให้ทำงานบนหน้าจอปกติแล้ววัดความสูงแทน (แม่นยำในระดับ CSS layout แต่ยังแนะนำให้ลองพิมพ์จริง
   จากเบราว์เซอร์อีกครั้งก่อนใช้งานจริง เพราะเครื่องพิมพ์/driver บางรุ่นอาจ render ต่างจากการคำนวณ mm→px นี้
   เล็กน้อย).
+- 2026-09-15 (รอบ 59): คุยข้อ 3 (DM/COPD) ต่อจนตกผลึก — รอบแรกผู้ใช้บอกให้ AI สแกนจาก "ผลการเยี่ยม" เฉพาะ
+  กลุ่มที่มีแท็กโรคประจำตัว DM/COPD (ใช้ chip ที่ทำไว้ในรอบ 55 กรองกลุ่มเป้าหมายก่อน) ผู้เขียนถามต่อว่าควรมี
+  ขั้นตอนยืนยันแบบ AI-draft pattern (ตาม human-in-the-loop ใน CLAUDE.md) ไหม — ผู้ใช้ตอบว่าให้ AI สรุป
+  "จำนวนเคส พร้อมเหตุผลประกอบที่ได้จากผลการติดตาม" แทน คือใช้ความโปร่งใส (โชว์เหตุผล/หลักฐานจากข้อความจริง
+  ประกอบทุกแถว) เป็นกลไกตรวจสอบในตัว แทนที่จะต้องมีปุ่มกดยืนยันแยกต่างหาก — ตรงกับโครงตาราง Section 3 ที่มี
+  อยู่แล้วพอดี (คอลัมน์ "รายละเอียด" คือช่องเหตุผลประกอบนั้นเอง) แก้ table-note ของ Section 3 ใน
+  `monthly-visit-report.html` ให้สะท้อนกฎที่ตกผลึกแล้วทั้งหมด: AI สแกนเฉพาะกลุ่ม DM/COPD, คอลัมน์รายละเอียด
+  ต้องมีเหตุผลจากข้อความจริงเสมอเพื่อให้ตรวจสอบได้ในตัว ไม่ต้องมีขั้นตอนยืนยันแยก — ยังไม่ได้เปลี่ยนแถวข้อมูล
+  ("-" ทั้งแถวเดิม เพราะเดือนนี้ไม่มีเคสเข้าเงื่อนไขจริงตามข้อมูลที่มีอยู่) ถือว่าข้อ 3 ตกผลึกแนวทางครบแล้ว
+  เหลือแค่ข้อ 4 (ความพึงพอใจ) ที่ยังไม่ได้เริ่มคุย.
+- 2026-09-15 (รอบ 60): ผู้ใช้ส่งภาพแบบประเมินความพึงพอใจกระดาษจริงของ รพ.ค่ายจิรประวัติ ("แบบประเมินความพึงพอใจ
+  ผู้รับบริการในชุมชน" — ส่วนที่ 1 ข้อมูลทั่วไป 6 ข้อ, ส่วนที่ 2 ความพึงพอใจ 10 หัวข้อแบบ 5-point Likert,
+  ส่วนที่ 3 ข้อเสนอแนะ) พร้อมขอให้แยกเป็นเมนู sidebar ใหม่ — ในหน้าแสดงชื่อผู้ป่วยเฉพาะ "ในเขต" ที่เยี่ยมแล้ว
+  พร้อมปุ่มให้เจ้าหน้าที่ประเมินเอง หรือแสดง QR code ให้ผู้ป่วยสแกนทำเอง เพิ่ม 2 ไฟล์ใหม่:
+  - `satisfaction-survey-list.html`: ใช้ sidebar/persona ของทีมเยี่ยมบ้าน (พว.กัญญา รักษ์ผู้ป่วย — ตรงกับ
+    `dashboard.html`/`followup-list.html`/`followup-record.html` เพราะทีมเยี่ยมบ้านเป็นคนลงพื้นที่จริง จึง
+    เหมาะเป็นคนถือ QR/สัมภาษณ์มากกว่า ward staff ที่ไม่ได้ออกชุมชนเอง) แสดง 6 เคส "ในเขต" เดียวกับทะเบียน
+    ตอบกลับใน Section 6 ของ `monthly-visit-report.html` (สมพงษ์ ศรีสุวรรณ, เล็ก แสงทอง, ประดิษฐ์ วงศ์เจริญ,
+    ธนากร ใจเพชร, อภิสิทธิ์ แก้วมณี, สำรวย ทองอินทร์ — ตั้ง HN ใหม่ 660201-660206 เพราะไฟล์นั้นไม่เคยมี HN)
+    2 เคสตั้งสถานะ "ประเมินแล้ว" (ลิงก์ "ดูผลประเมิน"), 4 เคส "ยังไม่ประเมิน" (ปุ่ม "ประเมินให้ผู้ป่วย" +
+    ปุ่ม "แสดง QR" เปิด modal มี QR แบบ SVG วาดมือเป็น placeholder — ระบุชัดในข้อความกำกับว่าของจริงจะเป็น QR
+    เฉพาะรายเคส ต้นแบบนี้ใช้ QR ตัวอย่างเดียวกันทุกแถว)
+  - `satisfaction-survey-form.html`: ตัวฟอร์มจริงตามภาพต้นฉบับครบทุกข้อ ไม่มี sidebar (มาตรฐานเดียวกับ
+    `care-plan-print.html` เพราะต้องใช้ได้ทั้งจากเจ้าหน้าที่และผู้ป่วยสแกนเอง) อ่าน query string
+    `?name=&hn=&mode=` เพื่อโชว์ patient banner (mode=staff) หรือหน้าผลประเมินแบบอ่านอย่างเดียว (mode=view)
+    ส่วน mode ว่าง/ไม่มี = ฟอร์มเปล่าสำหรับผู้ป่วยกรอกเองผ่าน QR
+  เพิ่มเมนู "ประเมินความพึงพอใจ" ใน sidebar ทั้ง 3 ไฟล์ของทีมเยี่ยมบ้าน (`dashboard.html`,
+  `followup-list.html`, `followup-record.html`)
+  ข้อจำกัดการทดสอบที่พบ: Browser pane ของ session นี้เปิดไฟล์ local ที่มี query string โดยแปลงเป็น
+  `data:` URL แบบ static snapshot ซึ่ง**ตัด query string ทิ้งเสมอ** ทำให้ทดสอบโหมด staff/view ผ่านเครื่องมือ
+  นี้ไม่ได้จริง (ทดสอบได้แค่ฟอร์มเปล่า/ค่าเริ่มต้น) — ตรวจโค้ด `URLSearchParams` ด้วยมือแล้วว่าถูกต้องตาม
+  มาตรฐาน จะทำงานได้ปกติเมื่อเปิดผ่านเบราว์เซอร์จริงนอก sandbox นี้ ทดสอบส่วนที่ไม่พึ่ง query string ได้ครบ
+  (10 ข้อ Likert ครบ, toggle "อาชีพ: อื่นๆ ระบุ" ทำงานถูกต้อง, QR modal เปิด/ปิดถูกต้อง).
 
 **Known prototype simplifications (not bugs):**
 - All referral rows in `referrals-list.html` link to the same `referral-detail.html` (one mock patient),

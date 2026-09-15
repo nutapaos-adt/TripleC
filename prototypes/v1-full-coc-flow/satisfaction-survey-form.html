@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แบบประเมินความพึงพอใจ — Triple C</title>
+<style>
+  :root{
+    --color-primary-900:#16232C; --color-primary-800:#1E3644; --color-primary-700:#2C5166;
+    --color-primary-600:#3D6B84; --color-primary-500:#5586A0; --color-primary-300:#A8C4D2;
+    --color-primary-100:#E1EBEF; --color-primary-50:#F4F8FA;
+    --color-neutral-900:#22201A; --color-neutral-700:#4A4739; --color-neutral-500:#7C7863;
+    --color-neutral-300:#C9C4AD; --color-neutral-200:#DEDAC6; --color-neutral-100:#F1EEE0; --color-surface:#FFFFFF;
+    --color-risk:#B23B2C; --color-risk-tint:#F7E7E2;
+    --color-warning:#C2891F; --color-warning-tint:#FBF0DC;
+    --color-success:#3E8E49; --color-success-tint:#E5F2E4;
+    --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-5:20px; --space-6:24px; --space-8:32px;
+    --radius-sm:4px; --radius-md:8px; --radius-lg:12px; --radius-pill:999px;
+    --shadow-sm:0 1px 2px rgba(34,32,26,0.06);
+    --shadow-md:0 1px 2px rgba(34,32,26,0.06), 0 4px 14px rgba(34,32,26,0.08);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Sarabun','Noto Sans Thai','Leelawadee UI','Segoe UI',system-ui,sans-serif;
+    background:var(--color-primary-50);color:var(--color-neutral-900);font-size:14px;line-height:1.5;
+  }
+  a{color:var(--color-primary-700);text-decoration:none;}
+  :focus-visible{outline:2px solid var(--color-primary-700);outline-offset:2px;border-radius:var(--radius-sm);}
+
+  .toolbar{padding:12px 20px;background:var(--color-primary-800);color:#F4F8FA;font-size:13px;}
+  .toolbar a{color:#F4F8FA;font-weight:600;}
+
+  .page-wrap{max-width:720px;margin:24px auto 48px;padding:0 16px;}
+  .sheet{background:var(--color-surface);border:1px solid var(--color-neutral-200);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);padding:28px;}
+
+  .doc-header{text-align:center;border-bottom:2px solid var(--color-primary-700);padding-bottom:16px;margin-bottom:20px;}
+  .doc-header h1{margin:0 0 4px;font-size:19px;color:var(--color-primary-800);}
+  .doc-header .sub{font-size:12px;color:var(--color-neutral-500);}
+
+  .patient-banner{
+    display:flex;align-items:center;gap:8px;background:var(--color-primary-100);color:var(--color-primary-800);
+    border-radius:var(--radius-md);padding:10px 14px;margin-bottom:20px;font-size:13px;font-weight:600;
+  }
+
+  .section-title{font-size:14px;font-weight:700;color:var(--color-primary-700);margin:0 0 14px;padding-bottom:6px;border-bottom:1px solid var(--color-neutral-200);}
+  .section{margin-bottom:26px;}
+
+  .field{margin-bottom:16px;}
+  .field label.q{display:block;font-size:13px;font-weight:600;color:var(--color-neutral-900);margin-bottom:8px;}
+  .choice-row{display:flex;flex-wrap:wrap;gap:8px 20px;}
+  .choice-opt{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--color-neutral-900);cursor:pointer;}
+  .choice-opt input{accent-color:var(--color-primary-700);width:16px;height:16px;cursor:pointer;}
+  .input{
+    width:100%;background:var(--color-neutral-100);border:1px solid var(--color-neutral-300);
+    border-radius:var(--radius-sm);padding:10px 12px;font-size:14px;font-family:inherit;color:var(--color-neutral-900);
+  }
+  .input-sm{width:100px;display:inline-block;}
+  .inline-input-wide{width:200px;display:inline-block;}
+  .textarea{min-height:100px;resize:vertical;}
+
+  .likert-wrap{overflow-x:auto;}
+  table.likert{width:100%;border-collapse:collapse;min-width:640px;}
+  table.likert th{
+    font-size:11px;font-weight:700;color:var(--color-neutral-500);text-align:center;padding:8px 6px;
+    border-bottom:1px solid var(--color-neutral-300);white-space:nowrap;
+  }
+  table.likert th.q-col{text-align:left;width:38%;}
+  table.likert td{padding:10px 6px;border-bottom:1px solid var(--color-neutral-100);text-align:center;font-size:13px;}
+  table.likert td.q-col{text-align:left;font-size:12.5px;color:var(--color-neutral-900);}
+  table.likert tbody tr:last-child td{border-bottom:none;}
+  table.likert input[type="radio"]{accent-color:var(--color-primary-700);width:16px;height:16px;cursor:pointer;}
+  .likert-num{
+    display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;
+    background:var(--color-primary-100);color:var(--color-primary-700);font-size:10.5px;font-weight:800;
+    flex-shrink:0;margin-right:6px;
+  }
+
+  .action-row{margin-top:24px;}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:12px 24px;
+    border-radius:var(--radius-md);font-size:14px;font-weight:700;cursor:pointer;border:1px solid transparent;
+    font-family:inherit;width:100%;
+  }
+  .btn-primary{background:var(--color-primary-700);color:#fff;}
+  .btn-primary:hover{background:var(--color-primary-600);}
+
+  .thankyou{display:none;text-align:center;padding:40px 20px;}
+  .thankyou .ico{font-size:40px;margin-bottom:12px;}
+  .thankyou h2{margin:0 0 6px;color:var(--color-primary-800);}
+  .thankyou p{color:var(--color-neutral-500);font-size:13px;margin:0;}
+
+  @media (max-width:520px){
+    .sheet{padding:18px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar no-print" id="staffToolbar" style="display:none;">
+  <a href="satisfaction-survey-list.html">&larr; กลับไปรายชื่อประเมินความพึงพอใจ</a>
+</div>
+
+<div class="page-wrap">
+  <div class="sheet">
+
+    <div id="formView">
+      <div class="doc-header">
+        <h1>แบบประเมินความพึงพอใจผู้รับบริการในชุมชน</h1>
+        <div class="sub">Chira Continuity Care (Triple C) — งานเยี่ยมบ้าน</div>
+      </div>
+
+      <div class="patient-banner" id="patientBanner" style="display:none;"></div>
+
+      <form id="surveyForm">
+        <div class="section">
+          <div class="section-title">ส่วนที่ 1 ข้อมูลทั่วไป</div>
+
+          <div class="field">
+            <label class="q">1. เพศ</label>
+            <div class="choice-row">
+              <label class="choice-opt"><input type="radio" name="sex" required> ชาย</label>
+              <label class="choice-opt"><input type="radio" name="sex"> หญิง</label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="q">2. ท่านเป็นผู้รับบริการประเภทใด</label>
+            <div class="choice-row">
+              <label class="choice-opt"><input type="radio" name="recipient_type" required> ผู้ป่วย</label>
+              <label class="choice-opt"><input type="radio" name="recipient_type"> ญาติ</label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="q" for="age">3. ปัจจุบันท่านอายุ</label>
+            <input type="number" id="age" min="0" class="input input-sm" required> <span style="font-size:13px;">ปี</span>
+          </div>
+
+          <div class="field">
+            <label class="q">4. สถานภาพสมรส</label>
+            <div class="choice-row">
+              <label class="choice-opt"><input type="radio" name="marital"> โสด</label>
+              <label class="choice-opt"><input type="radio" name="marital"> สมรส</label>
+              <label class="choice-opt"><input type="radio" name="marital"> หม้าย/หย่า/แยก</label>
+              <label class="choice-opt"><input type="radio" name="marital"> อื่นๆ</label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="q">5. ท่านจบการศึกษาสูงสุด</label>
+            <div class="choice-row">
+              <label class="choice-opt"><input type="radio" name="education"> ประถมศึกษาหรือต่ำกว่า</label>
+              <label class="choice-opt"><input type="radio" name="education"> มัธยมศึกษาหรืออนุปริญญา</label>
+              <label class="choice-opt"><input type="radio" name="education"> ปริญญาตรีหรือสูงกว่า</label>
+              <label class="choice-opt"><input type="radio" name="education"> อื่นๆ</label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="q">6. ปัจจุบันท่านประกอบอาชีพ</label>
+            <div class="choice-row">
+              <label class="choice-opt"><input type="radio" name="occupation" onchange="toggleOther()"> รับราชการ</label>
+              <label class="choice-opt"><input type="radio" name="occupation" onchange="toggleOther()"> รับจ้าง</label>
+              <label class="choice-opt"><input type="radio" name="occupation" onchange="toggleOther()"> ธุรกิจส่วนตัว</label>
+              <label class="choice-opt"><input type="radio" name="occupation" onchange="toggleOther()"> เกษตรกร</label>
+              <label class="choice-opt"><input type="radio" name="occupation" onchange="toggleOther()"> นักเรียนหรือนักศึกษา</label>
+              <label class="choice-opt"><input type="radio" name="occupation" id="occOther" onchange="toggleOther()"> อื่นๆ ระบุ <input type="text" id="occOtherText" class="input inline-input-wide" style="display:none;margin-left:4px;"></label>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">ส่วนที่ 2 ความพึงพอใจต่อบริการที่ได้รับ</div>
+          <div class="likert-wrap">
+            <table class="likert">
+              <thead>
+                <tr>
+                  <th class="q-col">หัวข้อการประเมิน</th>
+                  <th>มากที่สุด</th><th>มาก</th><th>ปานกลาง</th><th>น้อย</th><th>น้อยที่สุด</th>
+                </tr>
+              </thead>
+              <tbody id="likertBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">ส่วนที่ 3 ข้อเสนอแนะ</div>
+          <textarea class="input textarea" placeholder="ข้อเสนอแนะเพิ่มเติม (ถ้ามี)"></textarea>
+        </div>
+
+        <div class="action-row">
+          <button type="submit" class="btn btn-primary">ส่งแบบประเมิน</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="thankyou" id="thankYouView">
+      <div class="ico">&#10003;</div>
+      <h2>ขอบคุณสำหรับการประเมินค่ะ/ครับ</h2>
+      <p>ความคิดเห็นของท่านจะถูกนำไปใช้ปรับปรุงบริการเยี่ยมบ้านของโรงพยาบาลต่อไป</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  var QUESTIONS = [
+    'เจ้าหน้าที่มีการตรวจเยี่ยมประชาชนตามบ้านอย่างสม่ำเสมอ',
+    'เจ้าหน้าที่มีกริยามารยาทในการให้บริการที่ดี',
+    'เจ้าหน้าที่แสดงความสนใจและเอาใจใส่ต่อท่านเมื่อมาใช้บริการ',
+    'เจ้าหน้าที่ให้การดูแลผู้มารับบริการทุกคนอย่างเท่าเทียมกันและตามลำดับก่อนหลัง',
+    'โรงพยาบาลส่งเสริมสุขภาพชุมชนหรือศูนย์สุขภาพชุมชนเมือง มีการประชาสัมพันธ์บริการต่างๆ ที่จัดให้กับประชาชนในพื้นที่อย่างทั่วถึง',
+    'ท่านได้รับคำอธิบายเกี่ยวกับโรคและวิธีการรักษาจากพยาบาล',
+    'ท่านได้รับคำแนะนำจากพยาบาลเกี่ยวกับการปฏิบัติตัวเมื่อเจ็บป่วยหรือเพื่อป้องกันการเจ็บป่วย',
+    'เจ้าหน้าที่มีความสามารถหรือเชี่ยวชาญในการตรวจรักษาโรค',
+    'เจ้าหน้าที่มีความรวดเร็วในการให้บริการ',
+    'เจ้าหน้าที่เปิดโอกาสให้ท่านสอบถามข้อข้องใจเกี่ยวกับการรักษาพยาบาลหรือให้ท่านได้ตัดสินใจเลือกการรักษาที่เหมาะสมกับตัวของท่าน'
+  ];
+
+  var tbody = document.getElementById('likertBody');
+  QUESTIONS.forEach(function(q, i){
+    var tr = document.createElement('tr');
+    var qCell = '<td class="q-col"><span class="likert-num">' + (i+1) + '</span>' + q + '</td>';
+    var radioCells = '';
+    for (var v = 5; v >= 1; v--){
+      radioCells += '<td><input type="radio" name="q' + (i+1) + '" value="' + v + '" required></td>';
+    }
+    tr.innerHTML = qCell + radioCells;
+    tbody.appendChild(tr);
+  });
+
+  function toggleOther(){
+    document.getElementById('occOtherText').style.display = document.getElementById('occOther').checked ? 'inline-block' : 'none';
+  }
+
+  var params = new URLSearchParams(window.location.search);
+  var name = params.get('name');
+  var hn = params.get('hn');
+  var mode = params.get('mode');
+
+  if (mode === 'staff' && name){
+    document.getElementById('staffToolbar').style.display = 'block';
+    var banner = document.getElementById('patientBanner');
+    banner.style.display = 'flex';
+    banner.textContent = 'กำลังทำแบบประเมินสำหรับ: ' + name + (hn ? ' (HN ' + hn + ')' : '') + ' — เจ้าหน้าที่เป็นผู้กรอกแทน';
+  } else if (mode === 'view' && name){
+    document.getElementById('staffToolbar').style.display = 'block';
+    document.getElementById('formView').style.display = 'none';
+    document.getElementById('thankYouView').style.display = 'block';
+    document.getElementById('thankYouView').innerHTML =
+      '<div class="ico" style="color:var(--color-success);">&#10003;</div>' +
+      '<h2>' + name + (hn ? ' (HN ' + hn + ')' : '') + ' ประเมินความพึงพอใจแล้ว</h2>' +
+      '<p>ผลประเมินโดยรวมอยู่ในระดับ "มาก" — ดูรายละเอียดเต็มได้ที่รายงานสรุปประจำเดือน</p>';
+  }
+
+  document.getElementById('surveyForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    document.getElementById('formView').style.display = 'none';
+    document.getElementById('thankYouView').style.display = 'block';
+  });
+</script>
+</body>
+</html>
