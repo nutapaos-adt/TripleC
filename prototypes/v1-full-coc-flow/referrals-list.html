@@ -68,6 +68,17 @@ a:hover{text-decoration:underline;}
 .btn-primary:hover{background:var(--color-primary-600);text-decoration:none;}
 .btn-lg{padding:var(--space-4) var(--space-6);font-size:15px;}
 
+.filter-row{display:flex;gap:var(--space-2);flex-wrap:wrap;margin-bottom:var(--space-4);}
+.filter-chip{
+  display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius-pill);
+  font-size:13px;font-weight:600;border:1px solid var(--color-neutral-300);background:var(--color-surface);
+  color:var(--color-neutral-700);cursor:pointer;font-family:inherit;
+}
+.filter-chip.active{background:var(--color-primary-700);color:#fff;border-color:var(--color-primary-700);}
+.filter-chip .count{background:rgba(0,0,0,0.08);border-radius:var(--radius-pill);padding:1px 7px;font-size:11px;}
+.filter-chip.active .count{background:rgba(255,255,255,0.25);}
+.empty-note{padding:var(--space-10);text-align:center;color:var(--color-neutral-500);font-size:13px;}
+
 .card{background:var(--color-surface);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);overflow:hidden;}
 
 table{width:100%;border-collapse:collapse;}
@@ -122,6 +133,7 @@ tbody tr.row-link:hover{background:var(--color-primary-50);}
     <nav class="sidebar-nav">
       <a class="nav-item" href="dashboard-ward.html"><span class="nav-icon">&#9635;</span> Dashboard</a>
       <a class="nav-item active" href="referrals-list.html"><span class="nav-icon">&#128203;</span> รายการเคส</a>
+      <a class="nav-item" href="followup-list.html"><span class="nav-icon">&#128197;</span> บันทึกการเยี่ยมบ้าน</a>
       <a class="nav-item" href="ward-visit-results.html"><span class="nav-icon">&#128101;</span> ติดตามผลการเยี่ยม</a>
       <a class="nav-item" href="monthly-visit-report.html"><span class="nav-icon">&#128202;</span> สรุปรายงานประจำเดือน</a>
       <div class="nav-group-label">จัดการระบบ</div>
@@ -144,6 +156,14 @@ tbody tr.row-link:hover{background:var(--color-primary-50);}
       <a class="btn btn-primary btn-lg" href="referral-create.html">+ ส่งข้อมูลเยี่ยมบ้าน</a>
     </div>
 
+    <div class="filter-row" id="filterRow">
+      <button class="filter-chip active" data-filter="all">ทั้งหมด <span class="count">8</span></button>
+      <button class="filter-chip" data-filter="pending">รอตรวจสอบ <span class="count">2</span></button>
+      <button class="filter-chip" data-filter="confirmed">ยืนยันแผนแล้ว <span class="count">2</span></button>
+      <button class="filter-chip" data-filter="inprogress">กำลังติดตาม <span class="count">2</span></button>
+      <button class="filter-chip" data-filter="closed">ปิดเคสแล้ว <span class="count">2</span></button>
+    </div>
+
     <div class="card">
       <table>
         <thead>
@@ -156,8 +176,8 @@ tbody tr.row-link:hover{background:var(--color-primary-50);}
             <th>วันที่ส่งต่อข้อมูล</th>
           </tr>
         </thead>
-        <tbody>
-          <tr class="row-link" onclick="location.href='referral-detail.html'">
+        <tbody id="referralsTableBody">
+          <tr class="row-link" data-status="pending" onclick="location.href='referral-detail.html'">
             <td><div class="patient-name">นางสมหญิง ใจดี</div><div class="patient-hn">HN 660231</div></td>
             <td><span class="chip chip-source">หอผู้ป่วยอายุรกรรมหญิง</span></td>
             <td><span class="chip chip-primary">Palliative Care</span></td>
@@ -165,7 +185,7 @@ tbody tr.row-link:hover{background:var(--color-primary-50);}
             <td><span class="chip chip-warning">รอตรวจสอบ</span></td>
             <td class="tabular">20/08/2569</td>
           </tr>
-          <tr class="row-link" onclick="location.href='referral-detail.html'">
+          <tr class="row-link" data-status="pending" onclick="location.href='referral-detail.html'">
             <td><div class="patient-name">นายวิชัย ตั้งใจ</div><div class="patient-hn">HN 660120</div></td>
             <td><span class="chip chip-source">หอผู้ป่วยศัลยกรรมชาย</span></td>
             <td><span class="chip chip-primary">หลังผ่าตัด</span></td>
@@ -173,7 +193,7 @@ tbody tr.row-link:hover{background:var(--color-primary-50);}
             <td><span class="chip chip-warning">รอตรวจสอบ</span></td>
             <td class="tabular">21/08/2569</td>
           </tr>
-          <tr class="row-link" onclick="location.href='referral-detail.html'">
+          <tr class="row-link" data-status="confirmed" onclick="location.href='referral-detail.html'">
             <td><div class="patient-name">นายประเสริฐ วงศ์สุข</div><div class="patient-hn">HN 660198</div></td>
             <td><span class="chip chip-source">คลินิกศัลยกรรม (OPD)</span></td>
             <td><span class="chip chip-primary">หลังผ่าตัด</span></td>
@@ -181,7 +201,7 @@ tbody tr.row-link:hover{background:var(--color-primary-50);}
             <td><span class="chip chip-success">ยืนยันแผนแล้ว</span></td>
             <td class="tabular">18/08/2569</td>
           </tr>
-          <tr class="row-link" onclick="location.href='referral-detail.html'">
+          <tr class="row-link" data-status="confirmed" onclick="location.href='referral-detail.html'">
             <td><div class="patient-name">นางสาวรัตนา ทองดี</div><div class="patient-hn">HN 660098</div></td>
             <td><span class="chip chip-source">คลินิกฝากครรภ์ (OPD)</span></td>
             <td><span class="chip chip-primary">หลังคลอด</span></td>
@@ -189,7 +209,7 @@ tbody tr.row-link:hover{background:var(--color-primary-50);}
             <td><span class="chip chip-success">ยืนยันแผนแล้ว</span></td>
             <td class="tabular">05/08/2569</td>
           </tr>
-          <tr class="row-link" onclick="location.href='referral-detail.html'">
+          <tr class="row-link" data-status="inprogress" onclick="location.href='referral-detail.html'">
             <td><div class="patient-name">นางสาวพิมพ์ชนก แก้วมณี</div><div class="patient-hn">HN 660175</div></td>
             <td><span class="chip chip-source">หอผู้ป่วยสูติกรรม</span></td>
             <td><span class="chip chip-primary">หลังคลอด</span></td>
@@ -197,7 +217,7 @@ tbody tr.row-link:hover{background:var(--color-primary-50);}
             <td><span class="chip chip-inprogress">กำลังติดตาม</span></td>
             <td class="tabular">15/08/2569</td>
           </tr>
-          <tr class="row-link" onclick="location.href='referral-detail.html'">
+          <tr class="row-link" data-status="inprogress" onclick="location.href='referral-detail.html'">
             <td><div class="patient-name">นางบัวผัน มั่นคง</div><div class="patient-hn">HN 660142</div></td>
             <td><span class="chip chip-source">รพ.แม่สาย (ส่งต่อ)</span></td>
             <td><span class="chip chip-primary">Palliative Care</span></td>
@@ -205,7 +225,7 @@ tbody tr.row-link:hover{background:var(--color-primary-50);}
             <td><span class="chip chip-inprogress">กำลังติดตาม</span></td>
             <td class="tabular">08/08/2569</td>
           </tr>
-          <tr class="row-link" onclick="location.href='referral-detail.html'">
+          <tr class="row-link" data-status="closed" onclick="location.href='referral-detail.html'">
             <td><div class="patient-name">นายอนุชา ศรีสุวรรณ</div><div class="patient-hn">HN 660160</div></td>
             <td><span class="chip chip-source">แผนกเวชศาสตร์ฟื้นฟู</span></td>
             <td><span class="chip chip-primary">อื่นๆ</span></td>
@@ -213,7 +233,7 @@ tbody tr.row-link:hover{background:var(--color-primary-50);}
             <td><span class="chip chip-closed">ปิดเคสแล้ว</span></td>
             <td class="tabular">10/08/2569</td>
           </tr>
-          <tr class="row-link" onclick="location.href='referral-detail.html'">
+          <tr class="row-link" data-status="closed" onclick="location.href='referral-detail.html'">
             <td><div class="patient-name">นายสมพงษ์ เพชรรัตน์</div><div class="patient-hn">HN 660076</div></td>
             <td><span class="chip chip-source">หอผู้ป่วยอายุรกรรมชาย</span></td>
             <td><span class="chip chip-primary">อื่นๆ</span></td>
@@ -223,9 +243,49 @@ tbody tr.row-link:hover{background:var(--color-primary-50);}
           </tr>
         </tbody>
       </table>
+      <div class="empty-note" id="emptyNote" hidden>ไม่มีเคสในหมวดนี้</div>
     </div>
     <p class="count-caption">ทั้งหมด 8 เคส · แสดงข้อมูลจำลองสำหรับต้นแบบ (prototype)</p>
   </main>
 </div>
+
+<script>
+  var chips = document.querySelectorAll('.filter-chip');
+  var rows = document.querySelectorAll('#referralsTableBody tr');
+  var emptyNote = document.getElementById('emptyNote');
+  var currentFilter = 'all';
+
+  function applyFilter(){
+    var visibleCount = 0;
+    rows.forEach(function(row){
+      var show = (currentFilter === 'all') || (row.getAttribute('data-status') === currentFilter);
+      row.hidden = !show;
+      if (show) visibleCount++;
+    });
+    emptyNote.hidden = visibleCount !== 0;
+  }
+
+  chips.forEach(function(chip){
+    chip.addEventListener('click', function(){
+      chips.forEach(function(c){ c.classList.remove('active'); });
+      chip.classList.add('active');
+      currentFilter = chip.getAttribute('data-filter');
+      applyFilter();
+    });
+  });
+
+  // Pre-select a filter when linked from elsewhere, e.g. dashboard.html's
+  // "ตรวจสอบเคสรอยืนยัน" button -> referrals-list.html?status=pending
+  var urlStatus = new URLSearchParams(window.location.search).get('status');
+  if (urlStatus){
+    var target = document.querySelector('.filter-chip[data-filter="' + urlStatus + '"]');
+    if (target){
+      chips.forEach(function(c){ c.classList.remove('active'); });
+      target.classList.add('active');
+      currentFilter = urlStatus;
+      applyFilter();
+    }
+  }
+</script>
 </body>
 </html>
