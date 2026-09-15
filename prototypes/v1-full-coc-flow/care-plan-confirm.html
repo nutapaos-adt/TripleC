@@ -3,18 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ยืนยันแผนการดูแล — Chira Continuity Care (Triple C)</title>
+<title>วิเคราะห์แผนการพยาบาล — Chira Continuity Care (Triple C)</title>
 <style>
   :root{
-    /* Primary - Olive/Military Green */
-    --color-primary-900:#212B1C;
-    --color-primary-800:#2C3A22;
-    --color-primary-700:#3C4D2A;
-    --color-primary-600:#4C5F35;
-    --color-primary-500:#62784A;
-    --color-primary-300:#AAB994;
-    --color-primary-100:#E9EDDF;
-    --color-primary-50:#F5F6EF;
+    /* Primary - Slate/Steel Blue */
+    --color-primary-900:#16232C;
+    --color-primary-800:#1E3644;
+    --color-primary-700:#2C5166;
+    --color-primary-600:#3D6B84;
+    --color-primary-500:#5586A0;
+    --color-primary-300:#A8C4D2;
+    --color-primary-100:#E1EBEF;
+    --color-primary-50:#F4F8FA;
 
     /* Neutral - Warm Khaki */
     --color-neutral-900:#22201A;
@@ -191,10 +191,18 @@
     box-shadow:var(--shadow-sm);
     padding:var(--space-5) var(--space-6);
     display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    gap:var(--space-2);
+    margin-bottom:var(--space-6);
+  }
+  .patient-strip-top{
+    display:flex;
     flex-wrap:wrap;
     align-items:center;
-    gap:var(--space-6);
-    margin-bottom:var(--space-6);
+    justify-content:space-between;
+    gap:var(--space-4);
+    margin-bottom:var(--space-2);
   }
   .raw-notes-box{
     background:var(--color-surface);
@@ -525,6 +533,7 @@
     <nav class="nav" aria-label="เมนูหลัก">
       <a href="dashboard.html"><span class="ico">&#9635;</span> Dashboard</a>
       <a href="referrals-list.html" class="active"><span class="ico">&#9776;</span> รายการเคส</a>
+      <a href="monthly-visit-report.html"><span class="ico">&#128202;</span> สรุปรายงานประจำเดือน</a>
 
       <div class="nav-group-label">จัดการระบบ</div>
       <a href="admin-case-types-list.html" class="sub"><span class="ico">&#9881;</span> ประเภทเคส</a>
@@ -533,8 +542,8 @@
 
     <div class="sidebar-footer">
       <strong>พว. สุนีย์ วงศ์ประเสริฐ</strong>
-      เจ้าหน้าที่หอผู้ป่วย (ward staff)<br>
-      หอผู้ป่วยอายุรกรรมหญิง
+      ทีมเยี่ยมบ้าน (home visit team)<br>
+      ทีมเยี่ยมบ้านชุมชน
     </div>
   </aside>
 
@@ -546,25 +555,33 @@
         <div class="breadcrumb">
           <a href="referrals-list.html">รายการเคส</a>
           <span class="sep">/</span>
-          <a href="referral-detail.html">ใบส่งต่อ HN 6801234</a>
+          <a href="referral-detail.html">ใบส่งต่อ HN 660231</a>
           <span class="sep">/</span>
-          <span class="current">ยืนยันแผนการดูแล</span>
+          <span class="current">วิเคราะห์แผนการพยาบาล</span>
         </div>
-        <h1>ยืนยันแผนการดูแล (AI ช่วยร่าง)</h1>
+        <h1>วิเคราะห์แผนการพยาบาล</h1>
       </div>
       <a class="back-link" href="referral-detail.html">&larr; กลับไปหน้าใบส่งต่อ</a>
     </div>
 
     <!-- Patient summary strip -->
     <section class="patient-strip" aria-label="ข้อมูลผู้ป่วยโดยสรุป">
-      <div class="name-block">
-        <strong>นางสมหญิง ใจดี</strong><br>
-        <span class="hn">HN 6801234 &nbsp;&middot;&nbsp; หญิง &middot; 68 ปี</span>
+      <div class="patient-strip-top">
+        <div class="name-block">
+          <strong>นางสมหญิง ใจดี</strong><br>
+          <span class="hn">HN 660231 &nbsp;&middot;&nbsp; หญิง &middot; 79 ปี</span>
+        </div>
+        <div class="chip-row">
+          <span class="chip chip-inzone">ในเขต</span>
+          <span class="chip chip-casetype" id="caseTypeChip">Palliative Care</span>
+          <span class="chip chip-risk">พบสัญญาณเสี่ยง</span>
+        </div>
       </div>
-      <div class="meta-list">
+
+      <div class="meta-list meta-row">
         <div class="meta-item">
           <span class="lbl">ส่งต่อจาก</span>
-          หอผู้ป่วยอายุรกรรมหญิง (ตึก 3)
+          หอผู้ป่วยอายุรกรรมหญิง
         </div>
         <div class="meta-item">
           <span class="lbl">วันที่ส่งต่อ</span>
@@ -572,26 +589,51 @@
         </div>
         <div class="meta-item">
           <span class="lbl">ที่อยู่/เขต</span>
-          ต.ท่าสาย อ.เมือง (ในเขตรับผิดชอบ)
+          ต.บ้านดู่ อ.เมืองเชียงราย (ในเขตรับผิดชอบ)
         </div>
       </div>
-      <div class="chip-row">
-        <span class="chip chip-inzone">ในเขต</span>
-        <span class="chip chip-casetype" id="caseTypeChip">Palliative Care</span>
-        <span class="chip chip-risk">พบสัญญาณเสี่ยง</span>
+
+      <div class="meta-list meta-row">
+        <div class="meta-item">
+          <span class="lbl">โรคประจำตัว</span>
+          เบาหวาน, ความดันโลหิตสูง
+        </div>
+        <div class="meta-item">
+          <span class="lbl">การวินิจฉัย</span>
+          Cholangiocarcinoma (มะเร็งท่อน้ำดี) ระยะสุดท้าย
+        </div>
+        <div class="meta-item">
+          <span class="lbl">การผ่าตัด</span>
+          ผ่าตัดถุงน้ำดีทางกล้อง (Lap Cholecystectomy) มิ.ย. 2560
+        </div>
+      </div>
+
+      <div class="meta-list meta-row">
+        <div class="meta-item">
+          <span class="lbl">วันที่ Admit</span>
+          15 ส.ค. 2569
+        </div>
+        <div class="meta-item">
+          <span class="lbl">วันที่จำหน่าย</span>
+          20 ส.ค. 2569
+        </div>
+        <div class="meta-item">
+          <span class="lbl">วันนัดติดตาม</span>
+          05 ก.ย. 2569 (OPD อายุรกรรม)
+        </div>
       </div>
     </section>
 
     <!-- Raw notes from origin — compare against the AI draft below -->
     <div class="raw-notes-box" aria-label="ข้อมูลต้นทางก่อน AI สรุป">
       <span class="lbl">ข้อมูลต้นทาง (บันทึกดิบก่อน AI สรุป)</span>
-      <div class="note-text">ผู้ป่วยระยะท้าย ปวดจากมะเร็งระยะท้าย ต้องการอุปกรณ์ทางการแพทย์ที่บ้าน ผู้ดูแลหลักมีคนเดียว</div>
+      <div class="note-text">ผู้ป่วยมะเร็งตับระยะสุดท้าย (Cholangiocarcinoma, Stage IV) แพทย์แจ้งญาติเรื่องการดูแลแบบ Palliative Care ที่บ้าน ผู้ป่วยมีอาการปวดท้องเป็นระยะ รับประทานอาหารได้น้อย น้ำหนักลดลงต่อเนื่อง ญาติผู้ดูแลหลักคือบุตรสาว (นางสาวสมใจ ใจดี) ต้องการคำแนะนำการจัดการความปวดที่บ้านและการดูแลด้านจิตใจของผู้ป่วยและครอบครัว ปัจจุบันใช้มอร์ฟีนชนิดรับประทานตามแผนการรักษาของแพทย์</div>
       <p class="hint">เทียบกับร่างจาก AI ด้านล่าง เพื่อตรวจว่า AI สรุปครบถ้วนและตรงกับข้อมูลที่ส่งเข้ามาจริงหรือไม่</p>
     </div>
 
     <!-- ============ AI DRAFT BOX (editable) ============ -->
     <div class="section-title">
-      <h2>ร่างแผนการดูแลจาก AI</h2>
+      <h2>แบบร่างแผนการพยาบาล</h2>
       <p>ตรวจสอบและแก้ไขข้อมูลด้านล่างก่อนยืนยัน — ทุกช่องแก้ไขได้ ไม่มีข้อมูลใดถูกบันทึกจนกว่าพยาบาลจะกดยืนยัน</p>
     </div>
 
@@ -603,30 +645,38 @@
           <div class="field">
             <label for="caseType">ประเภทเคส</label>
             <select id="caseType">
-              <option value="Palliative Care" selected>Palliative Care</option>
+              <option value="อายุรกรรม">อายุรกรรม</option>
+              <option value="ศัลยกรรม">ศัลยกรรม</option>
+              <option value="กระดูกและข้อ">กระดูกและข้อ</option>
+              <option value="กุมารเวชกรรม">กุมารเวชกรรม</option>
               <option value="หลังคลอด">หลังคลอด</option>
-              <option value="หลังผ่าตัด">หลังผ่าตัด</option>
+              <option value="Palliative Care" selected>Palliative Care</option>
               <option value="อื่นๆ">อื่นๆ</option>
             </select>
           </div>
 
           <div class="field">
-            <label for="patientType">กลุ่มผู้ป่วย / ประเภทผู้ป่วย</label>
-            <input type="text" id="patientType" value="ผู้ป่วยมะเร็งตับระยะสุดท้าย (End-stage, receiving comfort care)">
+            <label for="patientType">การจำแนกกลุ่มความรุนแรง</label>
+            <select id="patientType">
+              <option value="g1">กลุ่ม 1 — บ้านสีเขียว (ช่วยเหลือตนเองได้ทั้งหมด)</option>
+              <option value="g2">กลุ่ม 2 — บ้านสีเหลือง (ช่วยเหลือตนเองได้บางส่วน)</option>
+              <option value="g3">กลุ่ม 3 — บ้านสีแดง (ช่วยเหลือตนเองไม่ได้เลย)</option>
+              <option value="g4" selected>กลุ่ม 4 — Palliative Care</option>
+            </select>
           </div>
 
           <div class="field full">
             <label for="mainProblem">ปัญหาหลัก</label>
-            <textarea id="mainProblem" rows="4">ผู้ป่วยหญิงอายุ 68 ปี วินิจฉัยมะเร็งตับระยะที่ 4 มีอาการปวดท้องบริเวณชายโครงขวาระดับ 6-7/10 ควบคุมด้วยยาแก้ปวดกลุ่มโอปิออยด์ที่ได้รับจากโรงพยาบาลไม่เพียงพอ ร่วมกับเบื่ออาหารและน้ำหนักลดลงประมาณ 3 กก. ใน 1 เดือนที่ผ่านมา ญาติผู้ดูแลหลัก (บุตรสาว) แสดงความเครียดและความกังวลสูงเกี่ยวกับการดูแลผู้ป่วยที่บ้าน</textarea>
+            <textarea id="mainProblem" rows="4">ผู้ป่วยหญิงอายุ 79 ปี วินิจฉัย Cholangiocarcinoma (มะเร็งท่อน้ำดี) ระยะสุดท้าย มีอาการปวดท้องบริเวณชายโครงขวาระดับ 6-7/10 ควบคุมด้วยยาแก้ปวดกลุ่มโอปิออยด์ที่ได้รับจากโรงพยาบาลไม่เพียงพอ ร่วมกับเบื่ออาหารและน้ำหนักลดลงประมาณ 3 กก. ใน 1 เดือนที่ผ่านมา ญาติผู้ดูแลหลัก (บุตรสาว) แสดงความเครียดและความกังวลสูงเกี่ยวกับการดูแลผู้ป่วยที่บ้าน</textarea>
           </div>
 
           <div class="field full">
-            <label for="followUpNeed">ความจำเป็นในการติดตาม</label>
+            <label for="followUpNeed">การวางแผนทางการพยาบาล</label>
             <textarea id="followUpNeed" rows="3">ต้องติดตามการควบคุมอาการปวดและการปรับขนาดยาอย่างใกล้ชิด ประเมินความพร้อมของญาติในการดูแลผู้ป่วยที่บ้าน ให้คำแนะนำการดูแลแบบประคับประคอง และเฝ้าระวังภาวะแทรกซ้อนที่อาจนำไปสู่การกลับเข้ารักษาซ้ำ</textarea>
           </div>
 
           <div class="field full">
-            <label for="riskSignals">สัญญาณความเสี่ยง <span class="hint" style="display:inline;margin:0;">(บรรทัดละ 1 รายการ)</span></label>
+            <label for="riskSignals">ประเด็นที่ต้องติดตาม <span class="hint" style="display:inline;margin:0;">(บรรทัดละ 1 รายการ)</span></label>
             <textarea id="riskSignals" rows="4">ปวดควบคุมไม่ได้
 ญาติเครียดสูง
 รับประทานอาหารได้น้อยลงมาก
@@ -635,7 +685,7 @@
 
           <div class="field full" id="ppsField">
             <label for="ppsScore">PPS Score เริ่มต้น</label>
-            <span class="hint">ใช้กำหนดความถี่ของการเยี่ยมครั้งแรกโดยอัตโนมัติ — แสดงเมื่อประเภทเคสเป็น Palliative Care</span>
+            <span class="hint">ประเมินโดยพยาบาลหอผู้ป่วยตอนส่งต่อข้อมูล (เห็นสภาพผู้ป่วยจริง) — ทีมเยี่ยมบ้านตรวจสอบและแก้ไขได้ก่อนยืนยัน ใช้กำหนดความถี่ของการเยี่ยมครั้งแรกโดยอัตโนมัติ</span>
             <div class="pps-row">
               <input type="range" id="ppsScore" min="0" max="100" step="10" value="60"
                      oninput="document.getElementById('ppsReadout').textContent=this.value">
@@ -656,7 +706,7 @@
 
     <div class="after-confirm-note">
       <span class="ico">&#8505;</span>
-      <span>การยืนยันจะสร้างกำหนดการติดตามให้อัตโนมัติตามประเภทเคสและ PPS Score — เช่น กรณี Palliative Care ที่ PPS Score 60 ระบบจะตั้งรอบเยี่ยมทุก 2 สัปดาห์ตามเกณฑ์ที่ผู้ดูแลระบบกำหนดไว้</span>
+      <span>การยืนยันจะสร้างกำหนดการติดตามให้อัตโนมัติตามประเภทเคสร่วมกับการจำแนกกลุ่มความรุนแรงของผู้ป่วย — กรณีนี้เป็น Palliative Care ที่ PPS Score 60 ระบบจะตั้งรอบเยี่ยมทุก 2 สัปดาห์ตามเกณฑ์ที่ผู้ดูแลระบบกำหนดไว้ (ประเภท Palliative Care ใช้ PPS Score เป็นหลักเสมอ ไม่ว่าจะจัดอยู่กลุ่มความรุนแรงใด)</span>
     </div>
 
     <!-- ============ CONFIRMED STATE PREVIEW ============ -->
@@ -681,19 +731,19 @@
           <div class="field-value">Palliative Care</div>
         </div>
         <div class="field">
-          <label>กลุ่มผู้ป่วย / ประเภทผู้ป่วย</label>
-          <div class="field-value">ผู้ป่วยมะเร็งตับระยะสุดท้าย (End-stage, receiving comfort care)</div>
+          <label>การจำแนกกลุ่มความรุนแรง</label>
+          <div class="field-value">กลุ่ม 4 — Palliative Care</div>
         </div>
         <div class="field full">
           <label>ปัญหาหลัก</label>
-          <div class="field-value multiline">ผู้ป่วยหญิงอายุ 68 ปี วินิจฉัยมะเร็งตับระยะที่ 4 มีอาการปวดท้องบริเวณชายโครงขวาระดับ 6-7/10 ควบคุมด้วยยาแก้ปวดกลุ่มโอปิออยด์ที่ได้รับจากโรงพยาบาลไม่เพียงพอ ร่วมกับเบื่ออาหารและน้ำหนักลดลงประมาณ 3 กก. ใน 1 เดือนที่ผ่านมา ญาติผู้ดูแลหลัก (บุตรสาว) แสดงความเครียดและความกังวลสูงเกี่ยวกับการดูแลผู้ป่วยที่บ้าน</div>
+          <div class="field-value multiline">ผู้ป่วยหญิงอายุ 79 ปี วินิจฉัย Cholangiocarcinoma (มะเร็งท่อน้ำดี) ระยะสุดท้าย มีอาการปวดท้องบริเวณชายโครงขวาระดับ 6-7/10 ควบคุมด้วยยาแก้ปวดกลุ่มโอปิออยด์ที่ได้รับจากโรงพยาบาลไม่เพียงพอ ร่วมกับเบื่ออาหารและน้ำหนักลดลงประมาณ 3 กก. ใน 1 เดือนที่ผ่านมา ญาติผู้ดูแลหลัก (บุตรสาว) แสดงความเครียดและความกังวลสูงเกี่ยวกับการดูแลผู้ป่วยที่บ้าน</div>
         </div>
         <div class="field full">
-          <label>ความจำเป็นในการติดตาม</label>
+          <label>การวางแผนทางการพยาบาล</label>
           <div class="field-value multiline">ต้องติดตามการควบคุมอาการปวดและการปรับขนาดยาอย่างใกล้ชิด ประเมินความพร้อมของญาติในการดูแลผู้ป่วยที่บ้าน ให้คำแนะนำการดูแลแบบประคับประคอง และเฝ้าระวังภาวะแทรกซ้อนที่อาจนำไปสู่การกลับเข้ารักษาซ้ำ</div>
         </div>
         <div class="field full">
-          <label>สัญญาณความเสี่ยง</label>
+          <label>ประเด็นที่ต้องติดตาม</label>
           <div class="field-value">
             <ul>
               <li>ปวดควบคุมไม่ได้</li>
@@ -711,7 +761,11 @@
         </div>
       </div>
 
-      <a class="next-step-link" href="followup-guide.html">ดูตัวอย่างขั้นตอนถัดไป: คู่มือก่อนเยี่ยม &rarr;</a>
+      <div class="btn-row" style="margin-top:var(--space-2);">
+        <a class="btn btn-secondary" href="care-plan-print.html">&#128424; พิมพ์รายงานสรุปแผนการดูแล</a>
+      </div>
+
+      <a class="next-step-link" href="followup-record.html">ดูตัวอย่างขั้นตอนถัดไป: บันทึกผลติดตาม &rarr;</a>
     </div>
 
   </main>
@@ -752,7 +806,7 @@
     pps: '60'
   };
   var draftB = {
-    mainProblem: "ผู้ป่วยหญิงอายุ 68 ปี ระยะท้ายของโรคมะเร็งตับ อาการปวดยังควบคุมไม่ดีแม้ปรับยาโอปิออยด์ครั้งล่าสุด มีอาการเหนื่อยง่ายและนอนมากขึ้นในช่วง 3-4 วัน ผู้ดูแลหลักคือบุตรสาวซึ่งต้องแบ่งเวลาทำงานประจำ ยังไม่มั่นใจในการดูแลผู้ป่วยที่บ้านช่วงกลางคืน",
+    mainProblem: "ผู้ป่วยหญิงอายุ 79 ปี ระยะท้ายของ Cholangiocarcinoma (มะเร็งท่อน้ำดี) อาการปวดยังควบคุมไม่ดีแม้ปรับยาโอปิออยด์ครั้งล่าสุด มีอาการเหนื่อยง่ายและนอนมากขึ้นในช่วง 3-4 วัน ผู้ดูแลหลักคือบุตรสาวซึ่งต้องแบ่งเวลาทำงานประจำ ยังไม่มั่นใจในการดูแลผู้ป่วยที่บ้านช่วงกลางคืน",
     followUpNeed: "ควรเยี่ยมประเมินอาการปวดและระดับการรู้ตัวอย่างใกล้ชิด ให้คำแนะนำการดูแลแบบประคับประคองแก่ผู้ดูแล และประสานทีมสหวิชาชีพหากอาการทรุดลงเร็วกว่าที่ประเมินไว้",
     riskSignals: "ปวดควบคุมไม่ได้\nญาติเครียดสูง\nระดับการรู้ตัวลดลง\nผู้ดูแลไม่พร้อมดูแลช่วงกลางคืน",
     pps: '50'

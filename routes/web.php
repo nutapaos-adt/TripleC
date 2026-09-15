@@ -32,10 +32,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/referrals/{referral}/care-plan', [ReferralController::class, 'confirmCarePlan'])
         ->name('referrals.care-plan.confirm');
 
-    Route::get('/follow-up-plans/{plan}/guide', [FollowUpController::class, 'guide'])
-        ->name('follow-up-plans.guide');
-    Route::post('/follow-up-plans/{plan}/guide', [FollowUpController::class, 'generateGuide'])
-        ->name('follow-up-plans.guide.generate');
     Route::get('/follow-up-plans/{plan}/record', [FollowUpController::class, 'createRecord'])
         ->name('follow-up-plans.record.create');
     Route::post('/follow-up-plans/{plan}/record', [FollowUpController::class, 'storeRecord'])

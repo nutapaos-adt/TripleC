@@ -6,14 +6,14 @@
 <title>ประเภทเคส — Chira Continuity Care</title>
 <style>
   :root{
-    --color-primary-900:#212B1C;
-    --color-primary-800:#2C3A22;
-    --color-primary-700:#3C4D2A;
-    --color-primary-600:#4C5F35;
-    --color-primary-500:#62784A;
-    --color-primary-300:#AAB994;
-    --color-primary-100:#E9EDDF;
-    --color-primary-50:#F5F6EF;
+    --color-primary-900:#16232C;
+    --color-primary-800:#1E3644;
+    --color-primary-700:#2C5166;
+    --color-primary-600:#3D6B84;
+    --color-primary-500:#5586A0;
+    --color-primary-300:#A8C4D2;
+    --color-primary-100:#E1EBEF;
+    --color-primary-50:#F4F8FA;
 
     --color-neutral-900:#22201A;
     --color-neutral-700:#4A4739;
@@ -68,11 +68,11 @@
   .brand{display:flex;align-items:center;gap:var(--space-3);padding:0 var(--space-3) var(--space-6);}
   .brand-mark{
     width:36px;height:36px;border-radius:50%;flex-shrink:0;
-    background:conic-gradient(from -40deg,#3E7CA6 0deg 110deg,#62784A 110deg 240deg,#C9932E 240deg 360deg);
+    background:conic-gradient(from -40deg,#3E7CA6 0deg 110deg,#5586A0 110deg 240deg,#C9932E 240deg 360deg);
     box-shadow:0 0 0 3px rgba(245,246,239,0.15);
   }
   .brand-text{display:flex;flex-direction:column;}
-  .brand-text strong{font-size:14px;font-weight:700;color:#F5F6EF;letter-spacing:.02em;}
+  .brand-text strong{font-size:14px;font-weight:700;color:#F4F8FA;letter-spacing:.02em;}
   .brand-text span{font-size:11.5px;color:rgba(236,233,221,.65);}
 
   nav.nav{display:flex;flex-direction:column;gap:2px;flex:1;}
@@ -90,17 +90,17 @@
     border-left:3px solid transparent;
   }
   .nav-link .ico{width:18px;text-align:center;flex-shrink:0;}
-  .nav-link:hover{background:rgba(255,255,255,.08);color:#F5F6EF;}
+  .nav-link:hover{background:rgba(255,255,255,.08);color:#F4F8FA;}
   .nav-link.active{
     background:rgba(60,77,42,0.35);
-    color:#F5F6EF;font-weight:700;
+    color:#F4F8FA;font-weight:700;
     border-left:3px solid var(--color-primary-300);
   }
   .nav-link:focus-visible{outline:2px solid var(--color-primary-300);outline-offset:2px;}
   .nav-sub{display:flex;flex-direction:column;gap:2px;margin-left:var(--space-3);padding-left:var(--space-2);border-left:1px solid rgba(236,233,221,.15);}
 
   .sidebar-foot{padding:var(--space-3) var(--space-3) 0;border-top:1px solid rgba(236,233,221,.15);margin-top:var(--space-4);padding-top:var(--space-4);}
-  .sidebar-foot .who{font-size:12.5px;color:#F5F6EF;font-weight:600;}
+  .sidebar-foot .who{font-size:12.5px;color:#F4F8FA;font-weight:600;}
   .sidebar-foot .role{font-size:11.5px;color:rgba(236,233,221,.6);}
 
   /* Main */
@@ -212,6 +212,7 @@
     <nav class="nav">
       <a class="nav-link" href="dashboard.html"><span class="ico">&#9634;</span>แดชบอร์ด</a>
       <a class="nav-link" href="referrals-list.html"><span class="ico">&#9776;</span>รายการเคส</a>
+      <a class="nav-link" href="monthly-visit-report.html"><span class="ico">&#128202;</span>สรุปรายงานประจำเดือน</a>
       <div class="nav-section-label">จัดการระบบ</div>
       <div class="nav-sub">
         <a class="nav-link active" href="admin-case-types-list.html"><span class="ico">&#9873;</span>ประเภทเคส</a>
@@ -244,6 +245,27 @@
         <a class="btn btn-primary" href="admin-case-type-form.html">+ เพิ่มประเภทเคส</a>
       </div>
 
+      <div style="display:flex;gap:12px;align-items:flex-start;background:var(--color-warning-tint);color:var(--color-neutral-900);border-radius:12px;padding:16px 20px;margin-bottom:20px;font-size:13.5px;line-height:22px;">
+        <span style="flex-shrink:0;">&#8505;&#65039;</span>
+        <div>
+          <strong>จำนวนครั้งที่เยี่ยมจริง พิจารณาร่วมกับ "การจำแนกกลุ่มความรุนแรง" ของผู้ป่วยด้วย</strong> — ตารางด้านล่างเป็นกฎตาม<u>ประเภทเคส</u>เท่านั้น ระบบจะใช้ลำดับความสำคัญนี้ตอนคำนวณจริง:
+          <ol style="margin:8px 0 0;padding-left:20px;">
+            <li>ประเภท <strong>Palliative Care</strong> → กำหนดรอบเยี่ยมตามระดับ PPS Score (ไม่ใช้กฎกลุ่มความรุนแรง)</li>
+            <li>ประเภท <strong>หลังคลอด</strong> → เยี่ยม 3 ครั้งตามตารางด้านล่าง (ไม่ใช้กฎกลุ่มความรุนแรง)</li>
+            <li>นอกเหนือจาก 2 ข้อบน หากผู้ป่วยอยู่ใน <strong>กลุ่ม 3 — บ้านสีแดง</strong> (ช่วยเหลือตนเองไม่ได้เลย) → เยี่ยมเดือนละ 1 ครั้งต่อเนื่อง โดยไม่คำนึงถึงประเภทเคส</li>
+            <li>ประเภทเคสและกลุ่มอื่นๆ นอกเหนือจากข้างต้น → เยี่ยม 1 ครั้ง</li>
+          </ol>
+          <div style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--color-neutral-300);">
+            <strong>กำหนดวันเยี่ยมครั้งแรก พิจารณาจากการจำแนกกลุ่มความรุนแรง</strong> (คนละมิติกับจำนวนครั้งด้านบน — ใช้กำหนด "ภายในกี่วัน" ต้องเยี่ยมครั้งแรก):
+            <ul style="margin:8px 0 0;padding-left:20px;">
+              <li><strong>กลุ่ม 1 — บ้านสีเขียว</strong> → เยี่ยมครั้งแรกภายใน 30 วัน</li>
+              <li><strong>กลุ่ม 2 — บ้านสีเหลือง</strong> → เยี่ยมครั้งแรกภายใน 14 วัน</li>
+              <li><strong>กลุ่ม 3 — บ้านสีแดง</strong> → เยี่ยมครั้งแรกภายใน 5 วัน</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
       <div class="card">
         <table class="data">
           <thead>
@@ -258,6 +280,38 @@
           </thead>
           <tbody>
             <tr>
+              <td class="row-title">อายุรกรรม</td>
+              <td><code class="slug">med</code></td>
+              <td style="max-width:260px;white-space:normal;">ผู้ป่วยจากหอผู้ป่วย/OPD อายุรกรรมที่ต้องติดตามอาการทั่วไปหลังจำหน่าย</td>
+              <td><span class="chip chip-success"><span class="chip-dot"></span>เปิดใช้งาน</span></td>
+              <td>1 ครั้ง (กลุ่ม 3 บ้านสีแดง: เดือนละ 1 ครั้งต่อเนื่อง)</td>
+              <td><a class="edit-link" href="admin-case-type-form.html">แก้ไข</a></td>
+            </tr>
+            <tr>
+              <td class="row-title">ศัลยกรรม</td>
+              <td><code class="slug">surg</code></td>
+              <td style="max-width:260px;white-space:normal;">ผู้ป่วยจากหอผู้ป่วย/OPD ศัลยกรรมที่ต้องติดตามแผล/ภาวะแทรกซ้อนหลังจำหน่าย</td>
+              <td><span class="chip chip-success"><span class="chip-dot"></span>เปิดใช้งาน</span></td>
+              <td>1 ครั้ง (กลุ่ม 3 บ้านสีแดง: เดือนละ 1 ครั้งต่อเนื่อง)</td>
+              <td><a class="edit-link" href="admin-case-type-form.html">แก้ไข</a></td>
+            </tr>
+            <tr>
+              <td class="row-title">กระดูกและข้อ</td>
+              <td><code class="slug">ortho</code></td>
+              <td style="max-width:260px;white-space:normal;">ผู้ป่วยกระดูกและข้อที่ต้องติดตามการฟื้นตัว/กายภาพบำบัดที่บ้าน</td>
+              <td><span class="chip chip-success"><span class="chip-dot"></span>เปิดใช้งาน</span></td>
+              <td>1 ครั้ง (กลุ่ม 3 บ้านสีแดง: เดือนละ 1 ครั้งต่อเนื่อง)</td>
+              <td><a class="edit-link" href="admin-case-type-form.html">แก้ไข</a></td>
+            </tr>
+            <tr>
+              <td class="row-title">กุมารเวชกรรม</td>
+              <td><code class="slug">peds</code></td>
+              <td style="max-width:260px;white-space:normal;">ผู้ป่วยเด็กที่ต้องติดตามอาการหลังจำหน่ายจากหอผู้ป่วยกุมารเวชกรรม</td>
+              <td><span class="chip chip-success"><span class="chip-dot"></span>เปิดใช้งาน</span></td>
+              <td>1 ครั้ง (กลุ่ม 3 บ้านสีแดง: เดือนละ 1 ครั้งต่อเนื่อง)</td>
+              <td><a class="edit-link" href="admin-case-type-form.html">แก้ไข</a></td>
+            </tr>
+            <tr>
               <td class="row-title">Palliative Care</td>
               <td><code class="slug">palliative-care</code></td>
               <td style="max-width:260px;white-space:normal;">ผู้ป่วยระยะท้ายที่ต้องการดูแลแบบประคับประคองต่อเนื่องที่บ้าน</td>
@@ -270,7 +324,7 @@
               <td><code class="slug">postpartum</code></td>
               <td style="max-width:260px;white-space:normal;">มารดาและทารกหลังคลอดที่ต้องติดตามภาวะแทรกซ้อน</td>
               <td><span class="chip chip-success"><span class="chip-dot"></span>เปิดใช้งาน</span></td>
-              <td>ตายตัว: 4 ครั้ง ห่างกัน 7 วัน</td>
+              <td>ตายตัว: 3 ครั้ง ห่างกัน 7 วัน</td>
               <td><a class="edit-link" href="admin-case-type-form.html">แก้ไข</a></td>
             </tr>
             <tr>
@@ -278,7 +332,7 @@
               <td><code class="slug">post-surgery</code></td>
               <td style="max-width:260px;white-space:normal;">ผู้ป่วยหลังผ่าตัดที่จำหน่ายกลับบ้านและต้องติดตามแผล/ภาวะแทรกซ้อน</td>
               <td><span class="chip chip-success"><span class="chip-dot"></span>เปิดใช้งาน</span></td>
-              <td>ตายตัว: 3 ครั้ง ห่างกัน 5 วัน</td>
+              <td>1 ครั้ง (กลุ่ม 3 บ้านสีแดง: เดือนละ 1 ครั้งต่อเนื่อง)</td>
               <td><a class="edit-link" href="admin-case-type-form.html">แก้ไข</a></td>
             </tr>
             <tr>
@@ -286,7 +340,7 @@
               <td><code class="slug">other</code></td>
               <td style="max-width:260px;white-space:normal;">เคสที่ไม่เข้าเกณฑ์ประเภทข้างต้น กำหนดแผนติดตามเป็นรายกรณี</td>
               <td><span class="chip chip-neutral"><span class="chip-dot"></span>ปิดใช้งาน</span></td>
-              <td>ตายตัว: 2 ครั้ง ห่างกัน 14 วัน</td>
+              <td>1 ครั้ง (กลุ่ม 3 บ้านสีแดง: เดือนละ 1 ครั้งต่อเนื่อง)</td>
               <td><a class="edit-link" href="admin-case-type-form.html">แก้ไข</a></td>
             </tr>
           </tbody>

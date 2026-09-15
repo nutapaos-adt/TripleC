@@ -6,9 +6,9 @@
 <title>ใบส่งต่อ — นางสมหญิง ใจดี — Chira Continuity Care</title>
 <style>
 :root{
-  --color-primary-900:#212B1C; --color-primary-800:#2C3A22; --color-primary-700:#3C4D2A;
-  --color-primary-600:#4C5F35; --color-primary-500:#62784A; --color-primary-300:#AAB994;
-  --color-primary-100:#E9EDDF; --color-primary-50:#F5F6EF;
+  --color-primary-900:#16232C; --color-primary-800:#1E3644; --color-primary-700:#2C5166;
+  --color-primary-600:#3D6B84; --color-primary-500:#5586A0; --color-primary-300:#A8C4D2;
+  --color-primary-100:#E1EBEF; --color-primary-50:#F4F8FA;
   --color-neutral-900:#22201A; --color-neutral-700:#4A4739; --color-neutral-500:#7C7863;
   --color-neutral-300:#C9C4AD; --color-neutral-200:#DEDAC6; --color-neutral-100:#F1EEE0; --color-surface:#FFFFFF;
   --color-accent-blue:#3E7CA6; --color-accent-gold:#C9932E;
@@ -33,7 +33,7 @@ a:hover{text-decoration:underline;}
 .app-shell{display:flex;min-height:100vh;}
 
 /* Sidebar */
-.sidebar{width:248px;flex-shrink:0;background:linear-gradient(180deg,var(--color-primary-900),var(--color-primary-800));color:#F5F6EF;display:flex;flex-direction:column;padding:var(--space-5) 0;}
+.sidebar{width:248px;flex-shrink:0;background:linear-gradient(180deg,var(--color-primary-900),var(--color-primary-800));color:#F4F8FA;display:flex;flex-direction:column;padding:var(--space-5) 0;}
 .sidebar-brand{display:flex;align-items:center;gap:var(--space-3);padding:0 var(--space-5) var(--space-5);border-bottom:1px solid rgba(255,255,255,0.14);margin-bottom:var(--space-4);}
 .brand-mark{position:relative;width:30px;height:26px;flex-shrink:0;}
 .brand-mark span{position:absolute;top:0;width:16px;height:16px;border-radius:50%;border:2.5px solid;background:transparent;}
@@ -41,7 +41,7 @@ a:hover{text-decoration:underline;}
 .brand-mark span.b2{left:7px;border-color:var(--color-primary-500);}
 .brand-mark span.b3{left:14px;border-color:var(--color-accent-gold);}
 .brand-text{display:flex;flex-direction:column;line-height:1.2;}
-.brand-name{font-weight:800;font-size:15px;letter-spacing:0.02em;color:#F5F6EF;}
+.brand-name{font-weight:800;font-size:15px;letter-spacing:0.02em;color:#F4F8FA;}
 .brand-sub{font-size:10.5px;color:var(--color-primary-300);}
 
 .sidebar-nav{display:flex;flex-direction:column;gap:2px;padding:0 var(--space-3);flex:1;}
@@ -72,11 +72,27 @@ a:hover{text-decoration:underline;}
 .chip-out-area{background:var(--color-neutral-100);color:var(--color-neutral-700);}
 .chip-warning{background:var(--color-warning-tint);color:var(--color-warning);}
 .chip-primary{background:var(--color-primary-100);color:var(--color-primary-700);}
+.chip-severity-green{background:var(--color-success-tint);color:var(--color-success);}
+.chip-severity-yellow{background:var(--color-warning-tint);color:var(--color-warning);}
+.chip-severity-red{background:var(--color-risk-tint);color:var(--color-risk);}
+.chip-severity-palliative{background:var(--color-primary-100);color:var(--color-primary-700);}
 
-.dl-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4) var(--space-6);}
-.dl-item dt{font-size:11.5px;color:var(--color-neutral-500);font-weight:600;margin-bottom:2px;}
-.dl-item dd{margin:0;font-size:14px;color:var(--color-neutral-900);font-weight:500;}
-dl{margin:0;}
+/* Info rows — เต็มบรรทัด แทน 2-column grid เดิม */
+.info-list{display:flex;flex-direction:column;}
+.info-row{display:flex;align-items:baseline;gap:var(--space-5);padding:var(--space-3) 0;border-bottom:1px solid var(--color-neutral-100);}
+.info-row:last-child{border-bottom:none;}
+.info-row dt{flex:0 0 220px;font-size:12.5px;color:var(--color-neutral-500);font-weight:600;}
+.info-row dd{flex:1;margin:0;font-size:14px;color:var(--color-neutral-900);font-weight:500;}
+.info-row dd .chip{margin-left:var(--space-2);vertical-align:middle;}
+.info-subgroup{margin:var(--space-5) 0 var(--space-2);font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--color-neutral-500);font-weight:700;}
+.info-subgroup:first-child{margin-top:0;}
+.tag-list{display:flex;flex-wrap:wrap;gap:var(--space-2);}
+.tag{display:inline-flex;align-items:center;background:var(--color-neutral-100);color:var(--color-neutral-700);font-size:12.5px;font-weight:600;padding:3px 10px;border-radius:var(--radius-pill);}
+
+@media (max-width:640px){
+  .info-row{flex-direction:column;gap:var(--space-1);}
+  .info-row dt{flex:none;}
+}
 
 .notes-box{background:var(--color-neutral-100);border-radius:var(--radius-md);padding:var(--space-4);font-size:14px;line-height:26px;color:var(--color-neutral-900);white-space:pre-line;}
 
@@ -126,7 +142,6 @@ dl{margin:0;}
   .nav-sub{padding-left:var(--space-3);}
   .sidebar-footer{display:none;}
   .main-content{padding:var(--space-5);}
-  .dl-grid{grid-template-columns:1fr;}
   .ai-draft-body{flex-direction:column;align-items:stretch;}
   .ai-draft-body .btn{width:100%;justify-content:center;}
 }
@@ -145,6 +160,7 @@ dl{margin:0;}
     <nav class="sidebar-nav">
       <a class="nav-item" href="dashboard.html"><span class="nav-icon">&#9635;</span> Dashboard</a>
       <a class="nav-item active" href="referrals-list.html"><span class="nav-icon">&#128203;</span> รายการเคส</a>
+      <a class="nav-item" href="monthly-visit-report.html"><span class="nav-icon">&#128202;</span> สรุปรายงานประจำเดือน</a>
       <div class="nav-group-label">จัดการระบบ</div>
       <a class="nav-item nav-sub" href="admin-case-types-list.html">ประเภทเคส</a>
       <a class="nav-item nav-sub" href="admin-users-list.html">ผู้ใช้งาน</a>
@@ -167,44 +183,121 @@ dl{margin:0;}
           <span class="chip chip-warning">รอตรวจสอบ</span>
         </div>
       </div>
+      <!-- แสดงเฉพาะกรณีทีมเยี่ยมบ้านยังไม่รับเคส (สถานะ "รอตรวจสอบ" — ยังไม่ยืนยันแผนดูแล) -->
+      <a class="btn btn-secondary" href="referral-create.html">แก้ไขข้อมูล</a>
     </div>
 
     <div class="card">
       <div class="section-title">ข้อมูลผู้ป่วย</div>
-      <dl class="dl-grid">
-        <div class="dl-item">
-          <dt>วันเกิด / อายุ</dt>
-          <dd>12/03/2490 (79 ปี)</dd>
+      <dl class="info-list">
+        <div class="info-row">
+          <dt>HN</dt>
+          <dd>660231</dd>
         </div>
-        <div class="dl-item">
+        <div class="info-row">
           <dt>เลขบัตรประชาชน</dt>
           <dd>1-5099-00123-45-6</dd>
         </div>
-        <div class="dl-item">
-          <dt>เบอร์โทร</dt>
-          <dd>089-215-6304 (บุตรสาว)</dd>
+        <div class="info-row">
+          <dt>วันเดือนปีเกิด / อายุ</dt>
+          <dd>12/03/2490 (79 ปี)</dd>
         </div>
-        <div class="dl-item">
-          <dt>แหล่งที่มา</dt>
-          <dd>หอผู้ป่วยอายุรกรรมหญิง (ward)</dd>
+        <div class="info-row">
+          <dt>สิทธิการรักษา</dt>
+          <dd>ข้าราชการ/รัฐวิสาหกิจ</dd>
         </div>
-        <div class="dl-item" style="grid-column:1 / -1;">
+        <div class="info-row">
+          <dt>สถานะผู้ป่วย</dt>
+          <dd>ครอบครัวกำลังพล <span style="color:var(--color-neutral-500);font-weight:400;">— หน่วยต้นสังกัด: กองพันทหารราบที่ 7</span></dd>
+        </div>
+        <div class="info-row">
+          <dt>การจำแนกตามระดับความรุนแรง</dt>
+          <dd><span class="chip chip-severity-palliative">กลุ่ม 4 — Palliative Care</span></dd>
+        </div>
+        <div class="info-row">
+          <dt>เบอร์โทรผู้ป่วย</dt>
+          <dd>ไม่มี (สื่อสารผ่านผู้ดูแลหลัก)</dd>
+        </div>
+        <div class="info-row">
           <dt>ที่อยู่</dt>
           <dd>45/2 หมู่ 3 ต.บ้านดู่ อ.เมืองเชียงราย จ.เชียงราย</dd>
         </div>
-        <div class="dl-item">
-          <dt>รับเคสโดย</dt>
-          <dd>กัลยา เจ้าหน้าที่ธุรการ</dd>
+
+        <div class="info-subgroup">ผู้ดูแลหลัก (กรณีผู้ป่วยสื่อสารเองไม่ได้)</div>
+        <div class="info-row">
+          <dt>ชื่อผู้ดูแลหลัก</dt>
+          <dd>นางสาวสมใจ ใจดี</dd>
         </div>
-        <div class="dl-item">
-          <dt>วันที่รับเคส</dt>
-          <dd style="font-variant-numeric:tabular-nums;">20/08/2569</dd>
+        <div class="info-row">
+          <dt>ความสัมพันธ์กับผู้ป่วย</dt>
+          <dd>บุตร/ธิดา</dd>
+        </div>
+        <div class="info-row">
+          <dt>เบอร์โทรผู้ดูแลหลัก</dt>
+          <dd>089-215-6304</dd>
         </div>
       </dl>
     </div>
 
     <div class="card">
-      <div class="section-title">ปัญหา/อาการปัจจุบัน (บันทึกดิบจากผู้ส่งต่อ)</div>
+      <div class="section-title">แหล่งที่มาและการส่งต่อ</div>
+      <dl class="info-list">
+        <div class="info-row">
+          <dt>แหล่งที่มา</dt>
+          <dd>หอผู้ป่วยอายุรกรรมหญิง (ward)</dd>
+        </div>
+        <div class="info-row">
+          <dt>ประเภทผู้ป่วย</dt>
+          <dd>Palliative Care</dd>
+        </div>
+        <div class="info-row">
+          <dt>วันที่ Admit</dt>
+          <dd style="font-variant-numeric:tabular-nums;">15/08/2569</dd>
+        </div>
+        <div class="info-row">
+          <dt>วันที่จำหน่าย</dt>
+          <dd style="font-variant-numeric:tabular-nums;">20/08/2569</dd>
+        </div>
+        <div class="info-row">
+          <dt>วันที่นัดติดตามอาการ</dt>
+          <dd style="font-variant-numeric:tabular-nums;">05/09/2569 (OPD อายุรกรรม)</dd>
+        </div>
+        <div class="info-row">
+          <dt>ชื่อแพทย์เจ้าของไข้</dt>
+          <dd>นพ.สมชาย ตั้งใจ</dd>
+        </div>
+        <div class="info-row">
+          <dt>ส่งข้อมูลโดย</dt>
+          <dd>กัลยา เจ้าหน้าที่ธุรการ</dd>
+        </div>
+        <div class="info-row">
+          <dt>วันที่ส่งต่อข้อมูล</dt>
+          <dd style="font-variant-numeric:tabular-nums;">20/08/2569 · 09:15 น.</dd>
+        </div>
+      </dl>
+    </div>
+
+    <div class="card">
+      <div class="section-title">ปัญหา/อาการปัจจุบัน</div>
+      <dl class="info-list" style="margin-bottom:var(--space-4);">
+        <div class="info-row">
+          <dt>การวินิจฉัยโรค</dt>
+          <dd>Cholangiocarcinoma (มะเร็งท่อน้ำดี) ระยะสุดท้าย</dd>
+        </div>
+        <div class="info-row">
+          <dt>โรคประจำตัว</dt>
+          <dd>เบาหวาน, ความดันโลหิตสูง</dd>
+        </div>
+        <div class="info-row">
+          <dt>ประวัติการผ่าตัด</dt>
+          <dd>ผ่าตัดถุงน้ำดีทางกล้อง (Lap Cholecystectomy) มิ.ย. 2560</dd>
+        </div>
+        <div class="info-row">
+          <dt>อุปกรณ์ของผู้ป่วย</dt>
+          <dd><div class="tag-list"><span class="tag">Foley cath</span></div></dd>
+        </div>
+      </dl>
+      <div class="section-title" style="margin-top:var(--space-5);">บันทึกดิบจากผู้ส่งต่อ</div>
       <div class="notes-box">ผู้ป่วยมะเร็งตับระยะสุดท้าย (Cholangiocarcinoma, Stage IV) แพทย์แจ้งญาติเรื่องการดูแลแบบ Palliative Care ที่บ้าน ผู้ป่วยมีอาการปวดท้องเป็นระยะ รับประทานอาหารได้น้อย น้ำหนักลดลงต่อเนื่อง ญาติผู้ดูแลหลักคือบุตรสาว (นางสาวสมใจ ใจดี) ต้องการคำแนะนำการจัดการความปวดที่บ้านและการดูแลด้านจิตใจของผู้ป่วยและครอบครัว ปัจจุบันใช้มอร์ฟีนชนิดรับประทานตามแผนการรักษาของแพทย์</div>
     </div>
 
@@ -244,7 +337,7 @@ dl{margin:0;}
         <div class="timeline-item">
           <div class="timeline-dot"></div>
           <div class="timeline-date">20/08/2569 · 09:15 น.</div>
-          <div class="timeline-title">รับเคสจากหอผู้ป่วยอายุรกรรมหญิง</div>
+          <div class="timeline-title">ส่งข้อมูลเยี่ยมบ้านจากหอผู้ป่วยอายุรกรรมหญิง</div>
           <div class="timeline-desc">สร้างใบส่งต่อโดยกัลยา เจ้าหน้าที่ธุรการ พร้อมเอกสารแนบ 3 รายการ</div>
         </div>
         <div class="timeline-item">
@@ -257,7 +350,7 @@ dl{margin:0;}
           <div class="timeline-dot future"></div>
           <div class="timeline-date">ยังไม่เกิดขึ้น</div>
           <div class="timeline-title future">ยืนยันแผนดูแล <span class="timeline-tag-future">รอดำเนินการ</span></div>
-          <div class="timeline-desc">จะบันทึกเมื่อพยาบาลตรวจสอบและยืนยันแผนดูแลจากร่าง AI ด้านล่าง</div>
+          <div class="timeline-desc">จะบันทึกเมื่อพยาบาลวิเคราะห์แผนการพยาบาลจากร่าง AI ด้านล่าง</div>
         </div>
         <div class="timeline-item">
           <div class="timeline-dot future"></div>
@@ -277,7 +370,7 @@ dl{margin:0;}
             <strong>สรุปโดย AI:</strong> ผู้ป่วยมะเร็งตับระยะสุดท้าย เสี่ยงสูงด้านความปวดและภาวะทางจิตใจ แนะนำ Palliative Care แผนเยี่ยมบ้าน 2 สัปดาห์/ครั้ง เริ่มครั้งแรกภายใน 7 วัน — ทุกช่องสามารถแก้ไขได้ในหน้ายืนยันแผน
           </div>
         </div>
-        <a class="btn btn-primary" href="care-plan-confirm.html">ตรวจสอบและยืนยันแผน</a>
+        <a class="btn btn-primary" href="care-plan-confirm.html">วิเคราะห์แผนการพยาบาล</a>
       </div>
     </div>
 

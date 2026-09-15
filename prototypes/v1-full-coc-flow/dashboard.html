@@ -6,15 +6,15 @@
 <title>แดชบอร์ด — Chira Continuity Care (Triple C)</title>
 <style>
   :root{
-    /* Primary - Olive / Military Green */
-    --color-primary-900:#212B1C;
-    --color-primary-800:#2C3A22;
-    --color-primary-700:#3C4D2A;
-    --color-primary-600:#4C5F35;
-    --color-primary-500:#62784A;
-    --color-primary-300:#AAB994;
-    --color-primary-100:#E9EDDF;
-    --color-primary-50:#F5F6EF;
+    /* Primary - Slate / Steel Blue */
+    --color-primary-900:#16232C;
+    --color-primary-800:#1E3644;
+    --color-primary-700:#2C5166;
+    --color-primary-600:#3D6B84;
+    --color-primary-500:#5586A0;
+    --color-primary-300:#A8C4D2;
+    --color-primary-100:#E1EBEF;
+    --color-primary-50:#F4F8FA;
 
     /* Neutral - Warm Khaki */
     --color-neutral-900:#22201A;
@@ -98,12 +98,12 @@
   }
   .brand-mark{
     width:34px;height:34px;flex-shrink:0;border-radius:var(--radius-sm);
-    background:#F5F6EF;
+    background:#F4F8FA;
     display:flex;align-items:center;justify-content:center;
   }
   .brand-mark svg{width:24px;height:24px;}
   .brand-text{display:flex;flex-direction:column;line-height:1.15;}
-  .brand-text .full{font-weight:700;font-size:14px;color:#F5F6EF;}
+  .brand-text .full{font-weight:700;font-size:14px;color:#F4F8FA;}
   .brand-text .sub{font-size:11px;color:var(--color-primary-300);}
 
   .nav-section{display:flex;flex-direction:column;gap:2px;}
@@ -400,7 +400,7 @@
   <aside class="sidebar" aria-label="เมนูหลัก">
     <div class="brand">
       <div class="brand-mark">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#3C4D2A" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="#2C5166" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
       </div>
       <div class="brand-text">
         <span class="full">Chira Continuity Care</span>
@@ -416,6 +416,10 @@
       <a class="nav-item" href="referrals-list.html">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 4h9a1 1 0 0 1 1 1v15l-4-3-4 3-4-3-4 3V8z"/><path d="M12 9h4M12 13h4"/></svg>
         <span>รายการเคส</span>
+      </a>
+      <a class="nav-item" href="monthly-visit-report.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg>
+        <span>สรุปรายงานประจำเดือน</span>
       </a>
     </nav>
 
@@ -519,7 +523,7 @@
               <td><span class="chip chip-method">เยี่ยมบ้าน</span></td>
               <td class="due-date">19/08/2569</td>
               <td><span class="chip chip-overdue">เกินกำหนด 2 วัน</span></td>
-              <td><a class="btn btn-primary btn-sm" href="followup-guide.html">เริ่มติดตาม</a></td>
+              <td><a class="btn btn-primary btn-sm" href="followup-record.html">เริ่มติดตาม</a></td>
             </tr>
             <tr class="row-overdue">
               <td>
@@ -529,7 +533,7 @@
               <td><span class="chip chip-method">โทรติดตาม</span></td>
               <td class="due-date">17/08/2569</td>
               <td><span class="chip chip-overdue">เกินกำหนด 4 วัน</span></td>
-              <td><a class="btn btn-primary btn-sm" href="followup-guide.html">เริ่มติดตาม</a></td>
+              <td><a class="btn btn-primary btn-sm" href="followup-record.html">เริ่มติดตาม</a></td>
             </tr>
             <tr>
               <td>
@@ -539,7 +543,7 @@
               <td><span class="chip chip-method">เยี่ยมบ้าน</span></td>
               <td class="due-date">21/08/2569</td>
               <td><span class="chip chip-today">วันนี้</span></td>
-              <td><a class="btn btn-primary btn-sm" href="followup-guide.html">เริ่มติดตาม</a></td>
+              <td><a class="btn btn-primary btn-sm" href="followup-record.html">เริ่มติดตาม</a></td>
             </tr>
             <tr>
               <td>
@@ -549,7 +553,7 @@
               <td><span class="chip chip-method">โทรติดตาม</span></td>
               <td class="due-date">21/08/2569</td>
               <td><span class="chip chip-today">วันนี้</span></td>
-              <td><a class="btn btn-primary btn-sm" href="followup-guide.html">เริ่มติดตาม</a></td>
+              <td><a class="btn btn-primary btn-sm" href="followup-record.html">เริ่มติดตาม</a></td>
             </tr>
             <tr>
               <td>
@@ -559,7 +563,7 @@
               <td><span class="chip chip-method">เยี่ยมบ้าน</span></td>
               <td class="due-date">21/08/2569</td>
               <td><span class="chip chip-today">วันนี้</span></td>
-              <td><a class="btn btn-primary btn-sm" href="followup-guide.html">เริ่มติดตาม</a></td>
+              <td><a class="btn btn-primary btn-sm" href="followup-record.html">เริ่มติดตาม</a></td>
             </tr>
             <tr>
               <td>
@@ -569,7 +573,7 @@
               <td><span class="chip chip-method">โทรติดตาม</span></td>
               <td class="due-date">21/08/2569</td>
               <td><span class="chip chip-today">วันนี้</span></td>
-              <td><a class="btn btn-primary btn-sm" href="followup-guide.html">เริ่มติดตาม</a></td>
+              <td><a class="btn btn-primary btn-sm" href="followup-record.html">เริ่มติดตาม</a></td>
             </tr>
           </tbody>
         </table>

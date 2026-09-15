@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\CaseType;
-use App\Models\FollowUpPlan;
 use App\Models\FollowUpRecord;
 use App\Models\Referral;
 use Illuminate\Support\Facades\Http;
@@ -35,21 +34,6 @@ class AiService
             'follow_up_need' => null,
             'risk_signals' => [],
             'suggested_case_type_slug' => null,
-        ]);
-    }
-
-    /**
-     * ให้ AI เตรียมหัวข้อ/คำถามที่ควรประเมินก่อนไปเยี่ยมบ้าน/โทรติดตามครั้งนี้
-     * (พยาบาล/เจ้าหน้าที่ดูเป็นแนวทางระหว่างเยี่ยม ไม่ใช่ข้อมูลที่บันทึกผูกกับผู้ป่วยโดยตรง)
-     *
-     * @return array{topics: array<int, array{title: string, note: ?string}>, parse_error: bool, raw_response?: string}
-     */
-    public function suggestFollowUpGuide(FollowUpPlan $plan): array
-    {
-        $prompt = $this->buildGuidePrompt($plan);
-
-        return $this->parseJsonResponse($this->callOllama($prompt), [
-            'topics' => [],
         ]);
     }
 
@@ -117,44 +101,6 @@ class AiService
 
             ตอบกลับเป็น JSON เท่านั้น ห้ามมีข้อความอื่นใดนอกเหนือจาก JSON ตามโครงสร้างนี้เป๊ะๆ:
             {"risk_detected": true/false, "risk_summary": "สรุปสัญญาณเสี่ยงที่พบ (null ถ้าไม่พบ)", "recommendation": "คำแนะนำเบื้องต้นว่าควรทำอย่างไรต่อ", "suggested_decision": "repeat หรือ refer หรือ close"}
-            PROMPT;
-    }
-
-    protected function buildGuidePrompt(FollowUpPlan $plan): string
-    {
-        $referral = $plan->referral;
-        $summary = $referral->confirmed_summary ?? $referral->ai_summary ?? [];
-        $methodText = $plan->method === FollowUpPlan::METHOD_HOME_VISIT ? 'เยี่ยมบ้าน' : 'โทรติดตามทางโทรศัพท์';
-
-        $previousRecords = $referral->followUpPlans()
-            ->with('record')
-            ->where('plan_number', '<', $plan->plan_number)
-            ->get()
-            ->pluck('record')
-            ->filter()
-            ->map(fn ($record) => "- ครั้งก่อน (PPS {$record->pps_score}): {$record->raw_notes}")
-            ->implode("\n");
-
-        $riskSignals = implode(', ', $summary['risk_signals'] ?? []);
-        $mainProblem = $summary['main_problem'] ?? '-';
-        $followUpNeed = $summary['follow_up_need'] ?? '-';
-        $caseTypeName = $referral->caseType?->name ?? '-';
-        $planNumber = $plan->plan_number;
-
-        return <<<PROMPT
-            คุณเป็นผู้ช่วยพยาบาลในหน่วยเยี่ยมบ้าน เตรียมหัวขัอ/คำถามที่ควรประเมินก่อนไป{$methodText}ครั้งนี้
-            (ครั้งที่ {$planNumber}) ให้เจ้าหน้าที่ใช้เป็นแนวทางระหว่างเยี่ยม/โทร
-
-            ประเภทเคส: {$caseTypeName}
-            ปัญหาสำคัญ: {$mainProblem}
-            ความต้องการติดตาม: {$followUpNeed}
-            สัญญาณเสี่ยงที่เคยพบ: {$riskSignals}
-
-            ประวัติการติดตามครั้งก่อนหน้า:
-            {$previousRecords}
-
-            ตอบกลับเป็น JSON เท่านั้น ห้ามมีข้อความอื่นใดนอกเหนือจาก JSON ตามโครงสร้างนี้เป๊ะๆ:
-            {"topics": [{"title": "หัวข้อที่ควรประเมิน", "note": "เหตุผลสั้นๆ ว่าทำไมควรถามข้อนี้"}]}
             PROMPT;
     }
 
