@@ -25,6 +25,8 @@ scope covering the entire continuity-of-care loop plus admin.
 | `admin-users-list.html` | Users list | Admin |
 | `admin-user-edit.html` | User role/department edit | Admin |
 | `monthly-visit-report.html` | Printable monthly home-visit performance report (KPI tiles, timeliness breakdown, satisfaction trend, photo gallery, case log) — no sidebar itself, standalone document like `care-plan-print.html`, but reachable via a "สรุปรายงานประจำเดือน" sidebar item from every other screen (added 2026-09-09) | Reporting |
+| `dashboard-ward.html` | Ward-staff dashboard: case-type breakdown, status funnel (submitted/pending-confirm/visited), and an editable pending-confirmation patient list, all scoped to this ward's referrals for the month (added 2026-09-15) | Dashboard |
+| `ward-visit-results.html` | Full, filterable list of every one of the ward's referred cases that has been visited/followed-up at least once — includes normal-outcome cases, not just risk-flagged ones (added 2026-09-15) | Dashboard |
 
 **Design decisions confirmed with user:**
 - Full 12-screen scope in one pass (not split into smaller batches).
@@ -373,6 +375,57 @@ scope covering the entire continuity-of-care loop plus admin.
   มีข้อมูลครบเหมือนเดิม หัวเอกสาร (h1) และหัวข้อ 3/6 ที่มีชื่อเดือนกำกับอยู่จะอัปเดตชื่อเดือนตามตัวเลือกที่
   เลือกด้วย (ผ่าน `<span id="titleMonth/sec3Month/sec6Month">`) ทดสอบสลับไปเดือนกันยายน 2569 แล้วเห็น empty
   state ถูกต้อง และสลับกลับสิงหาคม 2569 แล้วข้อมูลทั้งหมดกลับมาแสดงปกติ.
+- 2026-09-15 (รอบ 45): เพิ่มไฟล์ใหม่ `dashboard-ward.html` — แดชบอร์ดของหอผู้ป่วย (ward staff) แยกออกมาจาก
+  `dashboard.html` เดิม ตามที่ผู้ใช้ระบุสเปก 3 ส่วน:
+  1. สรุปเคสแยกตามประเภทที่ ward ส่งเยี่ยมในเดือนนั้นๆ — แสดงเป็น distribution bar list (ป้ายชื่อประเภท +
+     แถบสัดส่วน + จำนวน) แทน KPI tile แยกทีละประเภท เพราะมีหลายประเภทและเน้นดูสัดส่วนเทียบกันง่ายกว่า
+     (mock: อายุรกรรม 9, Palliative Care 5, อื่นๆ 4 — เลือกเฉพาะประเภทที่สมเหตุสมผลกับหอผู้ป่วยอายุรกรรม
+     ไม่ใส่ครบทั้ง 7 ประเภทเพราะบางประเภท เช่น หลังคลอด/กุมารเวชกรรม ไม่ใช่ของหอนี้)
+  2. สถานะ 3 ตัวเลข (KPI tile ตาม §3.5): "ส่งข้อมูลแล้ว" (รวมทั้งหมด 18), "รอยืนยัน" (4, มีลิงก์เลื่อนไปหา
+     รายชื่อในส่วนที่ 3), "ได้รับการเยี่ยมแล้ว" (11) — ไม่ใส่สี semantic (risk/warning) ให้ตัวเลขเหล่านี้ตาม
+     กฎ §3.5 ที่ระบุว่าใช้สีเฉพาะค่าที่ "ผิดปกติ" เท่านั้น ซึ่งจำนวนรอยืนยันปกติของเดือนไม่ถือว่าผิดปกติ
+     (ต่างจาก "เกินกำหนด" ใน `dashboard.html` ที่เป็นสัญญาณปัญหาจริง) เลข 18/4/11 ไม่ครบกัน (เหลือ 3) เพราะมี
+     สถานะกลาง "ยืนยันแผนแล้วแต่ยังไม่ได้เยี่ยม" ที่ผู้ใช้ไม่ได้ขอให้แสดงแยก จึงไม่ได้ใส่เป็น tile ที่ 4
+  3. ตารางรายชื่อผู้ป่วยสถานะ "รอตรวจสอบ" (4 ราย ตรงกับตัวเลข "รอยืนยัน" ข้อ 2) พร้อมปุ่ม "แก้ไขข้อมูล" ทุกแถว
+     (ลิงก์ไป `referral-create.html` ชั่วคราวเหมือน pattern เดิมที่ใช้ใน `referral-detail.html` เพราะยังไม่มี
+     หน้าแก้ไขแยก) และ "ดูรายละเอียด" (ลิงก์ `referral-detail.html`)
+  ใช้ sidebar/CSS token/persona เดียวกับ `referrals-list.html`/`referral-create.html`/`referral-detail.html`
+  ("กัลยา เจ้าหน้าที่ธุรการ · ward_staff · หอผู้ป่วยอายุรกรรม") เพราะทั้ง 3 ไฟล์นี้ใช้ persona เดียวกันอยู่แล้ว
+  จึงถือเป็นกลุ่มหน้าจอของ ward staff — แก้ลิงก์ "Dashboard" nav-item ใน 3 ไฟล์นี้ให้ชี้มาที่
+  `dashboard-ward.html` แทน `dashboard.html` (ซึ่งเนื้อหาจริงเป็นมุมมองงานประจำวันของทีมเยี่ยมบ้าน — นัดวันนี้/
+  เกินกำหนด/สัญญาณความเสี่ยง — ไม่ได้แก้ไฟล์ `dashboard.html` เอง คงไว้ให้ทีมเยี่ยมบ้านใช้ต่อเหมือนเดิม)
+  หมายเหตุที่พบระหว่างทำแต่ไม่ได้แก้ (นอกขอบเขตที่ขอ): `dashboard.html` เดิมมี user-chip ระบุผู้ใช้เป็น
+  "สมหญิง ใจดี / พยาบาลหอผู้ป่วย" ซึ่งดูเหมือนหยิบชื่อผู้ป่วยตัวอย่าง (ที่ใช้ซ้ำในหลายหน้าเป็น mock patient)
+  มาใส่ผิดเป็นชื่อผู้ใช้ที่ login แทน ทั้งที่เนื้อหาในหน้านั้นเป็นมุมมองทีมเยี่ยมบ้านจริงๆ — ถ้าต้องการแก้ไข
+  ให้ตรงกัน แจ้งได้.
+- 2026-09-15 (รอบ 46): ผู้ใช้ถามต่อจากรอบ 45 ว่า "เมื่อทีมเยี่ยมบ้านไปเยี่ยมแล้ว จะให้ ward เห็นข้อมูลนี้ตรงไหนดี"
+  — เสนอ 2 ทางเลือก (ก. ใส่ใน timeline ของ `referral-detail.html` ที่มี placeholder "เยี่ยมบ้านครั้งที่ 1
+  (รอดำเนินการ)" อยู่แล้ว ข. เพิ่ม list บนแดชบอร์ด) ผู้ใช้ตอบว่าอยากเห็น "ทุกเคสที่เยี่ยมแล้ว เพราะบางเคสอาจ
+  ไม่มีความเสี่ยงหรือความผิดปกติ" (ไม่ใช่แค่ list สัญญาณเสี่ยงแบบใน `dashboard.html` เดิมที่กรองเฉพาะเคสเสี่ยง)
+  แล้วเสนอเพิ่มว่าควรแยกเป็นเมนู sidebar ใหม่ต่างหาก (ตาม pattern เดียวกับที่ `followup-list.html` แยกออกจาก
+  `dashboard.html` ไปแล้ว) ผู้ใช้ยืนยันตกลง — เพิ่มไฟล์ใหม่ `ward-visit-results.html`:
+  - filter chip 4 ปุ่ม: ทั้งหมด(11)/พบความเสี่ยง(2)/ปกติ ไม่พบความเสี่ยง(5)/ปิดเคสแล้ว(4) + ตัวกรองปี/เดือน
+    ตามวันที่เยี่ยมล่าสุด (pattern เดียวกับ `followup-list.html` ทุกจุด รวม JS filter logic)
+  - ตาราง 11 แถว (ผู้ป่วย/ประเภทเคส/วันที่เยี่ยมล่าสุด/สถานะ-ผล/ดูรายละเอียด) เลขรวมตรงกับ Section 2 ของ
+    `dashboard-ward.html` ("ได้รับการเยี่ยมแล้ว" = 11) และ case type ที่ใช้ (อายุรกรรม 6 · Palliative 3 ·
+    อื่นๆ 2) รวมกับ 4 เคสที่ยัง "รอยืนยัน" ใน Section 3 (อายุรกรรม 2 · Palliative 1 · อื่นๆ 1) แล้วไม่เกิน
+    ยอดรวมแยกตามประเภทของ Section 1 (อายุรกรรม 9 · Palliative 5 · อื่นๆ 4) — เหลือ 3 เคส (อายุรกรรม 1 ·
+    Palliative 1 · อื่นๆ 1) เป็นสถานะกลาง "ยืนยันแผนแล้วแต่ยังไม่ได้เยี่ยม" ที่ไม่ได้แสดงเป็น list แยก
+    (ตัวเลขในทุกไฟล์ยังคงสอดคล้องกันเป็นชุดข้อมูลเดียวกัน)
+  - แถวที่ "พบความเสี่ยง" ลิงก์ไป `review-decide.html` (จุดที่พยาบาลตัดสินใจกรณีมีความเสี่ยง) ส่วนแถวอื่น
+    ลิงก์ไป `referral-detail.html` ตามปกติ
+  ใช้ sidebar variant ของ ward staff (เหมือน `referrals-list.html`/`dashboard-ward.html`) ไม่ใช่ของ
+  `followup-list.html` (นั่นเป็นของทีมเยี่ยมบ้านคนละ persona) — เพิ่มเมนู "ติดตามผลการเยี่ยม" (ไอคอน 👥) ใน
+  sidebar ของทั้ง 4 ไฟล์ที่ใช้ persona กัลยา เจ้าหน้าที่ธุรการ (`dashboard-ward.html`, `referrals-list.html`,
+  `referral-create.html`, `referral-detail.html`) วางไว้ระหว่าง "รายการเคส" กับ "สรุปรายงานประจำเดือน" และ
+  แก้ hint ของ KPI tile "ได้รับการเยี่ยมแล้ว" ใน `dashboard-ward.html` ให้เป็นลิงก์ "ดูผลการเยี่ยมทุกเคส →"
+  ไปหน้านี้แทนข้อความเฉยๆ (เดิม) — สรุปคือแดชบอร์ดยังคงโชว์แค่ตัวเลขสรุป (preview) ส่วนรายการเต็มพร้อม filter
+  แยกไปอยู่หน้าใหม่นี้ ตาม pattern เดียวกับคู่ `dashboard.html`/`followup-list.html` ของทีมเยี่ยมบ้านทุกประการ.
+- 2026-09-15 (รอบ 47): เพิ่มช่องค้นหา "ค้นหาชื่อผู้ป่วยหรือ HN..." ใน `ward-visit-results.html` ตามที่ผู้ใช้ขอ
+  วางไว้หน้าตัวกรองปี/เดือนเดิม ค้นหาแบบ real-time (พิมพ์แล้วกรองทันที ไม่ต้องกดปุ่ม) จับคู่เฉพาะข้อความใน
+  คอลัมน์ผู้ป่วย (ชื่อ+HN) เท่านั้น ไม่รวมคอลัมน์อื่น (ประเภทเคส/สถานะ) เพื่อไม่ให้ผลลัพธ์กว้างเกินคำขอ
+  ("ค้นหาจากชื่อหรือ HN") ทำงานร่วมกับ filter chip และตัวกรองปี/เดือนเดิมแบบ AND ทั้งหมด (ต้องผ่านทุกเงื่อนไข
+  พร้อมกันถึงจะแสดง) ทดสอบค้นหาด้วย HN ("660055") และชื่อ ("วิชัย") แล้วกรองเหลือแถวที่ตรงถูกต้องทั้งคู่.
 
 **Known prototype simplifications (not bugs):**
 - All referral rows in `referrals-list.html` link to the same `referral-detail.html` (one mock patient),
