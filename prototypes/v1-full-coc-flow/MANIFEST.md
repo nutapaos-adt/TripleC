@@ -29,6 +29,7 @@ scope covering the entire continuity-of-care loop plus admin.
 | `ward-visit-results.html` | Full, filterable list of every one of the ward's referred cases that has been visited/followed-up at least once — includes normal-outcome cases, not just risk-flagged ones (added 2026-09-15) | Dashboard |
 | `satisfaction-survey-list.html` | List of in-area, already-visited patients for the home-visit team to administer (or QR-hand-off) the community satisfaction survey — status per patient (evaluated/pending) (added 2026-09-15) | Satisfaction survey |
 | `satisfaction-survey-form.html` | The satisfaction survey itself (based on the hospital's real paper form), reached either staff-assisted from the list or via a patient-facing QR code; also renders a read-only "already evaluated" view (added 2026-09-15) | Satisfaction survey |
+| `visit-summary.html` | Key-metrics dashboard for home-visit work — KPI tiles, case-type/patient-status distribution bar charts, and a narrative-summary-as-tiles section, switchable by เดือน/ไตรมาส/ปี via a period-type toggle + matching dropdown; mock data exists for only one option per period type, others show an empty state (added 2026-09-16) | Reporting |
 
 **Design decisions confirmed with user:**
 - Full 12-screen scope in one pass (not split into smaller batches).
@@ -628,6 +629,28 @@ scope covering the entire continuity-of-care loop plus admin.
   `satisfaction-survey-list.html` ด้วย (วางไว้ก่อน "ติดตามการเยี่ยม" ที่มีอยู่แล้ว เพื่อให้ทั้ง 4 ไฟล์ในกลุ่ม
   ทีมเยี่ยมบ้านมีเมนูชุดเดียวกันครบเหมือนกันหมด) สรุปคือตอนนี้ทั้ง 4 หน้าของทีมเยี่ยมบ้านมีทางเข้า "วิเคราะห์
   แผนการพยาบาล" + "ติดตามการเยี่ยม" ตรงจาก sidebar โดยไม่ต้องอ้อมผ่านหน้าอื่นแล้ว.
+- 2026-09-16 (รอบ 63): ผู้ใช้ขอให้ `monthly-visit-report.html` ดูเป็นรายปี/รายไตรมาสได้ ไม่ใช่แค่รายเดือน —
+  แนะนำว่าควรแยกออกเป็นหน้าใหม่แทนที่จะฝังเป็น dropdown ช่วงเวลาที่สองในหน้ารายงานเดิม (เพราะ "แบบรายงานสรุป"
+  ต้องเป็นรายเดือนเสมอ เป็นเอกสารทางการที่ต้องเซ็นรับรอง ส่วน "สรุปข้อมูลสำคัญ" กำลังจะกลายเป็นแดชบอร์ดวิเคราะห์
+  ที่ต้องสลับเดือน/ไตรมาส/ปีได้ — ตัวเลือกช่วงเวลาของสองอย่างนี้ไม่เหมือนกันแล้ว) ผู้ใช้เห็นด้วยและตั้งชื่อหน้าใหม่ว่า
+  "สรุปข้อมูลสำคัญงานเยี่ยมบ้าน" — ก่อนหน้านี้ในรอบเดียวกัน (ยังไม่ได้บันทึกเป็นรอบแยก) เคยลองทำ "สรุปข้อมูลสำคัญ"
+  เป็นแท็บที่ 1 ของ `monthly-visit-report.html` มาก่อน (คู่กับแท็บ "แบบรายงานสรุป" เป็นแท็บที่ 2), เพิ่มกราฟแท่ง
+  แนวนอนสรุปตามประเภทผู้ป่วย (อายุรกรรม/ศัลยกรรม/Palliative Care/อื่นๆ) และตามสถานะ (กำลังพล/ครอบครัว/ประชาชน)
+  ในสไตล์เดียวกับ `dashboard-ward.html`, และแปลง narrative list "สรุปผลการเยี่ยมบ้านและรับส่งต่อ" เป็นกล่อง
+  KPI tile แทน bullet list — งานทั้งหมดนี้ถูกย้ายมาไว้ในหน้าใหม่แทน แล้วคืน `monthly-visit-report.html` กลับเป็น
+  หน้ารายงานฉบับเต็มหน้าเดียวไม่มีแท็บเหมือนเดิม (ตัด CSS/JS ของแท็บออกหมด, section 1/2 ของรายงานฉบับเต็มไม่ถูก
+  แตะต้องเลยตลอดทั้งรอบ). `visit-summary.html` ใหม่ใช้โครง sidebar/topbar เต็มแบบ `dashboard.html` (ต่างจาก
+  `monthly-visit-report.html` ที่เป็นเอกสารพิมพ์แบบ standalone ไม่มี sidebar) เพราะเป็นแดชบอร์ดที่ต้องเดินต่อไป
+  หน้าอื่นในแอปได้ ไม่ใช่ปลายทางที่ "ออกจาก" แอปไปพิมพ์แบบ `monthly-visit-report.html` — ตัวเลขต่อช่วงเวลาเป็น
+  mock data ที่ประดิษฐ์ขึ้นให้สัดส่วนสมเหตุสมผล (ผลรวมแต่ละหมวดตรงกับยอดรวม) ไม่ใช่ตัวเลขจริง มีข้อมูลจริงแค่
+  ตัวเลือกเดียวต่อช่วงเวลา 1 แบบ (เดือนสิงหาคม 2569 / ไตรมาส 4 ปีงบ 2569 / ปีงบ 2569) ตัวเลือกอื่นแสดง empty
+  state เหมือนที่ `monthly-visit-report.html` เคยทำไว้กับเดือนอื่นๆ ที่ไม่มีข้อมูล — เพิ่มเมนู sidebar
+  "สรุปข้อมูลสำคัญงานเยี่ยมบ้าน" (ไอคอน pie-chart ใหม่, วางไว้ก่อน "สรุปรายงานประจำเดือน") ในทุกไฟล์ที่มี sidebar
+  ทั้ง 16 ไฟล์ที่ลิงก์ไป `monthly-visit-report.html` อยู่แล้ว ตามรูปแบบมาร์กอัปเดิมของแต่ละไฟล์ (บางไฟล์ใช้ svg icon,
+  บางไฟล์ใช้ emoji `.nav-icon`/`.ico`/`.ic`) โดยไม่ได้พยายามรวม sidebar ให้เป็นโครงเดียวกันทั้งหมด (นอกขอบเขต
+  เหมือนที่บันทึกไว้ในรอบก่อนๆ) — ผู้ใช้แจ้งเพิ่มว่ากล่อง tracer ("Sepsis"/"Pneumonia") ในแท็บสรุป (ตอนนั้นยัง
+  เป็นแท็บอยู่) ไม่ควรมีชื่อผู้ป่วยกำกับ ตัดออกเหลือแค่ตัวเลข + "ราย" เหมือนกล่องอื่น (ชื่อผู้ป่วยยังอยู่ในตาราง
+  tracer ของ "แบบรายงานสรุป" ฉบับเต็มตามเดิม เผื่อใช้อ้างอิงในรายงานทางการ).
 
 **Known prototype simplifications (not bugs):**
 - All referral rows in `referrals-list.html` link to the same `referral-detail.html` (one mock patient),
@@ -636,3 +659,39 @@ scope covering the entire continuity-of-care loop plus admin.
 - Each screen batch was built by a separate agent; a link-consistency pass was done afterward to align
   sidebar nav filenames across all 12 files (a few agents initially invented slightly different filenames
   for sibling screens before the full set existed).
+- 2026-09-16 (รอบ 64): ผู้ใช้ขอให้ตรวจสอบ sidebar ทุกหน้าให้ตรงกัน — สำรวจแล้วพบว่า sidebar แตกเป็น 6 โครง
+  code ต่างกันใน 17 ไฟล์ (icon 5 แบบ: SVG stroke-width 2, SVG stroke-width 1.8 round, emoji `.nav-icon`,
+  emoji `.ico`, emoji `.ic`; class ราก 3 ชุด: `.nav-item`/`.nav-link`/bare `<a>`; footer 3 ชื่อ class:
+  `.sidebar-footer`/`.sidebar-foot`/`.user-box`) พร้อมบั๊กจริง 2 จุด (`referral-detail.html` ไม่มีเมนู active
+  เลย, `care-plan-confirm.html` active เมนูผิดหน้า) และหน้า admin 4 ไฟล์ขาดเมนูไป 4 รายการ — ผู้ใช้ยืนยันให้แก้
+  ทั้งโครง code และรายการเมนูให้ครบเป็นชุดเดียวกันต่อกลุ่มผู้ใช้ (ไม่ใช่แค่หน้าตา) โดยกลุ่มทีมเยี่ยมบ้านให้ครบ
+  9 รายการ, `satisfaction-survey-form.html` (ไม่มี sidebar อยู่แล้ว เหมือนเอกสารพิมพ์) ไม่ต้องเพิ่ม sidebar.
+  ยึด `dashboard.html`/`visit-summary.html` (SVG icon, `.nav-item`/`.brand`/`.sidebar-footer`, ไม่มี
+  linecap/linejoin) เป็นโครง canonical แล้วปรับทุกไฟล์ให้ตรงกันแบ่งเป็น 3 กลุ่มตามบทบาทผู้ใช้:
+  - **ทีมเยี่ยมบ้าน** (9 เมนู: แดชบอร์ด/รายการเคส/ประวัติผู้ป่วย/วิเคราะห์แผนการพยาบาล/บันทึกการเยี่ยมบ้าน/
+    ติดตามผลการเยี่ยม/สรุปข้อมูลสำคัญงานเยี่ยมบ้าน/สรุปรายงานประจำเดือน/ประเมินความพึงพอใจ + จัดการระบบ):
+    `dashboard.html`, `visit-summary.html`, `referral-detail.html`, `care-plan-pending-list.html`,
+    `care-plan-confirm.html`, `followup-list.html`, `followup-record.html`, `review-decide.html`,
+    `satisfaction-survey-list.html` — footer เป็น "พว.กัญญา รักษ์ผู้ป่วย · ทีมเยี่ยมบ้าน" ทุกไฟล์
+    (เดิมมี 3 ชื่อไม่ตรงกัน). แก้บั๊ก active state ของ `referral-detail.html` และ `care-plan-confirm.html`
+    ตามที่พบ. `care-plan-confirm.html` ต้องแก้ layout เพิ่ม (เดิม sidebar เป็น `position:fixed` + `.main`
+    มี `margin-left` ชดเชย — พอเปลี่ยนเป็น sidebar แบบ flex ปกติต้องตัด `margin-left` ออกด้วยไม่งั้นเนื้อหาจะ
+    เยื้องซ้ำ).
+  - **หอผู้ป่วย** (6 เมนู: แดชบอร์ด/รายการเคส/บันทึกการเยี่ยมบ้าน/ติดตามผลการเยี่ยม/สรุปข้อมูลสำคัญงานเยี่ยม
+    บ้าน/สรุปรายงานประจำเดือน + จัดการระบบ): `dashboard-ward.html`, `referrals-list.html`,
+    `referral-create.html`, `ward-visit-results.html` — footer "กัลยา เจ้าหน้าที่ธุรการ · ward_staff ·
+    หอผู้ป่วยอายุรกรรม" ทุกไฟล์ (เดิมมี logout link ปลอมด้วย ตัดออกเพราะไม่ใช่ pattern ของ canonical footer).
+    `referral-create.html` และ `ward-visit-results.html` ขาด "บันทึกการเยี่ยมบ้าน" ไปก่อนหน้านี้ เติมให้ครบ.
+  - **แอดมิน** (เมนูหลักเหมือนกลุ่มทีมเยี่ยมบ้านครบ 9 รายการ เพราะแอดมินควรเห็นภาพรวมทั้งหมด + จัดการระบบเป็น
+    ส่วนที่ active): `admin-case-types-list.html`, `admin-case-type-form.html`, `admin-users-list.html`,
+    `admin-user-edit.html` — footer "ธนกร ฝ่ายสารสนเทศ · แอดมิน · จัดการระบบ" (เดิมใช้ class `.sidebar-foot`
+    ไม่ใช่ `.sidebar-footer`). พบว่า 4 ไฟล์นี้ไม่มี token `--color-accent-gold` ใน `:root` เลย (ทุกไฟล์อื่นมี) —
+    เพิ่ม token ให้ตรงกับทั้งระบบแทนที่จะใช้ CSS fallback เฉพาะจุด.
+  ทำงานแบบขนาน 3 agent ตามกลุ่มด้านบน (คนละไฟล์ ไม่ overlap กัน) แล้วตรวจสอบซ้ำด้วย grep ว่าไม่มี class เดิม
+  (`.nav-icon`, `.ico`, `.ic`, `.nav-link`, `.nav-group-label`, `.nav-sub`, `.sidebar-brand`, `.user-box`,
+  `.sidebar-foot`, `.logout-link` ฯลฯ) หลงเหลืออยู่ในไฟล์ที่แก้แล้ว — เจอ `.ico`/`.ic` หลงเหลือ 3 จุดใน
+  `care-plan-confirm.html`/`review-decide.html`/`visit-summary.html` แต่ตรวจแล้วเป็นไอคอนอื่นในเนื้อหาหน้า
+  (info banner, toast, AI recommendation, empty state) ไม่ใช่ของ sidebar เดิม จึงไม่ต้องแก้. ไม่ได้แตะ
+  topbar, เนื้อหาหน้า, หรือ script ของไฟล์ไหนเลยในรอบนี้ — เฉพาะ `<aside>` sidebar, CSS ของมัน, และ
+  mobile breakpoint ที่เกี่ยวกับ sidebar เท่านั้น. `monthly-visit-report.html` และ
+  `satisfaction-survey-form.html` ไม่มี sidebar อยู่แล้วจึงไม่อยู่ในรอบนี้.

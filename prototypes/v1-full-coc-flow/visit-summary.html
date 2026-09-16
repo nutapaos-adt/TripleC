@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>สรุปข้อมูลสำคัญงานเยี่ยมบ้าน — Chira Continuity Care (Triple C)</title>
+<style>
+  :root{
+    /* Primary - Slate / Steel Blue */
+    --color-primary-900:#16232C;
+    --color-primary-800:#1E3644;
+    --color-primary-700:#2C5166;
+    --color-primary-600:#3D6B84;
+    --color-primary-500:#5586A0;
+    --color-primary-300:#A8C4D2;
+    --color-primary-100:#E1EBEF;
+    --color-primary-50:#F4F8FA;
+
+    /* Neutral - Warm Khaki */
+    --color-neutral-900:#22201A;
+    --color-neutral-700:#4A4739;
+    --color-neutral-500:#7C7863;
+    --color-neutral-300:#C9C4AD;
+    --color-neutral-200:#DEDAC6;
+    --color-neutral-100:#F1EEE0;
+    --color-surface:#FFFFFF;
+
+    /* Secondary accent */
+    --color-accent-blue:#3E7CA6;
+    --color-accent-gold:#C9932E;
+
+    /* Semantic */
+    --color-risk:#B23B2C;
+    --color-risk-tint:#F7E7E2;
+    --color-warning:#C2891F;
+    --color-warning-tint:#FBF0DC;
+    --color-success:#3E8E49;
+    --color-success-tint:#E5F2E4;
+
+    /* Spacing */
+    --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px;
+    --space-5:20px; --space-6:24px; --space-8:32px; --space-10:40px;
+    --space-12:48px; --space-16:64px;
+
+    /* Radius / Shadow */
+    --radius-sm:4px; --radius-md:8px; --radius-lg:12px; --radius-pill:999px;
+    --shadow-sm:0 1px 2px rgba(34,32,26,0.06);
+    --shadow-md:0 1px 2px rgba(34,32,26,0.06), 0 4px 14px rgba(34,32,26,0.08);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Sarabun','Noto Sans Thai','Leelawadee UI','Segoe UI',system-ui,sans-serif;
+    background:var(--color-primary-50);
+    color:var(--color-neutral-900);
+    font-size:14px;
+    line-height:22px;
+  }
+  a{color:inherit;text-decoration:none;}
+
+  :focus-visible{
+    outline:2px solid var(--color-primary-700);
+    outline-offset:2px;
+    border-radius:var(--radius-sm);
+  }
+
+  h1,h2,h3{margin:0;}
+  .h1{font-size:24px;line-height:32px;font-weight:700;}
+  .h2{font-size:18px;line-height:26px;font-weight:700;}
+  .caption{font-size:11.5px;line-height:16px;font-weight:500;color:var(--color-neutral-500);}
+
+  /* ============ Layout ============ */
+  .app{display:flex;min-height:100vh;}
+
+  /* ============ Sidebar ============ */
+  .sidebar{
+    width:248px;flex-shrink:0;
+    background:linear-gradient(180deg,var(--color-primary-900) 0%,var(--color-primary-800) 100%);
+    color:#EFEEE2;display:flex;flex-direction:column;
+    padding:var(--space-5) var(--space-3);gap:var(--space-6);
+  }
+  .brand{display:flex;align-items:center;gap:var(--space-2);padding:0 var(--space-2);margin-bottom:var(--space-2);}
+  .brand-mark{width:34px;height:34px;flex-shrink:0;border-radius:var(--radius-sm);background:#F4F8FA;display:flex;align-items:center;justify-content:center;}
+  .brand-mark svg{width:24px;height:24px;}
+  .brand-text{display:flex;flex-direction:column;line-height:1.15;}
+  .brand-text .full{font-weight:700;font-size:14px;color:#F4F8FA;}
+  .brand-text .sub{font-size:11px;color:var(--color-primary-300);}
+
+  .nav-section{display:flex;flex-direction:column;gap:2px;}
+  .nav-section + .nav-section{margin-top:var(--space-2);}
+  .nav-heading{padding:var(--space-2) var(--space-3) var(--space-1);font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--color-primary-300);text-transform:uppercase;}
+  .nav-item{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-3);border-radius:var(--radius-md);color:#E6E4D4;font-weight:600;font-size:14px;cursor:pointer;white-space:nowrap;}
+  .nav-item svg{width:18px;height:18px;flex-shrink:0;opacity:.9;}
+  .nav-item:hover{background:rgba(60,77,42,0.35);}
+  .nav-item.active{background:rgba(60,77,42,0.55);color:#FFFFFF;box-shadow:inset 3px 0 0 var(--color-accent-gold);}
+  .nav-item.sub{padding-left:var(--space-8);font-weight:500;font-size:13.5px;}
+  .sidebar-footer{margin-top:auto;padding:var(--space-3);font-size:11px;color:var(--color-primary-300);}
+
+  /* ============ Main ============ */
+  .main{flex:1;min-width:0;display:flex;flex-direction:column;}
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:var(--space-4) var(--space-6);background:var(--color-surface);
+    border-bottom:1px solid var(--color-neutral-200);position:sticky;top:0;z-index:10;
+  }
+  .topbar-title{font-size:16px;font-weight:700;color:var(--color-neutral-900);}
+  .user-chip{display:flex;align-items:center;gap:var(--space-2);padding:var(--space-1) var(--space-3);border:1px solid var(--color-neutral-300);border-radius:var(--radius-pill);background:var(--color-neutral-100);}
+  .user-avatar{width:28px;height:28px;border-radius:50%;background:var(--color-primary-700);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;}
+  .user-chip .who{display:flex;flex-direction:column;line-height:1.2;}
+  .user-chip .who .name{font-weight:600;font-size:13px;color:var(--color-neutral-900);}
+  .role-badge{display:inline-block;margin-top:1px;font-size:11px;font-weight:700;padding:1px var(--space-2);border-radius:var(--radius-pill);background:var(--color-primary-100);color:var(--color-primary-700);width:fit-content;}
+
+  .content{padding:var(--space-6);display:flex;flex-direction:column;gap:var(--space-6);max-width:1280px;}
+  .page-head{display:flex;flex-direction:column;gap:2px;}
+  .page-head .sub{color:var(--color-neutral-700);font-size:14px;}
+
+  /* ============ Period controls ============ */
+  .period-bar{display:flex;align-items:center;gap:var(--space-4);flex-wrap:wrap;}
+  .period-type-toggle{display:inline-flex;background:var(--color-neutral-100);border-radius:var(--radius-pill);padding:3px;gap:2px;}
+  .period-type-btn{border:none;background:none;font-family:inherit;font-size:13px;font-weight:600;color:var(--color-neutral-500);padding:7px 16px;border-radius:var(--radius-pill);cursor:pointer;}
+  .period-type-btn:hover:not(.active){color:var(--color-neutral-700);}
+  .period-type-btn.active{background:var(--color-primary-700);color:#fff;}
+  .period-select{background:#fff;border:1px solid var(--color-neutral-300);border-radius:var(--radius-md);padding:8px 12px;font-family:inherit;font-size:13.5px;font-weight:600;color:var(--color-neutral-900);cursor:pointer;}
+
+  /* ============ KPI Tiles ============ */
+  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-4);}
+  .kpi-tile{background:var(--color-surface);border:1px solid var(--color-neutral-200);border-radius:var(--radius-lg);padding:var(--space-4);box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:4px;}
+  .kpi-tile .caption{font-weight:600;}
+  .kpi-value{font-size:30px;line-height:36px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--color-neutral-900);}
+  .kpi-value.risk{color:var(--color-risk);}
+  .kpi-tile .hint{font-size:11px;color:var(--color-neutral-500);}
+  .kpi-tile.alert{border-color:var(--color-risk-tint);background:linear-gradient(180deg,#fff 0%, var(--color-risk-tint) 260%);}
+
+  /* ============ Card / Section ============ */
+  .card{background:var(--color-surface);border:1px solid var(--color-neutral-200);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);}
+  .card-head{padding:var(--space-5) var(--space-5) var(--space-3);}
+  .card-head .h2{font-size:16px;}
+  .card-head .sub{color:var(--color-neutral-500);font-size:12.5px;margin-top:2px;}
+  .card-body{padding:0 var(--space-5) var(--space-5);}
+
+  /* ============ Distribution bar chart ============ */
+  .dist-charts{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-8);}
+  .dist-group-title{display:block;font-size:12.5px;font-weight:700;color:var(--color-primary-700);text-transform:uppercase;letter-spacing:.02em;margin-bottom:var(--space-3);}
+  .dist-list{display:flex;flex-direction:column;gap:var(--space-3);}
+  .dist-row{display:grid;grid-template-columns:130px 1fr 40px;align-items:center;gap:var(--space-3);}
+  .dist-label{font-size:13px;font-weight:600;color:var(--color-neutral-900);}
+  .dist-track{height:10px;border-radius:var(--radius-pill);background:var(--color-primary-100);overflow:hidden;}
+  .dist-fill{height:100%;border-radius:var(--radius-pill);background:var(--color-primary-700);transition:width .2s ease;}
+  .dist-count{font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums;text-align:right;color:var(--color-neutral-900);}
+
+  /* ============ Mini KPI tiles (narrative-as-boxes) ============ */
+  .subsection{margin-bottom:var(--space-5);}
+  .subsection:last-child{margin-bottom:0;}
+  .subsection-title{display:block;font-size:13px;font-weight:700;color:var(--color-neutral-900);margin-bottom:var(--space-2);}
+  .kpi-grid.mini{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:var(--space-3);}
+  .kpi-grid.mini .kpi-tile{padding:10px 12px;gap:2px;}
+  .kpi-grid.mini .kpi-value{font-size:20px;line-height:26px;}
+  .kpi-grid.mini .hint{font-size:10.5px;}
+
+  /* ============ Empty state ============ */
+  .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;padding:64px 24px;color:var(--color-neutral-500);}
+  .empty-state .ico{font-size:40px;}
+  .empty-state h2{margin:0;font-size:16px;color:var(--color-neutral-700);}
+  .empty-state p{margin:0;font-size:12.5px;max-width:440px;}
+  [hidden]{display:none!important;}
+
+  footer.credit{padding:0 var(--space-6) var(--space-8);color:var(--color-neutral-500);font-size:12px;}
+
+  /* ============ Responsive ============ */
+  @media (max-width:860px){
+    .app{flex-direction:column;}
+    .sidebar{width:100%;flex-direction:row;align-items:center;overflow-x:auto;padding:var(--space-3);gap:var(--space-3);position:sticky;top:0;z-index:20;}
+    .brand{margin-bottom:0;}
+    .nav-section{flex-direction:row;gap:var(--space-1);}
+    .nav-heading{display:none;}
+    .nav-item.sub{padding-left:var(--space-3);}
+    .sidebar-footer{display:none;}
+    .kpi-grid{grid-template-columns:repeat(2,1fr);}
+    .content{padding:var(--space-4);}
+    .dist-charts{grid-template-columns:1fr;}
+  }
+  @media (max-width:520px){
+    .kpi-grid{grid-template-columns:1fr;}
+    .dist-row{grid-template-columns:100px 1fr 32px;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ============ Sidebar ============ -->
+  <aside class="sidebar" aria-label="เมนูหลัก">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#2C5166" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      </div>
+      <div class="brand-text">
+        <span class="full">Chira Continuity Care</span>
+        <span class="sub">Triple C</span>
+      </div>
+    </div>
+
+    <nav class="nav-section" aria-label="เมนูงานหลัก">
+      <a class="nav-item" href="dashboard.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+        <span>แดชบอร์ด</span>
+      </a>
+      <a class="nav-item" href="referrals-list.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 4h9a1 1 0 0 1 1 1v15l-4-3-4 3-4-3-4 3V8z"/><path d="M12 9h4M12 13h4"/></svg>
+        <span>รายการเคส</span>
+      </a>
+      <a class="nav-item" href="referral-detail.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5l3.2 2"/></svg>
+        <span>ประวัติผู้ป่วย</span>
+      </a>
+      <a class="nav-item" href="care-plan-pending-list.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M9 3h6v3H9z"/><path d="M9 13l2 2 4-4"/></svg>
+        <span>วิเคราะห์แผนการพยาบาล</span>
+      </a>
+      <a class="nav-item" href="followup-list.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 4.5v-1M16 4.5v-1"/><path d="M7 13.5h3M7 16.5h6"/></svg>
+        <span>บันทึกการเยี่ยมบ้าน</span>
+      </a>
+      <a class="nav-item" href="ward-visit-results.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-7.5 7-12a7 7 0 1 0-14 0c0 4.5 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>
+        <span>ติดตามผลการเยี่ยม</span>
+      </a>
+      <a class="nav-item active" href="visit-summary.html" aria-current="page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+        <span>สรุปข้อมูลสำคัญงานเยี่ยมบ้าน</span>
+      </a>
+      <a class="nav-item" href="monthly-visit-report.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg>
+        <span>สรุปรายงานประจำเดือน</span>
+      </a>
+      <a class="nav-item" href="satisfaction-survey-list.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12.5l2 2 4-4.5"/><circle cx="12" cy="12" r="9"/></svg>
+        <span>ประเมินความพึงพอใจ</span>
+      </a>
+    </nav>
+
+    <div class="nav-section" aria-label="จัดการระบบ">
+      <div class="nav-heading">จัดการระบบ</div>
+      <a class="nav-item sub" href="admin-case-types-list.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.35a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.65 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.65 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.65 1.7 1.7 0 0 0 10.03 3.09V3a2 2 0 1 1 4 0v.09c0 .69.4 1.3 1.03 1.56.61.25 1.32.12 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06c-.46.55-.6 1.26-.34 1.87.25.61.87 1.03 1.56 1.03H21a2 2 0 1 1 0 4h-.09c-.69 0-1.31.4-1.56 1.03z"/></svg>
+        <span>ประเภทเคส</span>
+      </a>
+      <a class="nav-item sub" href="admin-users-list.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1"/><circle cx="9" cy="7" r="3.2"/><path d="M22 21v-1a4 4 0 0 0-3-3.87"/><path d="M16.5 3.3a3.2 3.2 0 0 1 0 6.2"/></svg>
+        <span>ผู้ใช้งาน</span>
+      </a>
+    </div>
+
+    <div class="sidebar-footer">พว.กัญญา รักษ์ผู้ป่วย &middot; ทีมเยี่ยมบ้าน</div>
+  </aside>
+
+  <!-- ============ Main content ============ -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-title">สรุปข้อมูลสำคัญงานเยี่ยมบ้าน</div>
+      <div class="user-chip">
+        <div class="user-avatar">สจ</div>
+        <div class="who">
+          <span class="name">สมหญิง ใจดี</span>
+          <span class="role-badge">พยาบาลหอผู้ป่วย</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <div class="page-head">
+        <h1 class="h1">สรุปข้อมูลสำคัญงานเยี่ยมบ้าน</h1>
+        <span class="sub">ภาพรวมผลงานทีมเยี่ยมบ้าน — <span id="periodLabel">สิงหาคม 2569</span></span>
+      </div>
+
+      <!-- ============ Period controls ============ -->
+      <div class="period-bar" role="group" aria-label="เลือกช่วงเวลา">
+        <div class="period-type-toggle" role="tablist" aria-label="ประเภทช่วงเวลา">
+          <button type="button" class="period-type-btn active" data-type="month" id="periodTypeMonth">รายเดือน</button>
+          <button type="button" class="period-type-btn" data-type="quarter" id="periodTypeQuarter">รายไตรมาส</button>
+          <button type="button" class="period-type-btn" data-type="year" id="periodTypeYear">รายปี</button>
+        </div>
+        <select id="monthSelect" class="period-select" onchange="render()">
+          <option value="2568-10">ตุลาคม 2568</option>
+          <option value="2568-11">พฤศจิกายน 2568</option>
+          <option value="2568-12">ธันวาคม 2568</option>
+          <option value="2569-01">มกราคม 2569</option>
+          <option value="2569-02">กุมภาพันธ์ 2569</option>
+          <option value="2569-03">มีนาคม 2569</option>
+          <option value="2569-04">เมษายน 2569</option>
+          <option value="2569-05">พฤษภาคม 2569</option>
+          <option value="2569-06">มิถุนายน 2569</option>
+          <option value="2569-07">กรกฎาคม 2569</option>
+          <option value="2569-08" selected>สิงหาคม 2569</option>
+          <option value="2569-09">กันยายน 2569</option>
+        </select>
+        <select id="quarterSelect" class="period-select" onchange="render()" hidden>
+          <option value="2569-Q1">ไตรมาส 1 ปีงบประมาณ 2569 (ต.ค.&ndash;ธ.ค. 68)</option>
+          <option value="2569-Q2">ไตรมาส 2 ปีงบประมาณ 2569 (ม.ค.&ndash;มี.ค. 69)</option>
+          <option value="2569-Q3">ไตรมาส 3 ปีงบประมาณ 2569 (เม.ย.&ndash;มิ.ย. 69)</option>
+          <option value="2569-Q4" selected>ไตรมาส 4 ปีงบประมาณ 2569 (ก.ค.&ndash;ก.ย. 69)</option>
+        </select>
+        <select id="yearSelect" class="period-select" onchange="render()" hidden>
+          <option value="2568">ปีงบประมาณ 2568 (ต.ค. 67&ndash;ก.ย. 68)</option>
+          <option value="2569" selected>ปีงบประมาณ 2569 (ต.ค. 68&ndash;ก.ย. 69)</option>
+        </select>
+      </div>
+
+      <div id="summaryBody">
+
+      <!-- ============ KPI tiles ============ -->
+      <section class="kpi-grid" aria-label="สรุปตัวเลขการส่งเยี่ยมบ้าน">
+        <div class="kpi-tile">
+          <span class="caption">จำนวนการส่งเยี่ยมทั้งหมด</span>
+          <span class="kpi-value" id="kpiTotal">62</span>
+          <span class="hint">ราย</span>
+        </div>
+        <div class="kpi-tile">
+          <span class="caption">ในเขต</span>
+          <span class="kpi-value" id="kpiInzone">6</span>
+          <span class="hint">ราย</span>
+        </div>
+        <div class="kpi-tile">
+          <span class="caption">นอกเขต</span>
+          <span class="kpi-value" id="kpiOutzone">56</span>
+          <span class="hint">ราย</span>
+        </div>
+        <div class="kpi-tile alert">
+          <span class="caption">ยังไม่ได้รับการเยี่ยม/ยืนยันแผน</span>
+          <span class="kpi-value risk" id="kpiPending">54</span>
+          <span class="hint" id="kpiPendingHint">ราย — ในเขต 0 &middot; นอกเขต 54</span>
+        </div>
+        <div class="kpi-tile">
+          <span class="caption">ทันใน 5 วัน (ด่วน)</span>
+          <span class="kpi-value" id="kpiFast5">0</span>
+          <span class="hint">ราย</span>
+        </div>
+        <div class="kpi-tile">
+          <span class="caption">ทันใน 14 วัน</span>
+          <span class="kpi-value" id="kpiFast14">8</span>
+          <span class="hint">ราย</span>
+        </div>
+        <div class="kpi-tile">
+          <span class="caption">ทันใน 30 วัน</span>
+          <span class="kpi-value" id="kpiFast30">0</span>
+          <span class="hint">ราย</span>
+        </div>
+      </section>
+
+      <!-- ============ Distribution charts ============ -->
+      <section class="card" aria-label="สรุปตามประเภทผู้ป่วยและสถานะ">
+        <div class="card-head">
+          <h2 class="h2">สรุปตามประเภทผู้ป่วยและสถานะ</h2>
+          <div class="sub">สัดส่วนจำนวนการส่งเยี่ยมในช่วงเวลาที่เลือก</div>
+        </div>
+        <div class="card-body dist-charts">
+          <div>
+            <span class="dist-group-title">ตามประเภทผู้ป่วย</span>
+            <div class="dist-list">
+              <div class="dist-row">
+                <span class="dist-label">อายุรกรรม</span>
+                <div class="dist-track"><div class="dist-fill" id="ctMedFill"></div></div>
+                <span class="dist-count" id="ctMedCount">28</span>
+              </div>
+              <div class="dist-row">
+                <span class="dist-label">ศัลยกรรม</span>
+                <div class="dist-track"><div class="dist-fill" id="ctSurgFill"></div></div>
+                <span class="dist-count" id="ctSurgCount">18</span>
+              </div>
+              <div class="dist-row">
+                <span class="dist-label">Palliative Care</span>
+                <div class="dist-track"><div class="dist-fill" id="ctPallFill"></div></div>
+                <span class="dist-count" id="ctPallCount">9</span>
+              </div>
+              <div class="dist-row">
+                <span class="dist-label">อื่นๆ</span>
+                <div class="dist-track"><div class="dist-fill" id="ctOtherFill"></div></div>
+                <span class="dist-count" id="ctOtherCount">7</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <span class="dist-group-title">ตามสถานะ</span>
+            <div class="dist-list">
+              <div class="dist-row">
+                <span class="dist-label">กำลังพล</span>
+                <div class="dist-track"><div class="dist-fill" id="stMilFill"></div></div>
+                <span class="dist-count" id="stMilCount">22</span>
+              </div>
+              <div class="dist-row">
+                <span class="dist-label">ครอบครัว</span>
+                <div class="dist-track"><div class="dist-fill" id="stFamFill"></div></div>
+                <span class="dist-count" id="stFamCount">24</span>
+              </div>
+              <div class="dist-row">
+                <span class="dist-label">ประชาชน</span>
+                <div class="dist-track"><div class="dist-fill" id="stCivFill"></div></div>
+                <span class="dist-count" id="stCivCount">16</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ Narrative summary as tiles ============ -->
+      <section class="card" aria-label="สรุปผลการเยี่ยมบ้านและรับส่งต่อ">
+        <div class="card-head">
+          <h2 class="h2">สรุปผลการเยี่ยมบ้านและรับส่งต่อ</h2>
+        </div>
+        <div class="card-body">
+
+          <div class="subsection">
+            <span class="subsection-title">สรุปผลการเยี่ยมบ้าน</span>
+            <div class="kpi-grid mini">
+              <div class="kpi-tile">
+                <span class="caption">ในเขต</span>
+                <span class="kpi-value" id="visitInzone">6</span>
+                <span class="hint">ราย</span>
+              </div>
+              <div class="kpi-tile">
+                <span class="caption">นอกเขต — มีการตอบกลับ</span>
+                <span class="kpi-value" id="visitOutResp">2</span>
+                <span class="hint">ราย</span>
+              </div>
+              <div class="kpi-tile alert">
+                <span class="caption">นอกเขต — ไม่พบการตอบกลับในระบบ</span>
+                <span class="kpi-value risk" id="visitOutNoResp">54</span>
+                <span class="hint">ราย</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="subsection">
+            <span class="subsection-title" id="refHeading">รับส่งต่อเยี่ยมบ้าน จำนวน 6 ราย แบ่งตามหอผู้ป่วยต้นทาง</span>
+            <div class="kpi-grid mini">
+              <div class="kpi-tile">
+                <span class="caption">หอผู้ป่วยชาย</span>
+                <span class="kpi-value" id="refMale">5</span>
+                <span class="hint">ราย</span>
+              </div>
+              <div class="kpi-tile">
+                <span class="caption">หอผู้ป่วยหนัก</span>
+                <span class="kpi-value" id="refIcu">1</span>
+                <span class="hint">ราย</span>
+              </div>
+              <div class="kpi-tile">
+                <span class="caption">หอผู้ป่วยหญิง</span>
+                <span class="kpi-value" id="refFemale">0</span>
+                <span class="hint">ราย</span>
+              </div>
+              <div class="kpi-tile">
+                <span class="caption">ห้องตรวจโรคผู้ป่วยนอก</span>
+                <span class="kpi-value" id="refOpd">0</span>
+                <span class="hint">ราย</span>
+              </div>
+              <div class="kpi-tile">
+                <span class="caption">ห้องฉุกเฉิน</span>
+                <span class="kpi-value" id="refEr">0</span>
+                <span class="hint">ราย</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="subsection">
+            <span class="subsection-title" id="tracerHeading">เยี่ยมตาม tracer จำนวน 2 ราย (นับตามผู้ป่วยที่ไม่ซ้ำกัน — 1 รายอาจเข้าเงื่อนไข tracer มากกว่า 1 โรค)</span>
+            <div class="kpi-grid mini">
+              <div class="kpi-tile">
+                <span class="caption">Sepsis</span>
+                <span class="kpi-value" id="trSepsis">1</span>
+                <span class="hint">ราย</span>
+              </div>
+              <div class="kpi-tile">
+                <span class="caption">Stroke</span>
+                <span class="kpi-value" id="trStroke">0</span>
+                <span class="hint">ราย</span>
+              </div>
+              <div class="kpi-tile">
+                <span class="caption">Heat stroke</span>
+                <span class="kpi-value" id="trHeat">0</span>
+                <span class="hint">ราย</span>
+              </div>
+              <div class="kpi-tile">
+                <span class="caption">STEMI</span>
+                <span class="kpi-value" id="trStemi">0</span>
+                <span class="hint">ราย</span>
+              </div>
+              <div class="kpi-tile">
+                <span class="caption">Pneumonia</span>
+                <span class="kpi-value" id="trPneumonia">2</span>
+                <span class="hint">ราย</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      </div>
+
+      <div id="emptyState" class="empty-state" hidden>
+        <span class="ico">&#128197;</span>
+        <h2>ยังไม่มีข้อมูลสรุปสำหรับ<span id="emptyLabel">กันยายน 2569</span></h2>
+        <p>ระบบจะรวบรวมข้อมูลสรุปผลงานเยี่ยมบ้านให้อัตโนมัติเมื่อสิ้นช่วงเวลานั้นๆ — ลองเลือก "สิงหาคม 2569" (รายเดือน) เพื่อดูตัวอย่างข้อมูลที่มีครบ</p>
+      </div>
+
+    </main>
+
+    <footer class="credit">Chira Continuity Care (Triple C) — ต้นแบบใช้งานสำหรับสาธิตเท่านั้น ข้อมูลทั้งหมดเป็นข้อมูลจำลอง</footer>
+  </div>
+</div>
+
+<script>
+  var MONTH_LABELS = {
+    '2568-10':'ตุลาคม 2568', '2568-11':'พฤศจิกายน 2568', '2568-12':'ธันวาคม 2568',
+    '2569-01':'มกราคม 2569', '2569-02':'กุมภาพันธ์ 2569', '2569-03':'มีนาคม 2569',
+    '2569-04':'เมษายน 2569', '2569-05':'พฤษภาคม 2569', '2569-06':'มิถุนายน 2569',
+    '2569-07':'กรกฎาคม 2569', '2569-08':'สิงหาคม 2569', '2569-09':'กันยายน 2569'
+  };
+  var QUARTER_LABELS = {
+    '2569-Q1':'ไตรมาส 1 ปีงบประมาณ 2569 (ต.ค.–ธ.ค. 68)',
+    '2569-Q2':'ไตรมาส 2 ปีงบประมาณ 2569 (ม.ค.–มี.ค. 69)',
+    '2569-Q3':'ไตรมาส 3 ปีงบประมาณ 2569 (เม.ย.–มิ.ย. 69)',
+    '2569-Q4':'ไตรมาส 4 ปีงบประมาณ 2569 (ก.ค.–ก.ย. 69)'
+  };
+  var YEAR_LABELS = {
+    '2568':'ปีงบประมาณ 2568 (ต.ค. 67–ก.ย. 68)',
+    '2569':'ปีงบประมาณ 2569 (ต.ค. 68–ก.ย. 69)'
+  };
+
+  // Mock data only exists for one option per period type (เหมือน monthly-visit-report.html)
+  var DATA = {
+    'month:2569-08': {
+      total:62, inzone:6, outzone:56, f5:0, f14:8, f30:0, pending:54, pendingInzone:0, pendingOutzone:54,
+      caseType:{med:28, surg:18, pall:9, other:7},
+      status:{mil:22, fam:24, civ:16},
+      visit:{inzone:6, outResp:2, outNoResp:54},
+      referral:{total:6, male:5, icu:1, female:0, opd:0, er:0},
+      tracer:{total:2, sepsis:1, stroke:0, heat:0, stemi:0, pneumonia:2}
+    },
+    'quarter:2569-Q4': {
+      total:168, inzone:19, outzone:149, f5:1, f14:22, f30:4, pending:141, pendingInzone:0, pendingOutzone:141,
+      caseType:{med:74, surg:49, pall:26, other:19},
+      status:{mil:58, fam:64, civ:46},
+      visit:{inzone:19, outResp:8, outNoResp:141},
+      referral:{total:27, male:18, icu:4, female:3, opd:1, er:1},
+      tracer:{total:6, sepsis:2, stroke:1, heat:0, stemi:1, pneumonia:3}
+    },
+    'year:2569': {
+      total:612, inzone:71, outzone:541, f5:4, f14:88, f30:15, pending:505, pendingInzone:0, pendingOutzone:505,
+      caseType:{med:268, surg:178, pall:98, other:68},
+      status:{mil:214, fam:232, civ:166},
+      visit:{inzone:71, outResp:36, outNoResp:505},
+      referral:{total:92, male:58, icu:14, female:10, opd:6, er:4},
+      tracer:{total:24, sepsis:8, stroke:4, heat:1, stemi:3, pneumonia:11}
+    }
+  };
+
+  var currentType = 'month';
+
+  function setText(id, value){ document.getElementById(id).textContent = value; }
+  function setFill(id, value, total){ document.getElementById(id).style.width = (total ? (value/total*100) : 0) + '%'; }
+
+  function selectPeriodType(type){
+    currentType = type;
+    document.getElementById('periodTypeMonth').classList.toggle('active', type === 'month');
+    document.getElementById('periodTypeQuarter').classList.toggle('active', type === 'quarter');
+    document.getElementById('periodTypeYear').classList.toggle('active', type === 'year');
+    document.getElementById('monthSelect').hidden = type !== 'month';
+    document.getElementById('quarterSelect').hidden = type !== 'quarter';
+    document.getElementById('yearSelect').hidden = type !== 'year';
+    render();
+  }
+  document.getElementById('periodTypeMonth').addEventListener('click', function(){ selectPeriodType('month'); });
+  document.getElementById('periodTypeQuarter').addEventListener('click', function(){ selectPeriodType('quarter'); });
+  document.getElementById('periodTypeYear').addEventListener('click', function(){ selectPeriodType('year'); });
+
+  function render(){
+    var value, label;
+    if (currentType === 'month'){
+      value = document.getElementById('monthSelect').value;
+      label = MONTH_LABELS[value];
+    } else if (currentType === 'quarter'){
+      value = document.getElementById('quarterSelect').value;
+      label = QUARTER_LABELS[value];
+    } else {
+      value = document.getElementById('yearSelect').value;
+      label = YEAR_LABELS[value];
+    }
+
+    setText('periodLabel', label);
+
+    var d = DATA[currentType + ':' + value];
+    if (!d){
+      document.getElementById('summaryBody').hidden = true;
+      document.getElementById('emptyState').hidden = false;
+      setText('emptyLabel', label);
+      return;
+    }
+    document.getElementById('summaryBody').hidden = false;
+    document.getElementById('emptyState').hidden = true;
+
+    setText('kpiTotal', d.total);
+    setText('kpiInzone', d.inzone);
+    setText('kpiOutzone', d.outzone);
+    setText('kpiFast5', d.f5);
+    setText('kpiFast14', d.f14);
+    setText('kpiFast30', d.f30);
+    setText('kpiPending', d.pending);
+    setText('kpiPendingHint', 'ราย — ในเขต ' + d.pendingInzone + ' · นอกเขต ' + d.pendingOutzone);
+
+    var ct = d.caseType;
+    setFill('ctMedFill', ct.med, d.total); setText('ctMedCount', ct.med);
+    setFill('ctSurgFill', ct.surg, d.total); setText('ctSurgCount', ct.surg);
+    setFill('ctPallFill', ct.pall, d.total); setText('ctPallCount', ct.pall);
+    setFill('ctOtherFill', ct.other, d.total); setText('ctOtherCount', ct.other);
+
+    var st = d.status;
+    setFill('stMilFill', st.mil, d.total); setText('stMilCount', st.mil);
+    setFill('stFamFill', st.fam, d.total); setText('stFamCount', st.fam);
+    setFill('stCivFill', st.civ, d.total); setText('stCivCount', st.civ);
+
+    setText('visitInzone', d.visit.inzone);
+    setText('visitOutResp', d.visit.outResp);
+    setText('visitOutNoResp', d.visit.outNoResp);
+
+    var r = d.referral;
+    setText('refHeading', 'รับส่งต่อเยี่ยมบ้าน จำนวน ' + r.total + ' ราย แบ่งตามหอผู้ป่วยต้นทาง');
+    setText('refMale', r.male); setText('refIcu', r.icu); setText('refFemale', r.female);
+    setText('refOpd', r.opd); setText('refEr', r.er);
+
+    var t = d.tracer;
+    setText('tracerHeading', 'เยี่ยมตาม tracer จำนวน ' + t.total + ' ราย (นับตามผู้ป่วยที่ไม่ซ้ำกัน — 1 รายอาจเข้าเงื่อนไข tracer มากกว่า 1 โรค)');
+    setText('trSepsis', t.sepsis); setText('trStroke', t.stroke); setText('trHeat', t.heat);
+    setText('trStemi', t.stemi); setText('trPneumonia', t.pneumonia);
+  }
+
+  render();
+</script>
+</body>
+</html>
