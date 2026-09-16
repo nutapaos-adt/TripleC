@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class FollowUpRecord extends Model
 {
@@ -16,6 +17,7 @@ class FollowUpRecord extends Model
 
     protected $fillable = [
         'follow_up_plan_id',
+        'method',
         'performed_by',
         'visited_at',
         'pps_score',
@@ -59,6 +61,11 @@ class FollowUpRecord extends Model
     public function nextPlan(): BelongsTo
     {
         return $this->belongsTo(FollowUpPlan::class, 'next_follow_up_plan_id');
+    }
+
+    public function photos(): HasMany
+    {
+        return $this->hasMany(FollowUpRecordPhoto::class);
     }
 
     public function isConfirmed(): bool

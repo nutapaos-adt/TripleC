@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Referral extends Model
@@ -21,6 +22,14 @@ class Referral extends Model
     public const STATUS_IN_PROGRESS = 'in_progress';
     public const STATUS_CLOSED = 'closed';
 
+    /**
+     * การจำแนกกลุ่มความรุนแรง (กลุ่มบ้านสี) — คนละมิติกับ CaseType เสมอ (ดู SeverityRule)
+     * กำหนดครั้งเดียวตอนยืนยันแผน ไม่มีหน้าจอแก้ไขภายหลัง
+     */
+    public const SEVERITY_GREEN = 'green';
+    public const SEVERITY_YELLOW = 'yellow';
+    public const SEVERITY_RED = 'red';
+
     protected $fillable = [
         'patient_id',
         'case_type_id',
@@ -34,6 +43,7 @@ class Referral extends Model
         'confirmed_by',
         'confirmed_at',
         'zone',
+        'severity_level',
         'status',
         'closed_at',
     ];
@@ -77,6 +87,14 @@ class Referral extends Model
     public function attachments(): HasMany
     {
         return $this->hasMany(ReferralAttachment::class);
+    }
+
+    /**
+     * การติดตามต่อเนื่องตาม clinical tracer ที่เลือกไว้ — กำหนดครั้งเดียวตอนรับเคส ไม่มีหน้าจอแก้ไขภายหลัง
+     */
+    public function tracers(): BelongsToMany
+    {
+        return $this->belongsToMany(Tracer::class);
     }
 
     public function isConfirmed(): bool

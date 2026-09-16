@@ -616,13 +616,14 @@
           <div class="field">
             <label for="caseType">ประเภทเคส</label>
             <select id="caseType">
-              <option value="อายุรกรรม">อายุรกรรม</option>
-              <option value="ศัลยกรรม">ศัลยกรรม</option>
-              <option value="กระดูกและข้อ">กระดูกและข้อ</option>
-              <option value="กุมารเวชกรรม">กุมารเวชกรรม</option>
-              <option value="หลังคลอด">หลังคลอด</option>
-              <option value="Palliative Care" selected>Palliative Care</option>
-              <option value="อื่นๆ">อื่นๆ</option>
+              <option value="med">อายุรกรรม</option>
+              <option value="surg">ศัลยกรรม</option>
+              <option value="ortho">กระดูกและข้อ</option>
+              <option value="peds">กุมารเวชกรรม</option>
+              <option value="postpartum">หลังคลอด</option>
+              <option value="post-surgery">หลังผ่าตัด</option>
+              <option value="palliative-care" selected>Palliative Care</option>
+              <option value="other">อื่นๆ</option>
             </select>
           </div>
 
@@ -631,9 +632,10 @@
             <select id="patientType">
               <option value="g1">กลุ่ม 1 — บ้านสีเขียว (ช่วยเหลือตนเองได้ทั้งหมด)</option>
               <option value="g2">กลุ่ม 2 — บ้านสีเหลือง (ช่วยเหลือตนเองได้บางส่วน)</option>
-              <option value="g3">กลุ่ม 3 — บ้านสีแดง (ช่วยเหลือตนเองไม่ได้เลย)</option>
-              <option value="g4" selected>กลุ่ม 4 — Palliative Care</option>
+              <option value="g3" selected>กลุ่ม 3 — บ้านสีแดง (ช่วยเหลือตนเองไม่ได้เลย)</option>
             </select>
+            <span class="hint">ประเมินอิสระในการช่วยเหลือตนเอง — คนละมิติกับประเภทเคสด้านบน เก็บไว้ทุกเคส
+              แต่ไม่มีผลต่อรอบเยี่ยมของ Palliative Care เพราะใช้ PPS Score กำหนดแทน</span>
           </div>
 
           <div class="field full">
@@ -703,7 +705,7 @@
         </div>
         <div class="field">
           <label>การจำแนกกลุ่มความรุนแรง</label>
-          <div class="field-value">กลุ่ม 4 — Palliative Care</div>
+          <div class="field-value">กลุ่ม 3 — บ้านสีแดง</div>
         </div>
         <div class="field full">
           <label>ปัญหาหลัก</label>
@@ -755,8 +757,8 @@
 
   function syncCaseType(){
     var val = caseTypeSelect.value;
-    ppsField.hidden = (val !== 'Palliative Care');
-    caseTypeChip.textContent = val;
+    ppsField.hidden = (val !== 'palliative-care');
+    caseTypeChip.textContent = caseTypeSelect.options[caseTypeSelect.selectedIndex].text;
   }
   caseTypeSelect.addEventListener('change', syncCaseType);
   syncCaseType();

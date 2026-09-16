@@ -77,11 +77,17 @@ php artisan migrate
 
 จะสร้างตาราง `users` (มาตรฐานจาก Breeze) แล้วรัน migration ที่เขียนไว้ให้แล้วตามลำดับ:
 `add_role_to_users_table`, `case_types`, `patients`, `visit_rules`, `referrals`,
-`follow_up_plans`, `follow_up_records`, `referral_attachments`
+`follow_up_plans`, `follow_up_records`, `referral_attachments`, `severity_rules`,
+`add_severity_level_to_referrals_table`, `tracers`, `referral_tracer`,
+`add_status_to_patients_table`, `add_recurring_interval_days_to_severity_rules_table`,
+`add_gender_to_patients_table`, `add_method_to_follow_up_records_table`,
+`follow_up_record_photos`
 
 ไฟล์แนบ (เอกสารที่อัปโหลด) จะถูกเก็บไว้ที่ `storage/app/referral-attachments` (ไม่เปิดเผยต่อสาธารณะ
-ต้อง login และเป็นเจ้าของสิทธิ์เข้าถึงใบส่งต่อนั้นถึงจะดาวน์โหลดได้ผ่านระบบเท่านั้น) ไม่ต้องรัน
-`php artisan storage:link` เพราะไม่ได้ใช้ public disk
+ต้อง login และเป็นเจ้าของสิทธิ์เข้าถึงใบส่งต่อนั้นถึงจะดาวน์โหลดได้ผ่านระบบเท่านั้น) รูปภาพประกอบการเยี่ยม
+(ผูกกับ `FollowUpRecord` แต่ละครั้ง คนละตารางจาก `referral_attachments` เพราะผูกกับคนละ parent) เก็บไว้ที่
+`storage/app/follow-up-record-photos` ด้วยหลักการเดียวกัน ไม่ต้องรัน
+`php artisan storage:link` เพราะไม่ได้ใช้ public disk ทั้งสองที่
 
 ### ใส่ข้อมูลตั้งต้น (ประเภทเคส + เกณฑ์จำนวนครั้งเยี่ยม)
 
@@ -89,6 +95,8 @@ php artisan migrate
 
 ```php
 $this->call(\Database\Seeders\CaseTypeSeeder::class);
+$this->call(\Database\Seeders\SeverityRuleSeeder::class);
+$this->call(\Database\Seeders\TracerSeeder::class);
 ```
 
 จากนั้นรัน:

@@ -69,7 +69,6 @@ a:hover{text-decoration:underline;}
 .chip-severity-green{background:var(--color-success-tint);color:var(--color-success);}
 .chip-severity-yellow{background:var(--color-warning-tint);color:var(--color-warning);}
 .chip-severity-red{background:var(--color-risk-tint);color:var(--color-risk);}
-.chip-severity-palliative{background:var(--color-primary-100);color:var(--color-primary-700);}
 
 /* Info rows — เต็มบรรทัด แทน 2-column grid เดิม */
 .info-list{display:flex;flex-direction:column;}
@@ -246,7 +245,7 @@ a:hover{text-decoration:underline;}
         </div>
         <div class="info-row">
           <dt>การจำแนกตามระดับความรุนแรง</dt>
-          <dd><span class="chip chip-severity-palliative">กลุ่ม 4 — Palliative Care</span></dd>
+          <dd><span class="chip chip-severity-red">กลุ่ม 3 — บ้านสีแดง</span></dd>
         </div>
         <div class="info-row">
           <dt>เบอร์โทรผู้ป่วย</dt>
@@ -329,6 +328,10 @@ a:hover{text-decoration:underline;}
         <div class="info-row">
           <dt>อุปกรณ์ของผู้ป่วย</dt>
           <dd><div class="tag-list"><span class="tag">Foley cath</span></div></dd>
+        </div>
+        <div class="info-row">
+          <dt>การติดตามต่อเนื่องตาม clinical tracer</dt>
+          <dd><span style="color:var(--color-neutral-500);">ไม่เข้าเงื่อนไข</span></dd>
         </div>
       </dl>
       <div class="section-title" style="margin-top:var(--space-5);">บันทึกดิบจากผู้ส่งต่อ</div>

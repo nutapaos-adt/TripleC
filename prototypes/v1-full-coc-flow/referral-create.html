@@ -97,7 +97,6 @@ textarea{resize:vertical;min-height:96px;}
 .chip-severity-green{background:var(--color-success-tint);color:var(--color-success);}
 .chip-severity-yellow{background:var(--color-warning-tint);color:var(--color-warning);}
 .chip-severity-red{background:var(--color-risk-tint);color:var(--color-risk);}
-.chip-severity-palliative{background:var(--color-primary-100);color:var(--color-primary-700);}
 
 .suggest-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:var(--space-2);}
 .suggest-chip{
@@ -214,14 +213,15 @@ textarea{resize:vertical;min-height:96px;}
           <div style="display:flex;flex-direction:column;gap:var(--space-4);">
             <div class="field">
               <label for="case_type">ประเภทผู้ป่วย (case_type)</label>
-              <select id="case_type" required onchange="document.getElementById('pps_field').style.display = (this.value==='palliative') ? 'flex' : 'none';">
+              <select id="case_type" required onchange="document.getElementById('pps_field').style.display = (this.value==='palliative-care') ? 'flex' : 'none';">
                 <option value="">— เลือกประเภทผู้ป่วย —</option>
                 <option value="med">อายุรกรรม</option>
                 <option value="surg">ศัลยกรรม</option>
                 <option value="ortho">กระดูกและข้อ</option>
                 <option value="peds">กุมารเวชกรรม</option>
                 <option value="postpartum">หลังคลอด</option>
-                <option value="palliative">Palliative Care</option>
+                <option value="post-surgery">หลังผ่าตัด</option>
+                <option value="palliative-care">Palliative Care</option>
                 <option value="other">อื่นๆ</option>
               </select>
               <span class="hint">เลือกประเภทที่ตรงกับผู้ป่วยที่สุด — ใช้กำหนดเกณฑ์การเยี่ยม/ติดตาม</span>
@@ -232,8 +232,7 @@ textarea{resize:vertical;min-height:96px;}
                 var map={
                   g1:{cls:'chip-severity-green', text:'กลุ่ม 1 บ้านสีเขียว'},
                   g2:{cls:'chip-severity-yellow', text:'กลุ่ม 2 บ้านสีเหลือง'},
-                  g3:{cls:'chip-severity-red', text:'กลุ่ม 3 บ้านสีแดง'},
-                  g4:{cls:'chip-severity-palliative', text:'กลุ่ม 4 Palliative Care'}
+                  g3:{cls:'chip-severity-red', text:'กลุ่ม 3 บ้านสีแดง'}
                 };
                 var v=map[this.value];
                 var chip=document.getElementById('severity_chip');
@@ -244,8 +243,9 @@ textarea{resize:vertical;min-height:96px;}
                 <option value="g1">กลุ่ม 1 บ้านสีเขียว (ช่วยเหลือตนเองได้ทั้งหมด)</option>
                 <option value="g2">กลุ่ม 2 บ้านสีเหลือง (ช่วยเหลือตนเองได้บางส่วน)</option>
                 <option value="g3">กลุ่ม 3 บ้านสีแดง (ช่วยเหลือตนเองไม่ได้เลย)</option>
-                <option value="g4">กลุ่ม 4 Palliative Care</option>
               </select>
+              <span class="hint">ประเมินอิสระในการช่วยเหลือตนเอง — เก็บทุกเคสไม่ว่าจะเป็นประเภทเคสใด แต่บาง
+                ประเภทเคส (เช่น Palliative Care) จะใช้ PPS Score กำหนดรอบเยี่ยมแทนกลุ่มนี้</span>
               <span class="chip" id="severity_chip" style="display:none;margin-top:4px;"></span>
             </div>
             <div class="field">
@@ -472,7 +472,17 @@ textarea{resize:vertical;min-height:96px;}
         </div>
         <div class="field" style="margin-bottom:var(--space-4);">
           <label for="surgery_history">ประวัติการผ่าตัด (ถ้ามี)</label>
-          <input type="text" id="surgery_history" placeholder="เช่น ผ่าตัดไส้ติ่ง 15 ส.ค. 2569 — เว้นว่างได้หากไม่มี">
+          <input type="text" id="surgery_history" placeholder="เช่น ผ่าตัดไส้ติ่ง 15 ส.ค. 2569 — เว้นว่างได้หากไม่มี"
+                 oninput="var parts=this.value.split(',').map(function(s){return s.trim();}); document.querySelectorAll('#surgery_chip_group .suggest-chip').forEach(function(btn){btn.classList.toggle('selected', parts.indexOf(btn.getAttribute('data-value'))!==-1);});">
+          <div class="suggest-chips" id="surgery_chip_group">
+            <button type="button" class="suggest-chip" data-value="ผ่าตัดเปลี่ยนข้อเข่าเทียมทั้งข้อ (TKR)" onclick="var inp=document.getElementById('surgery_history'); var val=this.getAttribute('data-value'); var parts=inp.value.split(',').map(function(s){return s.trim();}).filter(function(s){return s;}); var idx=parts.indexOf(val); if(idx===-1){parts.push(val); this.classList.add('selected');} else {parts.splice(idx,1); this.classList.remove('selected');} inp.value=parts.join(', ');">ผ่าตัดเปลี่ยนข้อเข่าเทียมทั้งข้อ (TKR)</button>
+            <button type="button" class="suggest-chip" data-value="ผ่าตัดเปลี่ยนข้อเข่าเทียมบางส่วน (UKA)" onclick="var inp=document.getElementById('surgery_history'); var val=this.getAttribute('data-value'); var parts=inp.value.split(',').map(function(s){return s.trim();}).filter(function(s){return s;}); var idx=parts.indexOf(val); if(idx===-1){parts.push(val); this.classList.add('selected');} else {parts.splice(idx,1); this.classList.remove('selected');} inp.value=parts.join(', ');">ผ่าตัดเปลี่ยนข้อเข่าเทียมบางส่วน (UKA)</button>
+            <button type="button" class="suggest-chip" data-value="ผ่าตัดยึดกระดูกด้วยโลหะ (ORIF)" onclick="var inp=document.getElementById('surgery_history'); var val=this.getAttribute('data-value'); var parts=inp.value.split(',').map(function(s){return s.trim();}).filter(function(s){return s;}); var idx=parts.indexOf(val); if(idx===-1){parts.push(val); this.classList.add('selected');} else {parts.splice(idx,1); this.classList.remove('selected');} inp.value=parts.join(', ');">ผ่าตัดยึดกระดูกด้วยโลหะ (ORIF)</button>
+            <button type="button" class="suggest-chip" data-value="ผ่าตัดเปลี่ยนข้อสะโพกเทียม" onclick="var inp=document.getElementById('surgery_history'); var val=this.getAttribute('data-value'); var parts=inp.value.split(',').map(function(s){return s.trim();}).filter(function(s){return s;}); var idx=parts.indexOf(val); if(idx===-1){parts.push(val); this.classList.add('selected');} else {parts.splice(idx,1); this.classList.remove('selected');} inp.value=parts.join(', ');">ผ่าตัดเปลี่ยนข้อสะโพกเทียม</button>
+            <button type="button" class="suggest-chip" onclick="var inp=document.getElementById('surgery_history'); if(inp.value.trim() &amp;&amp; !/,\s*$/.test(inp.value)){inp.value=inp.value.replace(/\s*$/, '') + ', ';} inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length);">+ อื่นๆ (ระบุเอง)</button>
+          </div>
+          <span class="hint">เลือกจากตัวเลือกด่วนหรือพิมพ์เองก็ได้ — คำที่ใช้ตรงกับ TKR/UKA จะช่วยให้ระบบแสดง
+            แบบประเมินหลังผ่าตัดเปลี่ยนข้อเข่าให้อัตโนมัติตอนบันทึกผลการเยี่ยม</span>
         </div>
         <div class="field span-2" style="margin-bottom:var(--space-4);">
           <label>อุปกรณ์ของผู้ป่วย (เลือกได้หลายรายการ)</label>

@@ -695,3 +695,181 @@ scope covering the entire continuity-of-care loop plus admin.
   topbar, เนื้อหาหน้า, หรือ script ของไฟล์ไหนเลยในรอบนี้ — เฉพาะ `<aside>` sidebar, CSS ของมัน, และ
   mobile breakpoint ที่เกี่ยวกับ sidebar เท่านั้น. `monthly-visit-report.html` และ
   `satisfaction-survey-form.html` ไม่มี sidebar อยู่แล้วจึงไม่อยู่ในรอบนี้.
+- 2026-09-16 (รอบ 65): เดินหน้าตรวจ data model ที่ค้างจากรอบ 54 — เริ่มข้อ "กลุ่มบ้านสี + SeverityRule" ก่อน
+  (ให้ความสำคัญสูงสุดเพราะเป็นตัวขับ `VisitPlanService` ทั้งระบบ) ไล่โค้ดจริงทุกหน้าที่พูดถึง "กลุ่มบ้านสี"
+  เจอว่า field นี้มี 4 ค่าไม่ใช่ 3 อย่างที่เข้าใจไว้ — `referral-create.html`/`referral-detail.html`/
+  `care-plan-confirm.html` ปนตัวเลือก "กลุ่ม 4 — Palliative Care" เข้าไปในช่องเดียวกับกลุ่มสีเขียว/เหลือง/
+  แดง ทั้งที่ Palliative Care เป็นคนละมิติ (คือ `case_type_id` อยู่แล้ว ใช้ PPS Score กำหนดรอบเยี่ยมเอง)
+  ผู้ใช้ยืนยัน 3 จุด: (1) แยกกลุ่ม 4 ออก เหลือ severity_level แค่ 3 ค่า (เขียว/เหลือง/แดง) ใช้ได้กับทุก
+  ประเภทเคสรวม Palliative Care ด้วย (แค่ไม่มีผลต่อการคำนวณรอบเยี่ยมของประเภทที่มีกฎตัวเองอยู่แล้ว)
+  (2) กำหนดครั้งเดียวตอนยืนยันแผน ไม่มีหน้าจอแก้ไขภายหลัง (3) เกณฑ์ "กลุ่ม X → เยี่ยมครั้งแรกภายใน N วัน"
+  ต้องเป็นตาราง admin แก้ได้จริงตามที่ตกลงไว้ในรอบ 54 (ไม่ใช่ค่าคงที่ในโค้ด) — ลงมือทำจริงส่วน backend
+  (มี migration/model จริงอยู่แล้วในโฟลเดอร์ `app/`/`database/` ตรงกับที่ CLAUDE.md อธิบาย จึงต่อยอดตรงนั้น
+  ไม่ใช่แค่เอกสาร):
+  - เพิ่ม migration `2024_01_01_000009_create_severity_rules_table.php` (severity_level enum
+    green/yellow/red unique + due_in_days) และ `..._000010_add_severity_level_to_referrals_table.php`
+    (คอลัมน์ nullable บน `referrals` หลัง `zone`)
+  - เพิ่ม `app/Models/SeverityRule.php` (constants LEVEL_GREEN/YELLOW/RED + `dueInDaysFor()` helper) และ
+    เพิ่ม `severity_level` เข้า `$fillable`/constants ของ `app/Models/Referral.php`
+  - เพิ่ม `database/seeders/SeverityRuleSeeder.php` สร้าง 3 แถวเริ่มต้น (30/14/5 วัน ตรงกับที่แสดงอยู่แล้วใน
+    `admin-case-types-list.html`) — เป็น seed ชุดปิด ไม่มีหน้าเพิ่ม/ลบกลุ่ม เพราะกลุ่มบ้านสีเป็นมาตรฐานคงที่
+    3 กลุ่มเท่านั้น (admin แก้ได้แค่จำนวนวันต่อกลุ่ม)
+  - อัปเดต `SETUP.md` ทั้ง 2 จุด (รายชื่อ migration ในขั้นตอนที่ 5, เพิ่มบรรทัดเรียก `SeverityRuleSeeder`
+    คู่กับ `CaseTypeSeeder`) และอัปเดต `CLAUDE.md` ส่วน "Core data flow / model relationships" ให้อธิบาย
+    ความสัมพันธ์ `Referral.severity_level` → `SeverityRule` แยกจาก `CaseType`/`VisitRule` ชัดเจน
+  - แก้ prototype 3 ไฟล์ให้ตรงกับการตัดสินใจ: ตัดตัวเลือก "กลุ่ม 4" ออกจาก select ใน `referral-create.html`
+    และ `care-plan-confirm.html` (ลบ CSS `.chip-severity-palliative` ที่ไม่ใช้แล้วด้วย), เปลี่ยนค่าที่แสดง/
+    เลือกไว้ของเคสตัวอย่าง (นางสมหญิง ใจดี — Palliative Care) จาก "กลุ่ม 4" เป็น "กลุ่ม 3 — บ้านสีแดง" ใน
+    `referral-detail.html`, `care-plan-confirm.html` (ทั้ง select และ preview หลังยืนยัน), และ
+    `care-plan-print.html` เพื่อให้ข้อมูลจำลองสอดคล้องกันทุกหน้า (สมเหตุสมผลกับอาการจริงของเคสนี้ที่ระบุไว้
+    แล้วว่า "ช่วยเหลือตนเองไม่ได้เลย")
+  ยังไม่ได้ทำ: หน้า admin สำหรับแก้ไข `SeverityRule` จริง (ตอนนี้มีแค่ migration/seeder, UI ยังเป็นข้อความ
+  static ใน `admin-case-types-list.html`) และยังไม่ได้เชื่อม `VisitPlanService` เข้ากับตารางนี้จริง (รอ
+  scaffold Laravel เต็มรูปแบบตามที่ตกลงกันไว้) — เหลือข้อ tracer/สถานะผู้ป่วย/satisfaction survey schema/
+  ตรวจ field ที่เหลือทุกหน้า ตามลำดับความสำคัญที่คุยไว้.
+- 2026-09-16 (รอบ 66): ต่อข้อ 2 (clinical tracer) จากรอบ 54 — ตอนนั้นทำแค่ UI ใน `referral-create.html`
+  ยังไม่มี schema จริง, `referral-detail.html` ไม่เคยแสดงเลย, และ `monthly-visit-report.html` section 2
+  ยังเป็นข้อความ static ไม่ได้ดึงจากข้อมูลจริง ก่อนทำถามผู้ใช้ 2 จุด: (1) 5 tracer เป็นชุดปิดตายตัวเหมือน
+  `SeverityRule` หรือแอดมินจัดการรายการเองได้ — ผู้ใช้เลือก **แอดมินจัดการรายการเองได้** (เหมือน `CaseType`)
+  (2) เลือก tracer ของเคสแก้ไขได้หลังรับเคสไหม — ผู้ใช้เลือก **กำหนดครั้งเดียวตอนรับเคส** (เหมือน
+  `severity_level`) ลงมือทำจริงส่วน backend:
+  - เพิ่ม migration `2024_01_01_000011_create_tracers_table.php` (name/slug unique/description/is_active
+    — โครงเดียวกับ `case_types` เป๊ะๆ เพราะเป็น lookup ที่แอดมินจัดการเองได้แบบเดียวกัน) และ
+    `..._000012_create_referral_tracer_table.php` (pivot many-to-many, unique(referral_id, tracer_id))
+  - เพิ่ม `app/Models/Tracer.php` (mirror `CaseType.php`) และเพิ่ม `tracers()` BelongsToMany เข้า
+    `app/Models/Referral.php`
+  - เพิ่ม `database/seeders/TracerSeeder.php` seed 5 แถวเริ่มต้น (Sepsis/Stroke/Heat stroke/STEMI/
+    Pneumonia — ตรงกับที่ใช้อยู่แล้วใน `referral-create.html`/ตาราง section 2 ของรายงานประจำเดือน)
+  - อัปเดต `SETUP.md` (รายชื่อ migration ในขั้นตอนที่ 5, เพิ่มบรรทัดเรียก `TracerSeeder`) และ `CLAUDE.md`
+    ส่วน model relationships ให้อธิบายความสัมพันธ์ `Referral` ↔ `Tracer` ผ่าน `referral_tracer`
+  - แก้ prototype gap ที่ค้างจากรอบ 54: เพิ่มแถว "การติดตามต่อเนื่องตาม clinical tracer" ใน
+    `referral-detail.html` (เดิมไม่มีเลย) วางต่อจาก "อุปกรณ์ของผู้ป่วย" ตาม pattern เดียวกับที่ใช้ตอนสร้าง
+    field นี้ครั้งแรก — เคสตัวอย่างไม่เข้าเงื่อนไข tracer ใดเลยจริง (Cholangiocarcinoma) จึงแสดง
+    "ไม่เข้าเงื่อนไข"
+  ยังไม่ได้ทำ: หน้า admin จัดการรายการ `Tracer` จริง (เป็นงานสร้างหน้าจอใหม่ แยกจากงานตรวจ data model รอบนี้
+  — ควรทำเป็นรอบ prototype ต่างหาก คล้าย `admin-case-types-list.html`) และยังไม่ได้เชื่อม
+  `monthly-visit-report.html` section 2 เข้ากับข้อมูลจริง (ต้อง query จริงตอน build backend ถึงจะทำได้ ตอนนี้
+  section 2 ยังเป็นข้อความ static เหมือนเดิม ไม่ใช่บั๊ก แค่ยังไม่มีข้อมูลจริงให้ query).
+- 2026-09-16 (รอบ 67): ต่อข้อ 3 (สถานะผู้ป่วย: กำลังพล/ครอบครัว/ประชาชน) — พบว่า `referral-create.html` มี
+  UI ค่อนข้างสมบูรณ์แล้ว (สถานะ 3 ค่า + หน่วยต้นสังกัด 15 หน่วยเฉพาะของ รพ.ค่ายฯ + ช่อง "อื่นๆ ระบุเอง") แค่
+  ไม่มี schema จริง ถามผู้ใช้ 2 จุดก่อนทำ: (1) field นี้อยู่บน `Patient` หรือ `Referral` — ผู้ใช้เลือก
+  **`Patient`** (เป็นคุณสมบัติประจำตัวผู้ป่วย ไม่เปลี่ยนตามเคส ตรงกับที่ `visit-summary.html` ใช้อยู่แล้ว)
+  (2) "หน่วยต้นสังกัด" ควรเป็นตาราง lookup ที่แอดมินจัดการเองได้ (แบบเดียวกับ Tracer ในรอบ 66) หรือเก็บเป็น
+  string ธรรมดา — ผู้ใช้เลือก **string ธรรมดา** (ต่างจาก Tracer เพราะหน่วยทหารเปลี่ยนไม่บ่อยและไม่ใช่เรื่อง
+  คลินิก ไม่จำเป็นต้องมีหน้า admin จัดการ) ลงมือทำจริงส่วน backend:
+  - เพิ่ม migration `2024_01_01_000013_add_status_to_patients_table.php` — เพิ่ม 2 คอลัมน์บน `patients`:
+    `status` enum(active_duty/active_duty_family/civilian) nullable และ `military_unit` string nullable
+    (มีความหมายเฉพาะตอน status เป็น active_duty หรือ active_duty_family — รายชื่อหน่วยที่ใช้บ่อยยังอยู่ใน UI
+    เหมือนเดิม ไม่ย้ายเข้า DB)
+  - เพิ่ม constants `STATUS_ACTIVE_DUTY`/`STATUS_ACTIVE_DUTY_FAMILY`/`STATUS_CIVILIAN` และ
+    `status`/`military_unit` เข้า `$fillable` ของ `app/Models/Patient.php`
+  - อัปเดต `SETUP.md` (รายชื่อ migration) และ `CLAUDE.md` ส่วนอธิบาย `Patient`
+  ยังไม่ได้ทำ: ยังไม่มีหน้า UI จริงที่บันทึกค่านี้ผ่าน backend จริง (prototype `referral-create.html` เป็น
+  static form อยู่แล้ว ไม่ต้องแก้อะไรเพิ่มในรอบนี้ เพราะ field/ตัวเลือกตรงกับ schema ใหม่พอดี) และยังไม่ได้
+  แก้ข้อความ mock ใน `referral-detail.html` ("หน่วยต้นสังกัด: กองพันทหารราบที่ 7") ที่ไม่ตรงกับ 15 หน่วยใน
+  dropdown ของ `referral-create.html` — เป็นความไม่สอดคล้องเล็กน้อยที่สังเกตเห็นระหว่างตรวจ ไม่ได้อยู่ใน
+  ขอบเขตที่คุยกันรอบนี้ จึงไม่ได้แก้.
+- 2026-09-16 (รอบ 68): ส่ง Explore agent ไปไล่ตรวจ field ที่เหลือทุกหน้าเทียบกับ migration จริง (ครบตามข้อ 4
+  ในลำดับความสำคัญที่คุยกันไว้) ผลตรวจ: `followup-list.html`/`dashboard.html`/`dashboard-ward.html`/
+  `ward-visit-results.html`/หน้า admin users ตรงกับ schema ดีไม่มี gap ใหม่ แต่เจอ gap จริง (Category 1) 5 จุด
+  ใน `followup-record.html`/`review-decide.html`/`admin-case-types-list.html`: (1) `patients` ไม่มีคอลัมน์
+  เพศ ทั้งที่ `review-decide.html`/`care-plan-confirm.html` แสดง "หญิง/ชาย" อยู่ (2) `follow_up_records`
+  ไม่มีคอลัมน์ "วิธีติดตามที่ทำจริง" มีแต่ `follow_up_plans.method` ซึ่งเป็นแผนที่วางไว้เท่านั้น (3) ไม่มีที่
+  เก็บรูปภาพประกอบการเยี่ยมแต่ละครั้ง (`referral_attachments` ผูกกับ referral ตอนรับเคสเท่านั้น) (4) ไม่มี
+  field บอกว่าเคสไหนเป็น TKR/UKA ทั้งที่ `followup-record.html` มี section ประเมินเฉพาะกลุ่มนี้ (5)
+  `severity_rules` เก็บแค่วันครบกำหนดเยี่ยมครั้งแรก ไม่มีฟิลด์รองรับกฎ "กลุ่ม 3 บ้านแดง → เยี่ยมเดือนละ 1
+  ครั้งต่อเนื่อง" ที่เห็นในหน้า admin เอง — ผู้ใช้ขอให้ไล่แก้ทีละข้อ เริ่มข้อ 5 ก่อนเพราะต่อยอดจากรอบ 65 พอดี
+  แก้ข้อ 5 เสร็จแล้ว: เพิ่ม migration `2024_01_01_000014_add_recurring_interval_days_to_severity_rules_table.php`
+  — เพิ่มคอลัมน์ `recurring_interval_days` (nullable) ลงในตาราง `severity_rules` เดิม (ไม่สร้างตารางใหม่)
+  ตั้งใจให้ nullable ทุกระดับ (ไม่ hardcode เฉพาะ red) เผื่ออนาคตนโยบายขยาย rule นี้ไปกลุ่มเหลือง/เขียวด้วยจะ
+  ได้แค่กรอกค่าผ่านหน้า admin ไม่ต้องแก้ migration ใหม่ — อัปเดต `SeverityRuleSeeder` ให้ red = 30
+  (เดือนละครั้ง) ตรงกับข้อความในหน้า admin, เพิ่ม `recurringIntervalDaysFor()` helper ใน
+  `app/Models/SeverityRule.php`, อัปเดต `SETUP.md`/`CLAUDE.md` ให้สะท้อนคอลัมน์ใหม่ — ลำดับความสำคัญของกฎ
+  (Palliative ใช้ PPS ก่อนเสมอ → หลังคลอดใช้ fixed count ก่อนเสมอ → red ถ้ามี override ใช้ตัวนี้ → ไม่งั้นใช้
+  กฎ CaseType ปกติ) ยังคงเป็น logic ใน `VisitPlanService` ไม่ย้ายมาเป็นข้อมูล ตรงตามที่ตกลงกันไว้ตั้งแต่รอบ 54
+  เหลือ 4 ข้อ (เพศผู้ป่วย, วิธีติดตามที่ทำจริง, รูปภาพประกอบการเยี่ยม, ฟิลด์ TKR/UKA) รอคุยทีละข้อต่อไป.
+- 2026-09-16 (รอบ 69): แก้ข้อ 1 จาก 4 ข้อที่เหลือ — `patients` ไม่มีคอลัมน์เพศ ทั้งที่ `review-decide.html`/
+  `care-plan-confirm.html` แสดง "หญิง/ชาย" อยู่ เป็น field ง่าย ไม่มีจุดต้องตัดสินใจซับซ้อนเหมือนข้ออื่น (ระบบ
+  โรงพยาบาลไทยผูกกับเลขบัตรประชาชนที่เป็น binary อยู่แล้ว) จึงลงมือทำตรงๆ: เพิ่ม migration
+  `2024_01_01_000015_add_gender_to_patients_table.php` (enum male/female nullable ต่อจาก `dob`), เพิ่ม
+  constants `GENDER_MALE`/`GENDER_FEMALE` และ `gender` เข้า `$fillable` ของ `app/Models/Patient.php`,
+  อัปเดต `SETUP.md`/`CLAUDE.md`. เหลือ 3 ข้อ (วิธีติดตามที่ทำจริง, รูปภาพประกอบการเยี่ยม, ฟิลด์ TKR/UKA).
+- 2026-09-16 (รอบ 70): แก้ข้อ 2 จาก 3 ข้อที่เหลือ — `follow_up_records` ไม่มีคอลัมน์ "วิธีที่ทำจริง" มีแต่
+  `follow_up_plans.method` ซึ่งเป็นแผนที่วางไว้เท่านั้น ทั้งที่ `followup-record.html` เองมี radio toggle
+  "ลงพื้นที่เยี่ยม/โทรติดตาม" ให้เลือกวิธีที่ทำจริงอยู่แล้ว (hint บอกชัดว่าอาจต่างจากแผนได้) เป็น field ตรงไปตรง
+  มา ไม่มีจุดต้องตัดสินใจซับซ้อน จึงลงมือทำตรงๆ: เพิ่ม migration
+  `2024_01_01_000016_add_method_to_follow_up_records_table.php` (enum home_visit/phone_call เหมือน
+  `follow_up_plans.method` ทุกประการ แต่ required ไม่ nullable เพราะบันทึกทุกครั้งต้องรู้ว่าทำวิธีไหนจริง),
+  เพิ่ม `method` เข้า `$fillable` ของ `app/Models/FollowUpRecord.php` (ไม่เพิ่ม constants ซ้ำ — อ้างอิง
+  `FollowUpPlan::METHOD_HOME_VISIT`/`METHOD_PHONE_CALL` ที่มีอยู่แล้วแทน ตาม pattern เดียวกับที่ `Referral`
+  ไม่ประกาศ zone constants ซ้ำจาก `Patient`), อัปเดต `SETUP.md`/`CLAUDE.md` ให้เตือนว่าอย่าสมมติว่า method
+  ของ record ตรงกับของ plan เสมอ — ไม่ต้องแก้ prototype เพราะฟอร์มมี field นี้อยู่แล้ว แค่ไม่มีที่เก็บจริง
+  เหลือ 2 ข้อ (รูปภาพประกอบการเยี่ยม, ฟิลด์ TKR/UKA).
+- 2026-09-16 (รอบ 71): แก้ข้อ 3 จาก 2 ข้อที่เหลือ — ไม่มีที่เก็บรูปภาพประกอบการเยี่ยมแต่ละครั้ง ทั้งที่
+  `followup-record.html` มี `<input type="file" name="visit_photos[]" multiple>` อยู่แล้ว (`referral_attachments`
+  ผูกกับ referral ตอนรับเคสเท่านั้น ผูกกับการเยี่ยมแต่ละครั้งไม่ได้) เสนอสร้างตารางใหม่แยกต่างหาก (มิเรอร์
+  `referral_attachments` ทุกคอลัมน์ แต่ผูกกับ `follow_up_record_id` แทน) เพราะการเติม FK ตัวที่สองแบบ
+  nullable ลงตารางเดิมจะทำให้ไม่ชัดว่าแถวหนึ่งควรผูกกับ parent ไหน — ผู้ใช้ตกลง ลงมือทำจริง:
+  - เพิ่ม migration `2024_01_01_000017_create_follow_up_record_photos_table.php` (โครงเดียวกับ
+    `referral_attachments` เป๊ะ: follow_up_record_id, uploaded_by, original_name, file_path, mime_type,
+    size)
+  - เพิ่ม `app/Models/FollowUpRecordPhoto.php` (mirror `ReferralAttachment.php`) และเพิ่ม `photos()`
+    HasMany เข้า `app/Models/FollowUpRecord.php`
+  - อัปเดต `SETUP.md` (รายชื่อ migration + ระบุที่เก็บไฟล์ `storage/app/follow-up-record-photos` แยกจาก
+    `referral-attachments` ตามหลักการเดียวกัน — private disk, ไม่ใช้ storage:link) และ `CLAUDE.md` อธิบาย
+    ว่าทำไมแยกตารางแทนใช้ polymorphic relation (โค้ดเบสนี้ไม่ใช้ morph ที่ไหนเลย จึงเลือกความสอดคล้องกับของ
+    เดิมมากกว่า)
+  - ไม่ต้องแก้ prototype เพราะฟอร์มมี field อัปโหลดรูปอยู่แล้วสมบูรณ์ แค่ไม่มีตารางเก็บจริง
+  เหลือข้อสุดท้ายจากรอบตรวจ: ฟิลด์ TKR/UKA (ไม่มี field บอกว่าเคสไหนเป็นผ่าตัดเปลี่ยนข้อเข่า ทั้งที่
+  `followup-record.html` มี section ประเมินเฉพาะกลุ่มนี้).
+- 2026-09-16 (รอบ 72): แก้ข้อ 4 (ข้อสุดท้าย) — ไม่มีประเภทเคสไหนตรงกับ "TKR/UKA" พอดี (ใกล้สุดคือ
+  "กระดูกและข้อ" แต่กว้างกว่ามาก) เสนอ 2 ทาง: (a) boolean flag เดี่ยวบน Referral (b) ระบบ "ป้ายกำกับหัตถการ"
+  แบบ admin จัดการเองได้คล้าย Tracer — ผู้ใช้ปัดทั้ง 2 ทาง เสนอทางที่ 3 เอง: ใช้ช่อง "ประวัติการผ่าตัด"
+  (free text ที่มีอยู่แล้ว) ตรวจจับด้วย AI ถ้าพบคำที่ตรงจึงแสดง section หรือเพิ่มตัวเลือกด่วนแบบเดียวกับ
+  "โรคประจำตัว" ก็ได้ — ตรงกับ pattern ที่ตกลงกันไว้แล้วสำหรับ DM/COPD ในรอบ 59 เป๊ะ (AI สแกนข้อความจริง +
+  โชว์หลักฐานประกอบ แทนการมี field ยืนยันแยก) **ไม่ต้องเพิ่ม column ใหม่เลย**:
+  - อัปเดต `CLAUDE.md` เพิ่มโน้ตในส่วน `AiService` อธิบายชัดว่า DM/COPD และ TKR/UKA gating ทั้งคู่ตั้งใจไม่มี
+    field เฉพาะ ใช้การสแกนข้อความจริงแทน กันไม่ให้เซสชันหน้าเปิดคำถามนี้ซ้ำ
+  - เพิ่มตัวเลือกด่วน (suggest-chips) ให้ช่อง "ประวัติการผ่าตัด" ใน `referral-create.html` (มิเรอร์ pattern
+    ของ "โรคประจำตัว" ทุกประการ — พิมพ์ query จาก `#underlying_disease` chip group เดิม) 4 ตัวเลือก:
+    TKR, UKA, ORIF, ผ่าตัดเปลี่ยนข้อสะโพกเทียม + "อื่นๆ ระบุเอง" — เดิมช่องนี้เป็น plain text ไม่มี chip เลย
+    ช่วยให้คำที่กรอกสม่ำเสมอพอให้ AI ตรวจจับได้แม่นยำขึ้นตอน build backend จริง
+  พบเพิ่มระหว่างตรวจ (ไม่ได้แก้ เพราะนอกขอบเขต): ประเภทเคสที่แสดงจริงใน `referral-create.html`/
+  `admin-case-types-list.html` (7-8 ประเภท: อายุรกรรม/ศัลยกรรม/กระดูกและข้อ/กุมารเวชกรรม/Palliative Care/
+  หลังคลอด/หลังผ่าตัด/อื่นๆ) ไม่ตรงกับที่ seed ไว้จริงใน `CaseTypeSeeder.php` (มีแค่ 4: Palliative Care,
+  หลังคลอด, หลังผ่าตัด, อื่นๆ) — เป็น gap แยกที่ควรคุยต่างหากถ้าต้องการแก้.
+
+  **ครบทั้ง 4 ข้อจากรอบตรวจแล้ว** (severity/tracer/สถานะผู้ป่วย/รอบตรวจ field ที่เหลือทุกหน้า → เพศ/วิธี
+  ติดตามที่ทำจริง/รูปภาพ/TKR-UKA) เหลือข้อ 5 (satisfaction survey schema) จากลำดับความสำคัญเดิม และ gap เรื่อง
+  CaseTypeSeeder ที่พบใหม่ข้างต้น.
+- 2026-09-16 (รอบ 73): ผู้ใช้สงสัยว่าทำไม `CaseTypeSeeder.php` ยังมีแค่ 4 ประเภทหลังจากที่ prototype
+  "อัปเดตกันแล้ว" — ไล่ `git log --follow` ดูจึงเจอสาเหตุจริง: `CaseTypeSeeder.php` เขียนครั้งเดียวตั้งแต่
+  commit แรกสุด (`fc32ee6`, 21 ส.ค.) ไม่มีใครแก้อีกเลย แต่ 18 วันต่อมา commit `edb5de8`
+  ("expand referral intake prototype", 8 ก.ย.) ขยาย `admin-case-types-list.html`/`referral-create.html`
+  เพิ่มประเภทเคสใหม่ในดรอปดาวน์ แต่ไม่มีใครย้อนไปแก้ seeder ให้ตรงกัน — ค้างมาตั้งแต่ตอนนั้น ตรวจลึกอีกชั้น
+  พบว่าไม่ใช่แค่ seeder ไม่ตรงกับ prototype แต่เป็น **3 แหล่งไม่ตรงกันทั้งหมด** (`CaseTypeSeeder.php` /
+  `admin-case-types-list.html` / `referral-create.html`) ทั้งจำนวนประเภท, slug (`palliative` vs
+  `palliative-care`, `post_surgery` vs `post-surgery`), สถานะเปิด/ปิดใช้งานของ "อื่นๆ", และช่วงคะแนน PPS ของ
+  Palliative Care (4 ช่วงใน seeder vs 3 ช่วงใน `admin-case-type-form.html`) — ผู้ใช้ยืนยันให้ยึด 2 หน้า admin
+  เป็นความจริง (ตรงกับหลักการที่ทำมาตลอดทั้งรอบนี้) แก้ 3 จุด:
+  1. เขียน `CaseTypeSeeder.php` ใหม่ทั้งไฟล์ ให้มีครบ 8 ประเภทตาม `admin-case-types-list.html` (อายุรกรรม/
+     ศัลยกรรม/กระดูกและข้อ/กุมารเวชกรรม/Palliative Care/หลังคลอด/หลังผ่าตัด/อื่นๆ) พร้อม slug ที่ตรงกัน
+     (`palliative-care`, `post-surgery`) — ประเภทที่ไม่มีกฎเฉพาะ (ไม่ใช่ Palliative/หลังคลอด) ให้ fixed_count=1
+     เป็นค่าเริ่มต้นตรงกับที่ตารางแสดง ("1 ครั้ง (กลุ่ม 3 บ้านสีแดง: เดือนละ 1 ครั้งต่อเนื่อง)" — ส่วน
+     "เดือนละ 1 ครั้งต่อเนื่อง" มาจาก `SeverityRule.recurring_interval_days` ที่ทำไว้ในรอบ 68 ไม่ใช่ข้อมูลซ้ำ
+     ใน VisitRule), ตั้ง "อื่นๆ" เป็น `is_active=false` ตามที่หน้า admin แสดงไว้จริง, อัปเดต Palliative Care
+     score_rules เป็น 3 ช่วง (0-39→7วัน "ทุกสัปดาห์", 40-69→14วัน "ทุก 2 สัปดาห์", 70-100→30วัน "ทุกเดือน")
+     ตาม `admin-case-type-form.html` แทนของเดิม 4 ช่วง
+  2. แก้ `referral-create.html` case_type dropdown: เพิ่ม "หลังผ่าตัด" (`post-surgery`) ที่หายไปทั้งอัน, แก้
+     slug Palliative จาก `palliative` เป็น `palliative-care` (ต้องแก้ onchange handler ของ PPS field
+     toggle ให้ตรงกับ slug ใหม่ด้วย ไม่งั้น field จะไม่โผล่ตอนเลือก Palliative Care)
+  3. ไม่ต้องแก้ migration ใหม่ — เป็นการแก้ seed data + prototype UI เท่านั้น ไม่กระทบ schema
+  ผู้ใช้ขอให้แก้ต่อทันทีก่อน commit: แก้ `care-plan-confirm.html`'s case_type select ให้ใช้ slug เดียวกับ
+  อีก 2 ไฟล์ (เดิมใช้ชื่อเต็มเช่น "Palliative Care" ตรงๆ เป็น value, ขาด "หลังผ่าตัด" ไปด้วยเหมือนกัน) —
+  เปลี่ยน option values ทั้ง 8 ตัวเป็น slug (med/surg/ortho/peds/postpartum/post-surgery/palliative-care/
+  other) เพิ่ม "หลังผ่าตัด" ที่หายไป และแก้ `syncCaseType()` ใน `<script>` 2 จุด: (1) เงื่อนไขซ่อน/แสดง
+  PPS field เปลี่ยนจากเทียบ `'Palliative Care'` เป็น `'palliative-care'` (2) ข้อความใน chip เดิมตั้งจาก
+  `caseTypeSelect.value` ตรงๆ (จะกลายเป็นโชว์ slug ดิบๆ ถ้าไม่แก้) เปลี่ยนเป็นอ่านจาก
+  `caseTypeSelect.options[caseTypeSelect.selectedIndex].text` แทน เพื่อให้ยังโชว์ชื่อไทยที่ถูกต้อง
+  ทั้ง 3 ไฟล์ (`referral-create.html`, `admin-case-types-list.html` เป็นความจริงเดิม, `care-plan-confirm.html`)
+  ใช้ slug ชุดเดียวกันครบแล้ว.

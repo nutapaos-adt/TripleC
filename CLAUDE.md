@@ -52,16 +52,40 @@ only `admin` can reach the `/admin/*` routes.
 ### Core data flow / model relationships
 
 `Referral` is the central "case" entity, tying together:
-- `Patient` (demographics, `zone` enum `in_area`/`out_area`, resolved by `ZoneResolver` against
-  `config/catchment.php`'s `in_area_sub_districts` list — falls back to manual selection if that list is
-  empty)
+- `Patient` (demographics, `gender` enum `male`/`female`; `zone` enum `in_area`/`out_area`, resolved by
+  `ZoneResolver` against `config/catchment.php`'s `in_area_sub_districts` list — falls back to manual
+  selection if that list is empty; `status` enum `active_duty`/`active_duty_family`/`civilian` plus a
+  free-text `military_unit` that only means something for the two active-duty statuses — a fixed
+  hospital-specific unit list lives in the UI, not a lookup table, since it changes rarely and doesn't need
+  admin CRUD)
 - `CaseType` → `VisitRule` (one active rule per case type; `rule_type` is `fixed_count` — N visits every
   fixed interval — or `score_based` — interval looked up from a JSON `score_rules` table of
   `{min, max, interval_days, label}` ranges, driven by PPS Score for Palliative Care)
-- `FollowUpPlan` (a scheduled visit/call; `plan_number` sequence) → `FollowUpRecord` (the recorded outcome;
-  `next_follow_up_plan_id` self-links to whatever plan gets generated after a nurse decision)
+- `Referral.severity_level` (`green`/`yellow`/`red` — the "กลุ่มบ้านสี" severity classification, a
+  dimension entirely separate from `CaseType`/`VisitRule`) → `SeverityRule` (admin-editable `due_in_days`
+  per level, seeded 30/14/5) — used only to set the **first** `FollowUpPlan`'s due date for case types
+  that don't already drive their own schedule (Palliative Care/postpartum ignore it, per `VisitRule`).
+  Set once by the nurse at plan confirmation and never edited afterward. `SeverityRule.recurring_interval_days`
+  (nullable, only set for `red` by default = 30) is the data-side override for "red house visits stay
+  monthly forever regardless of case type" — `null` on green/yellow means no override, fall through to the
+  case type's own `VisitRule`. Which rule wins (Palliative's PPS score > postpartum's fixed count > a
+  severity override > the case type's own `VisitRule`) is priority logic that lives in `VisitPlanService`,
+  not data.
+- `Referral` ↔ `Tracer` (many-to-many via `referral_tracer`; admin-manageable lookup list, seeded with the
+  5 national clinical tracer conditions — Sepsis/Stroke/Heat stroke/STEMI/Pneumonia). Selected once at
+  intake and never edited afterward, same as `severity_level`. Drives the "เยี่ยมตาม tracer" count in
+  `monthly-visit-report.html`, where the total is deduplicated by patient (one referral can match more
+  than one tracer).
+- `FollowUpPlan` (a scheduled visit/call; `plan_number` sequence, `method` is the *planned* method) →
+  `FollowUpRecord` (the recorded outcome; its own `method` is what was *actually* done and can differ from
+  the plan's — e.g. a planned home visit that had to become a phone call — so always read the record's
+  `method`, never assume it matches its plan's; `next_follow_up_plan_id` self-links to whatever plan gets
+  generated after a nurse decision)
 - `ReferralAttachment` (private-disk-only file uploads, never public; download gated through
-  `ReferralController::downloadAttachment`)
+  `ReferralController::downloadAttachment`) and `FollowUpRecordPhoto` (the same shape, but scoped to a
+  single `FollowUpRecord` instead of a `Referral` — kept as a separate table rather than a nullable second
+  foreign key on `ReferralAttachment`, since a row belonging to exactly one of two parents is exactly what
+  this codebase avoids by not using polymorphic relations anywhere else)
 
 `App\Services\VisitPlanService` owns all scheduling logic and is the one place that knows how
 `fixed_count` vs `score_based` rules translate into `FollowUpPlan` rows:
@@ -70,6 +94,13 @@ only `admin` can reach the `/admin/*` routes.
 - `generateNextPlan()` — called after a nurse decision of "repeat"/"refer"; no-ops if an upcoming
   `scheduled` plan already exists (the fixed_count case, pre-generated).
 - `cancelRemainingPlans()` — called on "close"; cancels all still-`scheduled` plans.
+
+Not every clinical classification gets its own column. DM/COPD complication reporting and gating the
+TKR/UKA post-op assessment section in `followup-record.html` both deliberately have **no** dedicated
+field — both are decided to work by having `AiService` scan the existing free text (surgical
+history/diagnosis, follow-up notes) and surface its match with the quoted evidence alongside it, the same
+transparency-as-verification pattern used elsewhere instead of a separate confirm step. Don't add a
+`is_tka_uka`-style boolean or a DM/COPD flag without re-opening that decision first.
 
 `App\Services\AiService` is the only thing that talks to the LLM (self-hosted Ollama over HTTP,
 `config/ai.php` → `OLLAMA_URL`/`OLLAMA_MODEL`/`OLLAMA_TIMEOUT`). **The Ollama URL must always be an
