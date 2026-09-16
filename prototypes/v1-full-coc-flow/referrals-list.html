@@ -32,30 +32,23 @@ a:hover{text-decoration:underline;}
 
 .app-shell{display:flex;min-height:100vh;}
 
-/* Sidebar */
-.sidebar{width:248px;flex-shrink:0;background:linear-gradient(180deg,var(--color-primary-900),var(--color-primary-800));color:#F4F8FA;display:flex;flex-direction:column;padding:var(--space-5) 0;}
-.sidebar-brand{display:flex;align-items:center;gap:var(--space-3);padding:0 var(--space-5) var(--space-5);border-bottom:1px solid rgba(255,255,255,0.14);margin-bottom:var(--space-4);}
-.brand-mark{position:relative;width:30px;height:26px;flex-shrink:0;}
-.brand-mark span{position:absolute;top:0;width:16px;height:16px;border-radius:50%;border:2.5px solid;background:transparent;}
-.brand-mark span.b1{left:0;border-color:var(--color-accent-blue);}
-.brand-mark span.b2{left:7px;border-color:var(--color-primary-500);}
-.brand-mark span.b3{left:14px;border-color:var(--color-accent-gold);}
-.brand-text{display:flex;flex-direction:column;line-height:1.2;}
-.brand-name{font-weight:800;font-size:15px;letter-spacing:0.02em;color:#F4F8FA;}
-.brand-sub{font-size:10.5px;color:var(--color-primary-300);}
-
-.sidebar-nav{display:flex;flex-direction:column;gap:2px;padding:0 var(--space-3);flex:1;}
-.nav-item{display:flex;align-items:center;gap:var(--space-2);padding:var(--space-3) var(--space-3);border-radius:var(--radius-md);color:#EDEFE4;font-size:14px;font-weight:600;border-left:3px solid transparent;}
-.nav-item:hover{background:rgba(255,255,255,0.08);text-decoration:none;}
-.nav-item.active{background:rgba(233,237,223,0.16);border-left-color:var(--color-primary-300);color:#ffffff;}
-.nav-icon{width:18px;text-align:center;flex-shrink:0;opacity:0.9;}
-.nav-group-label{padding:var(--space-3) var(--space-3) var(--space-1);font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--color-primary-300);font-weight:700;margin-top:var(--space-2);}
-.nav-sub{padding-left:var(--space-8);font-weight:500;font-size:13.5px;}
-
-.sidebar-footer{padding:var(--space-4) var(--space-5) 0;border-top:1px solid rgba(255,255,255,0.14);margin-top:var(--space-4);}
-.user-name{font-weight:700;font-size:13.5px;color:#fff;}
-.user-role{font-size:11.5px;color:var(--color-primary-300);}
-.logout-link{display:inline-block;margin-top:var(--space-2);font-size:12.5px;color:#EDEFE4;opacity:0.9;}
+/* Sidebar (canonical structure shared across ward-staff screens) */
+.sidebar{width:248px;flex-shrink:0;background:linear-gradient(180deg,var(--color-primary-900) 0%,var(--color-primary-800) 100%);color:#EFEEE2;display:flex;flex-direction:column;padding:var(--space-5) var(--space-3);gap:var(--space-6);}
+.brand{display:flex;align-items:center;gap:var(--space-2);padding:0 var(--space-2);margin-bottom:var(--space-2);}
+.brand-mark{width:34px;height:34px;flex-shrink:0;border-radius:var(--radius-sm);background:#F4F8FA;display:flex;align-items:center;justify-content:center;}
+.brand-mark svg{width:24px;height:24px;}
+.brand-text{display:flex;flex-direction:column;line-height:1.15;}
+.brand-text .full{font-weight:700;font-size:14px;color:#F4F8FA;}
+.brand-text .sub{font-size:11px;color:var(--color-primary-300);}
+.nav-section{display:flex;flex-direction:column;gap:2px;}
+.nav-section + .nav-section{margin-top:var(--space-2);}
+.nav-heading{padding:var(--space-2) var(--space-3) var(--space-1);font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--color-primary-300);text-transform:uppercase;}
+.nav-item{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-3);border-radius:var(--radius-md);color:#E6E4D4;font-weight:600;font-size:14px;cursor:pointer;white-space:nowrap;}
+.nav-item svg{width:18px;height:18px;flex-shrink:0;opacity:.9;}
+.nav-item:hover{background:rgba(60,77,42,0.35);}
+.nav-item.active{background:rgba(60,77,42,0.55);color:#FFFFFF;box-shadow:inset 3px 0 0 var(--color-accent-gold);}
+.nav-item.sub{padding-left:var(--space-8);font-weight:500;font-size:13.5px;}
+.sidebar-footer{margin-top:auto;padding:var(--space-3);font-size:11px;color:var(--color-primary-300);}
 
 /* Main */
 .main-content{flex:1;padding:var(--space-8);max-width:1180px;}
@@ -104,13 +97,11 @@ tbody tr.row-link:hover{background:var(--color-primary-50);}
 
 @media (max-width:860px){
   .app-shell{flex-direction:column;}
-  .sidebar{width:100%;flex-direction:row;align-items:center;overflow-x:auto;padding:var(--space-3) var(--space-4);gap:var(--space-4);}
-  .sidebar-brand{border-bottom:none;border-right:1px solid rgba(255,255,255,0.14);margin-bottom:0;padding:0 var(--space-4) 0 0;flex-shrink:0;}
-  .sidebar-nav{flex-direction:row;flex:0 0 auto;padding:0;}
-  .nav-group-label{display:none;}
-  .nav-item{border-left:none;border-bottom:3px solid transparent;white-space:nowrap;}
-  .nav-item.active{border-left:none;border-bottom-color:var(--color-primary-300);}
-  .nav-sub{padding-left:var(--space-3);}
+  .sidebar{width:100%;flex-direction:row;align-items:center;overflow-x:auto;padding:var(--space-3);gap:var(--space-3);position:sticky;top:0;z-index:20;}
+  .brand{margin-bottom:0;}
+  .nav-section{flex-direction:row;gap:var(--space-1);}
+  .nav-heading{display:none;}
+  .nav-item.sub{padding-left:var(--space-3);}
   .sidebar-footer{display:none;}
   .main-content{padding:var(--space-5);}
   table{font-size:13px;}
@@ -122,29 +113,57 @@ tbody tr.row-link:hover{background:var(--color-primary-50);}
 </head>
 <body>
 <div class="app-shell">
-  <aside class="sidebar">
-    <div class="sidebar-brand">
-      <div class="brand-mark"><span class="b1"></span><span class="b2"></span><span class="b3"></span></div>
+  <aside class="sidebar" aria-label="เมนูหลัก">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#2C5166" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      </div>
       <div class="brand-text">
-        <span class="brand-name">TRIPLE C</span>
-        <span class="brand-sub">Chira Continuity Care</span>
+        <span class="full">Chira Continuity Care</span>
+        <span class="sub">Triple C</span>
       </div>
     </div>
-    <nav class="sidebar-nav">
-      <a class="nav-item" href="dashboard-ward.html"><span class="nav-icon">&#9635;</span> Dashboard</a>
-      <a class="nav-item active" href="referrals-list.html"><span class="nav-icon">&#128203;</span> รายการเคส</a>
-      <a class="nav-item" href="followup-list.html"><span class="nav-icon">&#128197;</span> บันทึกการเยี่ยมบ้าน</a>
-      <a class="nav-item" href="ward-visit-results.html"><span class="nav-icon">&#128101;</span> ติดตามผลการเยี่ยม</a>
-      <a class="nav-item" href="monthly-visit-report.html"><span class="nav-icon">&#128202;</span> สรุปรายงานประจำเดือน</a>
-      <div class="nav-group-label">จัดการระบบ</div>
-      <a class="nav-item nav-sub" href="admin-case-types-list.html">ประเภทเคส</a>
-      <a class="nav-item nav-sub" href="admin-users-list.html">ผู้ใช้งาน</a>
+
+    <nav class="nav-section" aria-label="เมนูงานหลัก">
+      <a class="nav-item" href="dashboard-ward.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+        <span>แดชบอร์ด</span>
+      </a>
+      <a class="nav-item active" href="referrals-list.html" aria-current="page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 4h9a1 1 0 0 1 1 1v15l-4-3-4 3-4-3-4 3V8z"/><path d="M12 9h4M12 13h4"/></svg>
+        <span>รายการเคส</span>
+      </a>
+      <a class="nav-item" href="followup-list.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 4.5v-1M16 4.5v-1"/><path d="M7 13.5h3M7 16.5h6"/></svg>
+        <span>บันทึกการเยี่ยมบ้าน</span>
+      </a>
+      <a class="nav-item" href="ward-visit-results.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-7.5 7-12a7 7 0 1 0-14 0c0 4.5 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>
+        <span>ติดตามผลการเยี่ยม</span>
+      </a>
+      <a class="nav-item" href="visit-summary.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+        <span>สรุปข้อมูลสำคัญงานเยี่ยมบ้าน</span>
+      </a>
+      <a class="nav-item" href="monthly-visit-report.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg>
+        <span>สรุปรายงานประจำเดือน</span>
+      </a>
     </nav>
-    <div class="sidebar-footer">
-      <div class="user-name">กัลยา เจ้าหน้าที่ธุรการ</div>
-      <div class="user-role">ward_staff · หอผู้ป่วยอายุรกรรม</div>
-      <a class="logout-link" href="#">ออกจากระบบ</a>
+
+    <div class="nav-section" aria-label="จัดการระบบ">
+      <div class="nav-heading">จัดการระบบ</div>
+      <a class="nav-item sub" href="admin-case-types-list.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.35a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.65 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.65 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.65 1.7 1.7 0 0 0 10.03 3.09V3a2 2 0 1 1 4 0v.09c0 .69.4 1.3 1.03 1.56.61.25 1.32.12 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06c-.46.55-.6 1.26-.34 1.87.25.61.87 1.03 1.56 1.03H21a2 2 0 1 1 0 4h-.09c-.69 0-1.31.4-1.56 1.03z"/></svg>
+        <span>ประเภทเคส</span>
+      </a>
+      <a class="nav-item sub" href="admin-users-list.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1"/><circle cx="9" cy="7" r="3.2"/><path d="M22 21v-1a4 4 0 0 0-3-3.87"/><path d="M16.5 3.3a3.2 3.2 0 0 1 0 6.2"/></svg>
+        <span>ผู้ใช้งาน</span>
+      </a>
     </div>
+
+    <div class="sidebar-footer">กัลยา เจ้าหน้าที่ธุรการ &middot; ward_staff &middot; หอผู้ป่วยอายุรกรรม</div>
   </aside>
 
   <main class="main-content">
