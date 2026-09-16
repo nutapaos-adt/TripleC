@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Referral extends Model
 {
@@ -100,5 +101,14 @@ class Referral extends Model
     public function isConfirmed(): bool
     {
         return $this->confirmed_at !== null;
+    }
+
+    /**
+     * ผลประเมินความพึงพอใจ — เคสหนึ่งประเมินได้ครั้งเดียว (ใช้ได้/ไม่มีค่าเป็นตัวบอกสถานะ
+     * "ประเมินแล้ว"/"ยังไม่ประเมิน" ใน satisfaction-survey-list.html โดยตรง ไม่ต้องมี status column แยก)
+     */
+    public function satisfactionSurvey(): HasOne
+    {
+        return $this->hasOne(SatisfactionSurvey::class);
     }
 }

@@ -81,7 +81,7 @@ php artisan migrate
 `add_severity_level_to_referrals_table`, `tracers`, `referral_tracer`,
 `add_status_to_patients_table`, `add_recurring_interval_days_to_severity_rules_table`,
 `add_gender_to_patients_table`, `add_method_to_follow_up_records_table`,
-`follow_up_record_photos`
+`follow_up_record_photos`, `satisfaction_surveys`
 
 ไฟล์แนบ (เอกสารที่อัปโหลด) จะถูกเก็บไว้ที่ `storage/app/referral-attachments` (ไม่เปิดเผยต่อสาธารณะ
 ต้อง login และเป็นเจ้าของสิทธิ์เข้าถึงใบส่งต่อนั้นถึงจะดาวน์โหลดได้ผ่านระบบเท่านั้น) รูปภาพประกอบการเยี่ยม

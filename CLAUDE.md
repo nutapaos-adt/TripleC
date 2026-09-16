@@ -81,6 +81,12 @@ only `admin` can reach the `/admin/*` routes.
   the plan's — e.g. a planned home visit that had to become a phone call — so always read the record's
   `method`, never assume it matches its plan's; `next_follow_up_plan_id` self-links to whatever plan gets
   generated after a nurse decision)
+- `Referral` → `SatisfactionSurvey` (one per referral, matching `satisfaction-survey-list.html`'s binary
+  "ประเมินแล้ว"/"ยังไม่ประเมิน" state — a row existing *is* the "evaluated" flag, no separate status column).
+  Respondent demographics (Section 1) plus `submitted_via`/`collected_by` are real columns; the 10 fixed
+  Likert answers (Section 2) are one `answers` JSON column keyed by question number, matching this app's
+  existing JSON-for-flexible-data convention — the questions themselves are a hardcoded, never-admin-edited
+  instrument lifted from the hospital's real paper form, listed verbatim in `SatisfactionSurvey::QUESTIONS`.
 - `ReferralAttachment` (private-disk-only file uploads, never public; download gated through
   `ReferralController::downloadAttachment`) and `FollowUpRecordPhoto` (the same shape, but scoped to a
   single `FollowUpRecord` instead of a `Referral` — kept as a separate table rather than a nullable second

@@ -873,3 +873,26 @@ scope covering the entire continuity-of-care loop plus admin.
   `caseTypeSelect.options[caseTypeSelect.selectedIndex].text` แทน เพื่อให้ยังโชว์ชื่อไทยที่ถูกต้อง
   ทั้ง 3 ไฟล์ (`referral-create.html`, `admin-case-types-list.html` เป็นความจริงเดิม, `care-plan-confirm.html`)
   ใช้ slug ชุดเดียวกันครบแล้ว.
+- 2026-09-16 (รอบ 74): ทำข้อ 5 (ข้อสุดท้ายจากลำดับความสำคัญเดิม) — satisfaction survey ไม่มี schema เลยทั้ง
+  ระบบ ทั้งที่ `satisfaction-survey-list.html`/`satisfaction-survey-form.html` มี UI ครบสมบูรณ์แล้วตั้งแต่
+  รอบ 60 (คัดลอกจากแบบกระดาษจริงของ รพ.ค่ายจิรประวัติ) ถามผู้ใช้ 1 จุดก่อนออกแบบ: 10 คำถามความพึงพอใจควรตายตัว
+  ไปตลอด หรือควรรองรับการเปลี่ยนหมุน/เพิ่มชุดคำถามในอนาคต (เหมือนที่ถาม tracer ไปก่อนหน้า) — ผู้ใช้เลือก
+  **ตายตัวไปตลอด** เก็บคำตอบเป็น JSON ก้อนเดียว ไม่สร้างตาราง lookup แยก ลงมือทำจริง:
+  - เพิ่ม migration `2024_01_01_000018_create_satisfaction_surveys_table.php` — 1 แถวต่อการประเมิน 1 ครั้ง
+    ผูกกับ `referral_id` (ไม่ใช่ patient_id เพราะประเมินต่อเคส/รอบการดูแล) มี field ตาม 3 ส่วนของฟอร์มจริง:
+    ส่วนที่ 1 ข้อมูลผู้ตอบ (respondent_sex, recipient_type — ผู้ป่วยเองหรือญาติ, respondent_age,
+    marital_status/education/occupation ทั้งหมด nullable ตรงกับที่ฟอร์มไม่ได้บังคับกรอก, occupation_other
+    free text สำหรับ "อื่นๆ ระบุ"), ส่วนที่ 2 `answers` JSON ก้อนเดียวเก็บคะแนน 10 ข้อ (คีย์เป็นเลขข้อ,
+    ค่า 1-5), ส่วนที่ 3 `suggestions` text nullable — เพิ่ม `submitted_via`
+    (staff_assisted/self_service) + `collected_by` (nullable FK users) ให้ตรงกับ 2 โหมดที่ฟอร์มมีอยู่แล้ว
+    (`?mode=staff` เจ้าหน้าที่กรอกแทน vs ผู้ป่วยสแกน QR กรอกเอง) ซึ่ง prototype มีแต่ UI logic ยังไม่มีที่
+    เก็บว่าใครกรอกแบบไหน
+  - เพิ่ม `app/Models/SatisfactionSurvey.php` — เก็บ 10 คำถามจริง (เรียงตามฟอร์มกระดาษ) เป็น constant
+    `QUESTIONS` ในตัวโมเดลเอง (single source of truth เดียวสำหรับทั้งแสดงผลและคำนวณคะแนน), เพิ่ม
+    `averageScore()` helper, เพิ่ม `satisfactionSurvey()` HasOne เข้า `app/Models/Referral.php` — ไม่มี
+    status column แยกสำหรับ "ประเมินแล้ว/ยังไม่ประเมิน" เพราะการมี/ไม่มีแถวนี้เองคือคำตอบอยู่แล้ว (ตรงกับที่
+    `satisfaction-survey-list.html` แสดงเป็นสถานะ binary)
+  - อัปเดต `SETUP.md`/`CLAUDE.md`
+  ไม่ต้องแก้ prototype เลย เพราะฟอร์มสมบูรณ์ตรงกับ schema ใหม่อยู่แล้วทุกจุด — **นี่คือข้อสุดท้ายจากรอบตรวจ
+  data model ที่เริ่มจากรอบ 65 (กลุ่มบ้านสี) ครบทุกข้อแล้ว** (รอบ 65-73 commit ไปแล้วที่ `68c243a`) ยังไม่ได้
+  commit เฉพาะงานของรอบ 74 นี้.
