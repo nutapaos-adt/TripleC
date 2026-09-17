@@ -45,8 +45,7 @@
         // home_visit_team และ admin เห็นเมนูชุดเดียวกัน (admin เห็นครบทุกอย่าง)
         $mainItems = [
             $item('แดชบอร์ด', 'dashboard', 'dashboard', route('dashboard')),
-            $item('รายการเคส', 'list', ['referrals.index', 'referrals.create'], route('referrals.index')),
-            $item('ประวัติผู้ป่วย', 'history', 'referrals.show', route('referrals.index')),
+            $item('รายการเคส', 'list', ['referrals.index', 'referrals.create', 'referrals.show'], route('referrals.index')),
             $item('วิเคราะห์แผนการพยาบาล', 'clipboard-check', ['care-plan.pending', 'referrals.care-plan*'], route('care-plan.pending')),
             $item('บันทึกการเยี่ยมบ้าน', 'calendar', 'follow-up-plans.index', route('follow-up-plans.index')),
             $item('ติดตามผลการเยี่ยม', 'users', 'ward.visit-results', route('ward.visit-results')),

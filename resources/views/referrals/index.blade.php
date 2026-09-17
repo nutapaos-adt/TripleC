@@ -10,8 +10,10 @@
     </div>
 
     @php
+        // ใช้ 'all' แทน null เป็น key เพราะ PHP array literal จะแปลง key null เป็น "" ให้เอง
+        // (ทำให้ $value === null ใน foreach ด้านล่างไม่ตรงกับค่าที่ได้จริง)
         $statusLabels = [
-            null => 'ทั้งหมด',
+            'all' => 'ทั้งหมด',
             \App\Models\Referral::STATUS_PENDING_REVIEW => 'รอตรวจสอบ',
             \App\Models\Referral::STATUS_PLAN_CONFIRMED => 'ยืนยันแผนแล้ว',
             \App\Models\Referral::STATUS_IN_PROGRESS => 'กำลังติดตาม',
@@ -20,10 +22,10 @@
     @endphp
     <div style="display:flex;gap:var(--space-2);flex-wrap:wrap;">
         @foreach ($statusLabels as $value => $label)
-            @php $count = $value === null ? $statusCounts['all'] : $statusCounts[$value]; @endphp
-            <a href="{{ route('referrals.index', $value ? ['status' => $value] : []) }}"
-               class="btn btn-sm {{ $status === $value ? 'btn-primary' : 'btn-secondary' }}">
-                {{ $label }} ({{ $count }})
+            @php $isAll = $value === 'all'; @endphp
+            <a href="{{ route('referrals.index', $isAll ? [] : ['status' => $value]) }}"
+               class="btn btn-sm {{ ($isAll ? $status === null : $status === $value) ? 'btn-primary' : 'btn-secondary' }}">
+                {{ $label }} ({{ $statusCounts[$isAll ? 'all' : $value] }})
             </a>
         @endforeach
     </div>

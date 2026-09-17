@@ -695,3 +695,13 @@ scope covering the entire continuity-of-care loop plus admin.
   topbar, เนื้อหาหน้า, หรือ script ของไฟล์ไหนเลยในรอบนี้ — เฉพาะ `<aside>` sidebar, CSS ของมัน, และ
   mobile breakpoint ที่เกี่ยวกับ sidebar เท่านั้น. `monthly-visit-report.html` และ
   `satisfaction-survey-form.html` ไม่มี sidebar อยู่แล้วจึงไม่อยู่ในรอบนี้.
+
+- 2026-09-17 (round 65): ตัดเมนู "ประวัติผู้ป่วย" (เดิมชี้ไป `referral-detail.html`) ออกจาก sidebar ทั้ง 13
+  ไฟล์ที่มี (9 ไฟล์กลุ่มทีมเยี่ยมบ้าน + 4 ไฟล์กลุ่มแอดมิน ตามการแบ่งกลุ่มใน round 64) เพราะซ้ำซ้อนกับ
+  "รายการเคส" — ทั้งสองปลายทางไปสู่การดู referral เดียวกันในทางปฏิบัติ เมื่อสร้างของจริง (Blade) ไม่มีเหตุผล
+  ให้แยกเป็น 2 รายการเมนู. แก้ที่แอปจริง (`resources/views/components/sidebar.blade.php`) ก่อน แล้วย้อนกลับมา
+  แก้ prototype ให้ตรงกันตามคำขอ. ผลคือกลุ่มทีมเยี่ยมบ้าน/แอดมินเหลือ 8 เมนูหลัก (จากเดิม 9); `referral-detail.html`
+  ซึ่งเดิม active state อยู่ที่ "ประวัติผู้ป่วย" ของตัวเอง ย้าย active/`aria-current="page"` ไปที่ "รายการเคส"
+  (`referrals-list.html`) แทน — จุดเข้าถึงหน้า referral-detail.html ตอนนี้เหลือทางเดียวคือคลิกแถวใน
+  "รายการเคส" เท่านั้น. ข้อความ "ประวัติผู้ป่วย" ที่เหลืออยู่ใน `care-plan-confirm.html` (บรรทัด footnote
+  ใต้กล่อง AI) เป็นเนื้อหาปกติไม่ใช่เมนู จึงไม่ได้แตะ.
