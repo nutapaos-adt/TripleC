@@ -30,13 +30,15 @@ class VisitPlanService
 
         $rule = $referral->caseType?->activeVisitRule();
 
-        if (! $rule) {
-            return [];
-        }
-
         $method = $referral->zone === Patient::ZONE_IN_AREA
             ? FollowUpPlan::METHOD_HOME_VISIT
             : FollowUpPlan::METHOD_PHONE_CALL;
+
+        if (! $rule) {
+            // ไม่มีเกณฑ์ (visit_rules) กำหนดไว้สำหรับประเภทเคสนี้ — สร้างเยี่ยมครั้งแรกเสมอ (เพดานตามความรุนแรง
+            // ด้านล่าง) ส่วนจะมีครั้งถัดไปหรือไม่ขึ้นกับกลุ่มความรุนแรง (ดู generateNextPlan)
+            return [$this->createPlan($referral, 1, $method, $this->firstVisitDueDate($referral, 30))];
+        }
 
         if ($rule->rule_type === VisitRule::TYPE_FIXED_COUNT) {
             return $this->generateFixedCountPlans($referral, $rule, $method);
@@ -55,13 +57,11 @@ class VisitPlanService
         $plans = [];
 
         for ($i = 1; $i <= $count; $i++) {
-            $plans[] = FollowUpPlan::create([
-                'referral_id' => $referral->id,
-                'plan_number' => $i,
-                'method' => $method,
-                'due_date' => Carbon::now()->addDays($intervalDays * $i)->toDateString(),
-                'status' => FollowUpPlan::STATUS_SCHEDULED,
-            ]);
+            $dueDate = $i === 1
+                ? $this->firstVisitDueDate($referral, $intervalDays)
+                : Carbon::now()->addDays($intervalDays * $i)->toDateString();
+
+            $plans[] = $this->createPlan($referral, $i, $method, $dueDate);
         }
 
         return $plans;
@@ -73,13 +73,31 @@ class VisitPlanService
             ? ($rule->intervalDaysForScore($initialPpsScore) ?? 14)
             : 14;
 
+        return $this->createPlan($referral, 1, $method, $this->firstVisitDueDate($referral, $intervalDays));
+    }
+
+    protected function createPlan(Referral $referral, int $planNumber, string $method, string $dueDate): FollowUpPlan
+    {
         return FollowUpPlan::create([
             'referral_id' => $referral->id,
-            'plan_number' => 1,
+            'plan_number' => $planNumber,
             'method' => $method,
-            'due_date' => Carbon::now()->addDays($intervalDays)->toDateString(),
+            'due_date' => $dueDate,
             'status' => FollowUpPlan::STATUS_SCHEDULED,
         ]);
+    }
+
+    /**
+     * นัดเยี่ยมครั้งแรก (plan_number 1) ต้องไม่เกินกำหนดตามกลุ่มความรุนแรง (DESIGN — กลุ่ม 1 ≤30วัน/
+     * กลุ่ม 2 ≤14วัน/กลุ่ม 3 ≤5วัน) ใช้ตัดกับ interval ที่คำนวณไว้เดิม (เอาค่าที่น้อยกว่า) — Palliative
+     * (severity_group = palliative หรือไม่ระบุ) ไม่มีเพดานนี้ เพราะใช้ PPS Score กำหนดความถี่อยู่แล้ว
+     */
+    protected function firstVisitDueDate(Referral $referral, int $intervalDays): string
+    {
+        $deadline = Referral::SEVERITY_FIRST_VISIT_DEADLINE_DAYS[$referral->severity_group] ?? null;
+        $effectiveDays = $deadline !== null ? min($intervalDays, $deadline) : $intervalDays;
+
+        return Carbon::now()->addDays($effectiveDays)->toDateString();
     }
 
     /**

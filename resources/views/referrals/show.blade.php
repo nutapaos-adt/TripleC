@@ -1,143 +1,133 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-[#22201A] leading-tight">
-            ใบส่งต่อ — {{ $referral->patient->name }}
-            <span class="text-[#7C7863] text-base font-normal">(HN {{ $referral->patient->hn }})</span>
-        </h2>
-    </x-slot>
+    <x-slot name="header">ใบส่งต่อ — {{ $referral->patient->name }} (HN {{ $referral->patient->hn }})</x-slot>
 
-    <div class="py-8">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
+    <div class="page-head">
+        <h1 class="h1">{{ $referral->patient->name }}</h1>
+        <p class="sub">HN {{ $referral->patient->hn }}</p>
+    </div>
 
-            @if (session('status'))
-                <div class="p-4 rounded bg-[#E5F2E4] text-[#3E8E49] text-sm">{{ session('status') }}</div>
-            @endif
-            @if (session('error'))
-                <div class="p-4 rounded bg-[#F7E7E2] text-[#B23B2C] text-sm">{{ session('error') }}</div>
-            @endif
+    <div class="card">
+        <div class="card-body" style="padding-top:var(--space-5);">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:var(--space-4);">
+                <span class="chip {{ $referral->zone === 'in_area' ? 'chip-inzone' : 'chip-outzone' }}">
+                    {{ $referral->zone === 'in_area' ? 'ในเขต' : 'นอกเขต' }}
+                </span>
+                @if ($referral->caseType)
+                    <span class="chip chip-casetype">{{ $referral->caseType->name }}</span>
+                @endif
+                @if ($referral->severityLabel())
+                    <span class="chip chip-warning">{{ $referral->severityLabel() }}</span>
+                @endif
+                <span class="chip chip-method">{{ $referral->patientStatusLabel() }}</span>
+            </div>
 
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                <div class="flex flex-wrap gap-2 mb-4">
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold
-                        {{ $referral->zone === 'in_area' ? 'bg-[#E1EBEF] text-[#2C5166]' : 'bg-[#F1EEE0] text-[#4A4739]' }}">
-                        {{ $referral->zone === 'in_area' ? 'ในเขต' : 'นอกเขต' }}
-                    </span>
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-[#E1EBEF] text-[#2C5166]">
-                        {{ $referral->caseType?->name ?? 'รอ AI ประเมินประเภทเคส' }}
-                    </span>
+            <div class="info-list">
+                <div class="info-row">
+                    <div class="info-label">แหล่งข้อมูล</div>
+                    <div class="info-value">
+                        {{ match($referral->source_type) {
+                            'ward' => 'หอผู้ป่วย', 'opd' => 'OPD',
+                            'internal_dept' => 'หน่วยงานภายใน รพ.', 'external_hospital' => 'โรงพยาบาลอื่น',
+                            default => $referral->source_type,
+                        } }}
+                        @if ($referral->source_detail) — {{ $referral->source_detail }} @endif
+                        @if ($referral->ward) ({{ $referral->ward->name }}) @endif
+                    </div>
                 </div>
-
-                <dl class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                        <dt class="text-[#7C7863]">แหล่งข้อมูล</dt>
-                        <dd class="font-medium text-[#22201A]">
-                            {{ match($referral->source_type) {
-                                'ward' => 'หอผู้ป่วย',
-                                'opd' => 'OPD',
-                                'internal_dept' => 'หน่วยงานภายใน รพ.',
-                                'external_hospital' => 'โรงพยาบาลอื่น',
-                                default => $referral->source_type,
-                            } }}
-                            @if ($referral->source_detail) — {{ $referral->source_detail }} @endif
-                        </dd>
-                    </div>
-                    <div>
-                        <dt class="text-[#7C7863]">ส่งข้อมูลโดย</dt>
-                        <dd class="font-medium text-[#22201A]">{{ $referral->creator->name }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-[#7C7863]">ที่อยู่</dt>
-                        <dd class="font-medium text-[#22201A]">
-                            {{ $referral->patient->address }}
-                            @if ($referral->patient->sub_district) ต.{{ $referral->patient->sub_district }} @endif
-                            @if ($referral->patient->district) อ.{{ $referral->patient->district }} @endif
-                            @if ($referral->patient->province) จ.{{ $referral->patient->province }} @endif
-                        </dd>
-                    </div>
-                    <div>
-                        <dt class="text-[#7C7863]">เบอร์โทร</dt>
-                        <dd class="font-medium text-[#22201A]">{{ $referral->patient->phone ?: '—' }}</dd>
-                    </div>
-                </dl>
-
-                <div class="mt-6">
-                    <dt class="text-[#7C7863] text-sm mb-1">ข้อความสรุปอาการ / สถานการณ์</dt>
-                    <dd class="text-[#22201A] whitespace-pre-line bg-[#F1EEE0] rounded-md p-4 text-sm">{{ $referral->raw_notes }}</dd>
+                <div class="info-row">
+                    <div class="info-label">วันที่ส่งต่อข้อมูล / ส่งข้อมูลโดย</div>
+                    <div class="info-value">{{ $referral->created_at->format('d/m/Y H:i') }} — {{ $referral->creator->name }}</div>
                 </div>
-
-                @if ($referral->attachments->isNotEmpty())
-                    <div class="mt-6">
-                        <dt class="text-[#7C7863] text-sm mb-2">เอกสารแนบ</dt>
-                        <ul class="space-y-2">
-                            @foreach ($referral->attachments as $attachment)
-                                <li>
-                                    <a href="{{ route('referrals.attachments.download', [$referral, $attachment]) }}"
-                                       class="inline-flex items-center gap-2 text-sm text-[#2C5166] hover:underline">
-                                        📄 {{ $attachment->original_name }}
-                                    </a>
-                                </li>
-                            @endforeach
-                        </ul>
+                <div class="info-row">
+                    <div class="info-label">ที่อยู่</div>
+                    <div class="info-value">
+                        {{ $referral->patient->address }}
+                        @if ($referral->patient->sub_district) ต.{{ $referral->patient->sub_district }} @endif
+                        @if ($referral->patient->district) อ.{{ $referral->patient->district }} @endif
+                        @if ($referral->patient->province) จ.{{ $referral->patient->province }} @endif
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">เบอร์โทรผู้ป่วย</div>
+                    <div class="info-value">{{ $referral->patient->phone ?: '—' }}</div>
+                </div>
+                @if ($referral->caregiver_name)
+                    <div class="info-row">
+                        <div class="info-label">ผู้ดูแลหลัก</div>
+                        <div class="info-value">
+                            {{ $referral->caregiver_name }}
+                            @if ($referral->caregiver_relationship) ({{ $referral->caregiver_relationship }}) @endif
+                            @if ($referral->caregiver_phone) — {{ $referral->caregiver_phone }} @endif
+                        </div>
+                    </div>
+                @endif
+                @if ($referral->patient_status !== 'civilian' && $referral->military_unit)
+                    <div class="info-row">
+                        <div class="info-label">หน่วยต้นสังกัด</div>
+                        <div class="info-value">{{ $referral->military_unit }}</div>
+                    </div>
+                @endif
+                @if ($referral->coverage_type)
+                    <div class="info-row">
+                        <div class="info-label">สิทธิการรักษา</div>
+                        <div class="info-value">{{ $referral->coverage_type }}</div>
+                    </div>
+                @endif
+                @if ($referral->diagnosis || $referral->underlying_disease || $referral->surgery_history)
+                    <div class="info-row">
+                        <div class="info-label">วินิจฉัย/โรคประจำตัว/ผ่าตัด</div>
+                        <div class="info-value">
+                            @if ($referral->diagnosis) <div>วินิจฉัย: {{ $referral->diagnosis }}</div> @endif
+                            @if ($referral->underlying_disease) <div>โรคประจำตัว: {{ $referral->underlying_disease }}</div> @endif
+                            @if ($referral->surgery_history) <div>ผ่าตัด: {{ $referral->surgery_history }}</div> @endif
+                        </div>
+                    </div>
+                @endif
+                @if (!empty($referral->equipment))
+                    <div class="info-row">
+                        <div class="info-label">อุปกรณ์ของผู้ป่วย</div>
+                        <div class="info-value">{{ implode(', ', $referral->equipment) }}</div>
+                    </div>
+                @endif
+                @if (!empty($referral->clinical_tracers))
+                    <div class="info-row">
+                        <div class="info-label">Clinical tracer</div>
+                        <div class="info-value">{{ implode(', ', $referral->clinical_tracers) }}</div>
+                    </div>
+                @endif
+                @if ($referral->admit_date || $referral->discharge_date || $referral->opd_followup_date)
+                    <div class="info-row">
+                        <div class="info-label">วันที่ Admit/จำหน่าย/นัด OPD</div>
+                        <div class="info-value">
+                            {{ $referral->admit_date?->format('d/m/Y') ?? '—' }} /
+                            {{ $referral->discharge_date?->format('d/m/Y') ?? '—' }} /
+                            {{ $referral->opd_followup_date?->format('d/m/Y') ?? '—' }}
+                        </div>
+                    </div>
+                @endif
+                @if ($referral->attending_physician)
+                    <div class="info-row">
+                        <div class="info-label">แพทย์เจ้าของไข้</div>
+                        <div class="info-value">{{ $referral->attending_physician }}</div>
                     </div>
                 @endif
             </div>
 
-            <div class="bg-[#F4F8FA] border border-dashed border-[#A8C4D2] rounded-lg p-4 text-sm text-[#2C5166] flex items-center justify-between gap-4">
-                @if ($referral->isConfirmed())
-                    <span>ยืนยันแผนติดตามแล้วโดย {{ $referral->confirmer->name }} เมื่อ {{ $referral->confirmed_at->format('d/m/Y H:i') }}</span>
-                    <a href="{{ route('referrals.care-plan', $referral) }}" class="shrink-0 inline-flex items-center px-3 py-1.5 bg-white border border-[#C9C4AD] text-[#22201A] rounded-md text-sm font-semibold hover:bg-[#F1EEE0]">
-                        ดูแผนการดูแล
-                    </a>
-                @elseif ($referral->ai_summary)
-                    <span>AI สรุปข้อมูลแล้ว รอพยาบาลตรวจสอบและยืนยัน</span>
-                    <a href="{{ route('referrals.care-plan', $referral) }}" class="shrink-0 inline-flex items-center px-3 py-1.5 bg-[#2C5166] text-white rounded-md text-sm font-semibold hover:bg-[#3D6B84]">
-                        วิเคราะห์แผนการพยาบาล
-                    </a>
-                @else
-                    <span>ขั้นตอนถัดไป: ให้ AI ช่วยสรุปข้อมูลและแนะนำแผนติดตาม</span>
-                    <form method="POST" action="{{ route('referrals.ai-summary', $referral) }}">
-                        @csrf
-                        <button type="submit" class="shrink-0 inline-flex items-center px-3 py-1.5 bg-[#2C5166] text-white rounded-md text-sm font-semibold hover:bg-[#3D6B84]">
-                            ให้ AI ช่วยสรุปข้อมูล
-                        </button>
-                    </form>
-                @endif
+            <div style="margin-top:var(--space-5);">
+                <div class="label" style="margin-bottom:6px;">ข้อความสรุปอาการ / สถานการณ์</div>
+                <div class="field-value multiline">{{ $referral->raw_notes }}</div>
             </div>
 
-            @if ($referral->followUpPlans->isNotEmpty())
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                    <h3 class="text-sm font-semibold text-[#4A4739] uppercase tracking-wide mb-3">กำหนดการติดตาม</h3>
-                    <ul class="divide-y divide-[#F1EEE0]">
-                        @foreach ($referral->followUpPlans->sortBy('plan_number') as $plan)
-                            <li class="py-3 flex items-center justify-between text-sm">
-                                <div>
-                                    <span class="font-medium text-[#22201A]">ครั้งที่ {{ $plan->plan_number }}</span>
-                                    <span class="text-[#7C7863]">— {{ $plan->method === 'home_visit' ? 'เยี่ยมบ้าน' : 'โทรติดตาม' }}</span>
-                                </div>
-                                <div class="flex items-center gap-3">
-                                    <span class="text-[#7C7863] tabular-nums">กำหนด {{ $plan->due_date->format('d/m/Y') }}</span>
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold
-                                        {{ match(true) {
-                                            $plan->status === 'done' => 'bg-[#E5F2E4] text-[#3E8E49]',
-                                            $plan->isOverdue() => 'bg-[#F7E7E2] text-[#B23B2C]',
-                                            default => 'bg-[#FBF0DC] text-[#C2891F]',
-                                        } }}">
-                                        {{ match(true) {
-                                            $plan->status === 'done' => 'เยี่ยมแล้ว',
-                                            $plan->isOverdue() => 'เกินกำหนด',
-                                            default => 'รอถึงกำหนด',
-                                        } }}
-                                    </span>
-                                    @if ($plan->status !== 'done')
-                                        <a href="{{ route('follow-up-plans.record.create', $plan) }}" class="text-[#2C5166] hover:underline font-medium">
-                                            เริ่มติดตาม →
-                                        </a>
-                                    @elseif ($plan->record && ! $plan->record->isConfirmed())
-                                        <a href="{{ route('follow-up-plans.review', $plan) }}" class="text-[#C2891F] hover:underline font-medium">
-                                            รอวิเคราะห์/ยืนยัน →
-                                        </a>
-                                    @endif
-                                </div>
+            @if ($referral->attachments->isNotEmpty())
+                <div style="margin-top:var(--space-5);">
+                    <div class="label" style="margin-bottom:6px;">เอกสารแนบ</div>
+                    <ul style="margin:0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:6px;">
+                        @foreach ($referral->attachments as $attachment)
+                            <li>
+                                <a href="{{ route('referrals.attachments.download', [$referral, $attachment]) }}"
+                                   style="color:var(--color-primary-700);font-weight:600;">
+                                    📄 {{ $attachment->original_name }}
+                                </a>
                             </li>
                         @endforeach
                     </ul>
@@ -145,4 +135,71 @@
             @endif
         </div>
     </div>
+
+    @if ($referral->isConfirmed())
+        <div class="confirmed-box">
+            <div class="box-label"><span class="dot"></span> ยืนยันแล้วโดย {{ $referral->confirmer->name }} เมื่อ {{ $referral->confirmed_at->format('d/m/Y H:i') }}</div>
+            <div class="btn-row">
+                <a href="{{ route('referrals.care-plan', $referral) }}" class="btn btn-secondary">ดูแผนการดูแล</a>
+                <a href="{{ route('referrals.care-plan.print', $referral) }}" class="btn btn-secondary">พิมพ์แผนการดูแล</a>
+            </div>
+        </div>
+    @elseif ($referral->ai_summary)
+        <div class="ai-box">
+            <div class="box-label"><span class="dot"></span> ร่างจาก AI — ยังไม่ยืนยัน</div>
+            <p style="margin:0 0 var(--space-4);color:var(--color-primary-800);">AI สรุปข้อมูลแล้ว รอพยาบาลตรวจสอบและยืนยันแผนการพยาบาล</p>
+            <a href="{{ route('referrals.care-plan', $referral) }}" class="btn btn-primary">วิเคราะห์แผนการพยาบาล</a>
+        </div>
+    @else
+        <div class="banner">
+            <div class="banner-text">
+                <p class="h3">ขั้นตอนถัดไป: ให้ AI ช่วยสรุปข้อมูลและแนะนำแผนติดตาม</p>
+            </div>
+            <form method="POST" action="{{ route('referrals.ai-summary', $referral) }}">
+                @csrf
+                <button type="submit" class="btn btn-primary">ให้ AI ช่วยสรุปข้อมูล</button>
+            </form>
+        </div>
+    @endif
+
+    @if ($referral->followUpPlans->isNotEmpty())
+        <div class="card">
+            <div class="card-head"><span class="h2">กำหนดการติดตาม</span></div>
+            <div class="card-body">
+                <table>
+                    <tbody>
+                        @foreach ($referral->followUpPlans->sortBy('plan_number') as $plan)
+                            <tr>
+                                <td>
+                                    <span class="patient-name">ครั้งที่ {{ $plan->plan_number }}</span>
+                                    <span class="caption">— {{ $plan->method === 'home_visit' ? 'เยี่ยมบ้าน' : 'โทรติดตาม' }}</span>
+                                </td>
+                                <td class="due-date">กำหนด {{ $plan->due_date->format('d/m/Y') }}</td>
+                                <td>
+                                    <span class="chip {{ match(true) {
+                                        $plan->status === 'done' => 'chip-done',
+                                        $plan->isOverdue() => 'chip-overdue',
+                                        default => 'chip-today',
+                                    } }}">
+                                        {{ match(true) {
+                                            $plan->status === 'done' => 'เยี่ยมแล้ว',
+                                            $plan->isOverdue() => 'เกินกำหนด',
+                                            default => 'รอถึงกำหนด',
+                                        } }}
+                                    </span>
+                                </td>
+                                <td>
+                                    @if ($plan->status !== 'done')
+                                        <a href="{{ route('follow-up-plans.record.create', $plan) }}" style="color:var(--color-primary-700);font-weight:600;">เริ่มติดตาม →</a>
+                                    @elseif ($plan->record && ! $plan->record->isConfirmed())
+                                        <a href="{{ route('follow-up-plans.review', $plan) }}" style="color:var(--color-warning);font-weight:600;">รอวิเคราะห์/ยืนยัน →</a>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @endif
 </x-app-layout>

@@ -6,6 +6,7 @@ use App\Models\FollowUpPlan;
 use App\Models\FollowUpRecord;
 use App\Models\Patient;
 use App\Models\Referral;
+use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
 
@@ -13,6 +14,10 @@ class DashboardController extends Controller
 {
     public function index(): View
     {
+        if (auth()->user()->role === User::ROLE_WARD_STAFF) {
+            return $this->wardStaffIndex();
+        }
+
         $today = Carbon::today();
 
         $totalPatients = Patient::count();
@@ -52,6 +57,67 @@ class DashboardController extends Controller
             'upcomingPlans',
             'recentRiskRecords',
             'pendingReviewCount',
+        ));
+    }
+
+    private function wardStaffIndex(): View
+    {
+        $wardId = auth()->user()->ward_id;
+
+        $monthReferrals = Referral::query()
+            ->when(
+                $wardId,
+                fn ($q) => $q->where('ward_id', $wardId),
+                fn ($q) => $q->whereRaw('1 = 0'),
+            )
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year);
+
+        $totalReferralsCount = (clone $monthReferrals)->count();
+
+        $pendingReviewCount = (clone $monthReferrals)
+            ->where('status', Referral::STATUS_PENDING_REVIEW)
+            ->count();
+
+        $visitedCount = (clone $monthReferrals)
+            ->whereIn('status', [
+                Referral::STATUS_PLAN_CONFIRMED,
+                Referral::STATUS_IN_PROGRESS,
+                Referral::STATUS_CLOSED,
+            ])
+            ->whereHas('followUpPlans.record')
+            ->count();
+
+        $caseTypeBreakdown = (clone $monthReferrals)
+            ->with('caseType')
+            ->get()
+            ->groupBy('case_type_id')
+            ->map(function ($referrals) use ($totalReferralsCount) {
+                $count = $referrals->count();
+
+                return [
+                    'name' => $referrals->first()->caseType?->name ?? 'ไม่ระบุประเภท',
+                    'count' => $count,
+                    'percentage' => $totalReferralsCount > 0
+                        ? (int) round($count / $totalReferralsCount * 100)
+                        : 0,
+                ];
+            })
+            ->sortByDesc('count')
+            ->values();
+
+        $pendingReferrals = (clone $monthReferrals)
+            ->with(['patient', 'caseType'])
+            ->where('status', Referral::STATUS_PENDING_REVIEW)
+            ->latest()
+            ->get();
+
+        return view('dashboard-ward', compact(
+            'totalReferralsCount',
+            'pendingReviewCount',
+            'visitedCount',
+            'caseTypeBreakdown',
+            'pendingReferrals',
         ));
     }
 }

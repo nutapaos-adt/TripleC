@@ -62,6 +62,54 @@ class AiService
         ]);
     }
 
+    /**
+     * ให้ AI อ่านโรคประจำตัวและผลการเยี่ยม/โทรติดตามของเคสที่มีโรคประจำตัวเป็น DM หรือ COPD ในเดือนหนึ่งๆ
+     * แล้วสรุปว่าพบภาวะแทรกซ้อนหรือไม่ พร้อมสรุปสั้นๆ — ใช้ประกอบรายงานประจำเดือนเท่านั้น (informational-only)
+     * ไม่ใช่การตัดสินใจที่กระทบสถานะเคส/กำหนดการ จึงไม่ต้องผ่านขั้นตอนพยาบาลยืนยันตาม DESIGN.md §4.1
+     *
+     * @param  \Illuminate\Support\Collection<int, FollowUpRecord>  $records
+     * @return array{
+     *     has_complication: bool,
+     *     summary: ?string,
+     *     parse_error: bool,
+     *     raw_response?: string,
+     * }
+     */
+    public function summarizeDmCopdComplication(Referral $referral, \Illuminate\Support\Collection $records): array
+    {
+        $prompt = $this->buildDmCopdPrompt($referral, $records);
+
+        return $this->parseJsonResponse($this->callOllama($prompt), [
+            'has_complication' => false,
+            'summary' => null,
+        ]);
+    }
+
+    protected function buildDmCopdPrompt(Referral $referral, \Illuminate\Support\Collection $records): string
+    {
+        $underlyingDisease = $referral->underlying_disease ?: '-';
+
+        $notesText = $records
+            ->map(fn (FollowUpRecord $r) => '- '.($r->raw_notes ?: '-'))
+            ->implode("\n");
+
+        return <<<PROMPT
+            คุณเป็นผู้ช่วยพยาบาลในหน่วยเยี่ยมบ้าน ทำหน้าที่ช่วยอ่านโรคประจำตัวและผลการเยี่ยม/โทรติดตามของผู้ป่วย
+            ที่มีโรคประจำตัวเป็นเบาหวาน (DM) หรือถุงลมโป่งพอง (COPD) แล้วสรุปว่าพบสัญญาณภาวะแทรกซ้อนที่เกี่ยวข้องหรือไม่
+            (ใช้ประกอบรายงานประจำเดือนเท่านั้น ไม่ใช่การตัดสินใจทางคลินิก)
+
+            โรคประจำตัว: {$underlyingDisease}
+
+            ผลการเยี่ยม/โทรติดตามในเดือนนี้:
+            """
+            {$notesText}
+            """
+
+            ตอบกลับเป็น JSON เท่านั้น ห้ามมีข้อความอื่นใดนอกเหนือจาก JSON ตามโครงสร้างนี้เป๊ะๆ:
+            {"has_complication": true/false, "summary": "สรุปสั้นๆ ว่าพบภาวะแทรกซ้อนอะไรหรือไม่ (null ถ้าไม่พบ)"}
+            PROMPT;
+    }
+
     protected function buildAnalysisPrompt(FollowUpRecord $record): string
     {
         $plan = $record->plan;

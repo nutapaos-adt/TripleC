@@ -11,11 +11,72 @@ use App\Services\AiService;
 use App\Services\VisitPlanService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class FollowUpController extends Controller
 {
+    public function index(Request $request): View
+    {
+        $today = Carbon::today();
+        $status = $request->query('status');
+        $year = $request->query('year');
+        $month = $request->query('month');
+
+        $notCancelled = fn ($query) => $query->where('status', '!=', FollowUpPlan::STATUS_CANCELLED);
+
+        $counts = [
+            'all' => FollowUpPlan::tap($notCancelled)->count(),
+            'overdue' => FollowUpPlan::tap($notCancelled)
+                ->where('status', FollowUpPlan::STATUS_SCHEDULED)
+                ->whereDate('due_date', '<', $today)
+                ->count(),
+            'today' => FollowUpPlan::tap($notCancelled)
+                ->where('status', FollowUpPlan::STATUS_SCHEDULED)
+                ->whereDate('due_date', $today)
+                ->count(),
+            'scheduled' => FollowUpPlan::tap($notCancelled)
+                ->where('status', FollowUpPlan::STATUS_SCHEDULED)
+                ->whereDate('due_date', '>', $today)
+                ->count(),
+            'done' => FollowUpPlan::tap($notCancelled)
+                ->where('status', FollowUpPlan::STATUS_DONE)
+                ->count(),
+        ];
+
+        $query = FollowUpPlan::with(['referral.patient', 'referral.caseType'])
+            ->tap($notCancelled);
+
+        match ($status) {
+            'overdue' => $query->where('status', FollowUpPlan::STATUS_SCHEDULED)->whereDate('due_date', '<', $today),
+            'today' => $query->where('status', FollowUpPlan::STATUS_SCHEDULED)->whereDate('due_date', $today),
+            'scheduled' => $query->where('status', FollowUpPlan::STATUS_SCHEDULED)->whereDate('due_date', '>', $today),
+            'done' => $query->where('status', FollowUpPlan::STATUS_DONE),
+            default => null,
+        };
+
+        if ($year) {
+            $query->whereYear('due_date', $year);
+        }
+
+        if ($month) {
+            $query->whereMonth('due_date', $month);
+        }
+
+        $plans = $query->orderBy('due_date')->paginate(20)->withQueryString();
+
+        $availableYears = FollowUpPlan::tap($notCancelled)
+            ->orderBy('due_date')
+            ->pluck('due_date')
+            ->map(fn ($date) => Carbon::parse((string) $date)->year)
+            ->unique()
+            ->values();
+
+        return view('follow-up.index', compact('plans', 'counts', 'status', 'year', 'month', 'availableYears'));
+    }
+
     public function createRecord(FollowUpPlan $plan): View
     {
         abort_if($plan->record()->exists(), 403, 'บันทึกผลติดตามครั้งนี้ไปแล้ว');

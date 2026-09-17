@@ -22,13 +22,25 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReferralController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $referrals = Referral::with(['patient', 'caseType', 'creator'])
-            ->latest()
-            ->paginate(20);
+        $status = $request->query('status');
 
-        return view('referrals.index', compact('referrals'));
+        $referrals = Referral::with(['patient', 'caseType', 'creator'])
+            ->when($status, fn ($query) => $query->where('status', $status))
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
+
+        $statusCounts = [
+            'all' => Referral::count(),
+            Referral::STATUS_PENDING_REVIEW => Referral::where('status', Referral::STATUS_PENDING_REVIEW)->count(),
+            Referral::STATUS_PLAN_CONFIRMED => Referral::where('status', Referral::STATUS_PLAN_CONFIRMED)->count(),
+            Referral::STATUS_IN_PROGRESS => Referral::where('status', Referral::STATUS_IN_PROGRESS)->count(),
+            Referral::STATUS_CLOSED => Referral::where('status', Referral::STATUS_CLOSED)->count(),
+        ];
+
+        return view('referrals.index', compact('referrals', 'status', 'statusCounts'));
     }
 
     public function create(): View
@@ -68,8 +80,26 @@ class ReferralController extends Controller
                 'case_type_id' => $data['case_type_id'] ?? null,
                 'source_type' => $data['source_type'],
                 'source_detail' => $data['source_detail'] ?? null,
+                'ward_id' => Auth::user()->ward_id,
                 'created_by' => Auth::id(),
                 'raw_notes' => $data['raw_notes'],
+                'caregiver_name' => $data['caregiver_name'] ?? null,
+                'caregiver_phone' => $data['caregiver_phone'] ?? null,
+                'caregiver_relationship' => $data['caregiver_relationship'] ?? null,
+                'patient_status' => $data['patient_status'],
+                'military_unit' => $data['military_unit'] ?? null,
+                'coverage_type' => $data['coverage_type'] ?? null,
+                'diagnosis' => $data['diagnosis'] ?? null,
+                'underlying_disease' => $data['underlying_disease'] ?? null,
+                'surgery_history' => $data['surgery_history'] ?? null,
+                'equipment' => $data['equipment'] ?? [],
+                'clinical_tracers' => $data['clinical_tracers'] ?? [],
+                'admit_date' => $data['admit_date'] ?? null,
+                'discharge_date' => $data['discharge_date'] ?? null,
+                'opd_followup_date' => $data['opd_followup_date'] ?? null,
+                'attending_physician' => $data['attending_physician'] ?? null,
+                'severity_group' => $data['severity_group'],
+                'initial_pps_score' => $data['initial_pps_score'] ?? null,
                 'zone' => $zone,
                 'status' => Referral::STATUS_PENDING_REVIEW,
             ]);
@@ -164,6 +194,13 @@ class ReferralController extends Controller
         return redirect()
             ->route('referrals.show', $referral)
             ->with('status', $status);
+    }
+
+    public function printCarePlan(Referral $referral): View
+    {
+        $referral->load(['patient', 'caseType.visitRules', 'confirmer']);
+
+        return view('referrals.care-plan-print', compact('referral'));
     }
 
     public function zoneLookup(Request $request, ZoneResolver $zoneResolver): JsonResponse

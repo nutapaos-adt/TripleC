@@ -30,6 +30,7 @@ class User extends Authenticatable
         'password',
         'role',
         'department',
+        'ward_id',
     ];
 
     /**
@@ -71,5 +72,10 @@ class User extends Authenticatable
     public function roleLabel(): string
     {
         return self::ROLES[$this->role] ?? $this->role;
+    }
+
+    public function ward(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Ward::class);
     }
 }

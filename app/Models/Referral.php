@@ -21,13 +21,60 @@ class Referral extends Model
     public const STATUS_IN_PROGRESS = 'in_progress';
     public const STATUS_CLOSED = 'closed';
 
+    public const PATIENT_STATUS_CIVILIAN = 'civilian';
+    public const PATIENT_STATUS_MILITARY = 'military';
+    public const PATIENT_STATUS_MILITARY_FAMILY = 'military_family';
+
+    public const PATIENT_STATUS_LABELS = [
+        self::PATIENT_STATUS_CIVILIAN => 'ประชาชน',
+        self::PATIENT_STATUS_MILITARY => 'กำลังพล',
+        self::PATIENT_STATUS_MILITARY_FAMILY => 'ครอบครัวกำลังพล',
+    ];
+
+    public const SEVERITY_GREEN = 'green';
+    public const SEVERITY_YELLOW = 'yellow';
+    public const SEVERITY_RED = 'red';
+    public const SEVERITY_PALLIATIVE = 'palliative';
+
+    public const SEVERITY_LABELS = [
+        self::SEVERITY_GREEN => 'กลุ่ม 1 บ้านสีเขียว',
+        self::SEVERITY_YELLOW => 'กลุ่ม 2 บ้านสีเหลือง',
+        self::SEVERITY_RED => 'กลุ่ม 3 บ้านสีแดง',
+        self::SEVERITY_PALLIATIVE => 'กลุ่ม 4 Palliative Care',
+    ];
+
+    // นัดเยี่ยมครั้งแรกต้องไม่เกินกี่วัน ตามกลุ่มความรุนแรง (Palliative ใช้ตาม PPS Score แทน ไม่มีเพดานนี้)
+    public const SEVERITY_FIRST_VISIT_DEADLINE_DAYS = [
+        self::SEVERITY_GREEN => 30,
+        self::SEVERITY_YELLOW => 14,
+        self::SEVERITY_RED => 5,
+    ];
+
     protected $fillable = [
         'patient_id',
         'case_type_id',
         'source_type',
         'source_detail',
+        'ward_id',
         'created_by',
         'raw_notes',
+        'caregiver_name',
+        'caregiver_phone',
+        'caregiver_relationship',
+        'patient_status',
+        'military_unit',
+        'coverage_type',
+        'diagnosis',
+        'underlying_disease',
+        'surgery_history',
+        'equipment',
+        'clinical_tracers',
+        'admit_date',
+        'discharge_date',
+        'opd_followup_date',
+        'attending_physician',
+        'severity_group',
+        'initial_pps_score',
         'ai_summary',
         'ai_summary_generated_at',
         'confirmed_summary',
@@ -46,6 +93,11 @@ class Referral extends Model
             'confirmed_summary' => 'array',
             'confirmed_at' => 'datetime',
             'closed_at' => 'datetime',
+            'equipment' => 'array',
+            'clinical_tracers' => 'array',
+            'admit_date' => 'date',
+            'discharge_date' => 'date',
+            'opd_followup_date' => 'date',
         ];
     }
 
@@ -79,8 +131,28 @@ class Referral extends Model
         return $this->hasMany(ReferralAttachment::class);
     }
 
+    public function ward(): BelongsTo
+    {
+        return $this->belongsTo(Ward::class);
+    }
+
+    public function satisfactionSurveys(): HasMany
+    {
+        return $this->hasMany(SatisfactionSurvey::class);
+    }
+
     public function isConfirmed(): bool
     {
         return $this->confirmed_at !== null;
+    }
+
+    public function severityLabel(): ?string
+    {
+        return self::SEVERITY_LABELS[$this->severity_group] ?? null;
+    }
+
+    public function patientStatusLabel(): string
+    {
+        return self::PATIENT_STATUS_LABELS[$this->patient_status] ?? $this->patient_status;
     }
 }

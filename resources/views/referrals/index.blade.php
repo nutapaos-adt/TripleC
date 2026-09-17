@@ -1,76 +1,84 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-xl text-[#22201A] leading-tight">รายการใบส่งต่อ</h2>
-            <a href="{{ route('referrals.create') }}" class="inline-flex items-center px-4 py-2 bg-[#2C5166] text-white rounded-md text-sm font-semibold hover:bg-[#3D6B84]">
-                + ส่งข้อมูลเยี่ยมบ้าน
-            </a>
+    <x-slot name="header">รายการใบส่งต่อ</x-slot>
+
+    <div class="page-head" style="flex-direction:row;align-items:center;justify-content:space-between;">
+        <div>
+            <h1 class="h1">รายการใบส่งต่อ</h1>
+            <p class="sub">เคสทั้งหมดที่ส่งข้อมูลเข้าระบบ</p>
         </div>
-    </x-slot>
+        <a href="{{ route('referrals.create') }}" class="btn btn-primary">+ ส่งข้อมูลเยี่ยมบ้าน</a>
+    </div>
 
-    <div class="py-8">
-        <div class="max-w-6xl mx-auto sm:px-6 lg:px-8">
+    @php
+        $statusLabels = [
+            null => 'ทั้งหมด',
+            \App\Models\Referral::STATUS_PENDING_REVIEW => 'รอตรวจสอบ',
+            \App\Models\Referral::STATUS_PLAN_CONFIRMED => 'ยืนยันแผนแล้ว',
+            \App\Models\Referral::STATUS_IN_PROGRESS => 'กำลังติดตาม',
+            \App\Models\Referral::STATUS_CLOSED => 'ปิดเคสแล้ว',
+        ];
+    @endphp
+    <div style="display:flex;gap:var(--space-2);flex-wrap:wrap;">
+        @foreach ($statusLabels as $value => $label)
+            @php $count = $value === null ? $statusCounts['all'] : $statusCounts[$value]; @endphp
+            <a href="{{ route('referrals.index', $value ? ['status' => $value] : []) }}"
+               class="btn btn-sm {{ $status === $value ? 'btn-primary' : 'btn-secondary' }}">
+                {{ $label }} ({{ $count }})
+            </a>
+        @endforeach
+    </div>
 
-            @if (session('status'))
-                <div class="mb-4 p-4 rounded bg-[#E5F2E4] text-[#3E8E49] text-sm">{{ session('status') }}</div>
-            @endif
-
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <table class="min-w-full divide-y divide-[#DEDAC6] text-sm">
-                    <thead class="bg-[#F1EEE0]">
-                        <tr>
-                            <th class="px-4 py-3 text-left font-semibold text-[#7C7863] uppercase text-xs">ผู้ป่วย</th>
-                            <th class="px-4 py-3 text-left font-semibold text-[#7C7863] uppercase text-xs">แหล่งข้อมูล</th>
-                            <th class="px-4 py-3 text-left font-semibold text-[#7C7863] uppercase text-xs">ประเภทเคส</th>
-                            <th class="px-4 py-3 text-left font-semibold text-[#7C7863] uppercase text-xs">เขต</th>
-                            <th class="px-4 py-3 text-left font-semibold text-[#7C7863] uppercase text-xs">สถานะ</th>
-                            <th class="px-4 py-3 text-left font-semibold text-[#7C7863] uppercase text-xs">วันที่ส่งต่อข้อมูล</th>
+    <div class="card">
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ผู้ป่วย</th>
+                        <th>แหล่งข้อมูล</th>
+                        <th>ประเภทเคส</th>
+                        <th>เขต</th>
+                        <th>สถานะ</th>
+                        <th>วันที่ส่งต่อข้อมูล</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($referrals as $referral)
+                        <tr style="cursor:pointer;" onclick="window.location='{{ route('referrals.show', $referral) }}'">
+                            <td>
+                                <div class="patient-name">{{ $referral->patient->name }}</div>
+                                <div class="patient-hn">HN {{ $referral->patient->hn }}</div>
+                            </td>
+                            <td>{{ $referral->source_detail ?: match($referral->source_type) {
+                                'ward' => 'หอผู้ป่วย',
+                                'opd' => 'OPD',
+                                'internal_dept' => 'หน่วยงานภายใน รพ.',
+                                'external_hospital' => 'โรงพยาบาลอื่น',
+                                default => $referral->source_type,
+                            } }}</td>
+                            <td>
+                                @if ($referral->caseType)
+                                    <span class="chip chip-casetype">{{ $referral->caseType->name }}</span>
+                                @else
+                                    <span class="caption">— ยังไม่ระบุ —</span>
+                                @endif
+                            </td>
+                            <td>
+                                <span class="chip {{ $referral->zone === 'in_area' ? 'chip-inzone' : 'chip-outzone' }}">
+                                    {{ $referral->zone === 'in_area' ? 'ในเขต' : 'นอกเขต' }}
+                                </span>
+                            </td>
+                            <td>{{ $statusLabels[$referral->status] ?? $referral->status }}</td>
+                            <td class="due-date">{{ $referral->created_at->format('d/m/Y') }}</td>
                         </tr>
-                    </thead>
-                    <tbody class="divide-y divide-[#F1EEE0]">
-                        @forelse ($referrals as $referral)
-                            <tr class="hover:bg-[#F4F8FA] cursor-pointer" onclick="window.location='{{ route('referrals.show', $referral) }}'">
-                                <td class="px-4 py-3">
-                                    <div class="font-medium text-[#22201A]">{{ $referral->patient->name }}</div>
-                                    <div class="text-[#7C7863] text-xs">HN {{ $referral->patient->hn }}</div>
-                                </td>
-                                <td class="px-4 py-3 text-[#4A4739]">{{ $referral->source_detail ?: match($referral->source_type) {
-                                    'ward' => 'หอผู้ป่วย',
-                                    'opd' => 'OPD',
-                                    'internal_dept' => 'หน่วยงานภายใน รพ.',
-                                    'external_hospital' => 'โรงพยาบาลอื่น',
-                                    default => $referral->source_type,
-                                } }}</td>
-                                <td class="px-4 py-3 text-[#4A4739]">{{ $referral->caseType?->name ?? '— รอ AI ประเมิน —' }}</td>
-                                <td class="px-4 py-3">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold
-                                        {{ $referral->zone === 'in_area' ? 'bg-[#E1EBEF] text-[#2C5166]' : 'bg-[#F1EEE0] text-[#4A4739]' }}">
-                                        {{ $referral->zone === 'in_area' ? 'ในเขต' : 'นอกเขต' }}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3 text-[#4A4739]">
-                                    {{ match($referral->status) {
-                                        'pending_review' => 'รอตรวจสอบ',
-                                        'plan_confirmed' => 'ยืนยันแผนแล้ว',
-                                        'in_progress' => 'กำลังติดตาม',
-                                        'closed' => 'ปิดเคสแล้ว',
-                                        default => $referral->status,
-                                    } }}
-                                </td>
-                                <td class="px-4 py-3 text-[#7C7863] tabular-nums">{{ $referral->created_at->format('d/m/Y') }}</td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="px-4 py-8 text-center text-[#7C7863]">ยังไม่มีใบส่งต่อในระบบ</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="mt-4">
-                {{ $referrals->links() }}
-            </div>
+                    @empty
+                        <tr>
+                            <td colspan="6" style="text-align:center;padding:var(--space-8);color:var(--color-neutral-500);">ยังไม่มีใบส่งต่อในระบบ</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
+
+    <div>{{ $referrals->links() }}</div>
 </x-app-layout>
