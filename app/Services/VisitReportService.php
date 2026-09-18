@@ -213,6 +213,7 @@ class VisitReportService
             'not_yet_visited_in_area' => $notYetVisited->where('zone', 'in_area')->count(),
             'not_yet_visited_out_area' => $notYetVisited->where('zone', 'out_area')->count(),
             'timeliness' => $this->buildTimeliness($referrals),
+            'urgency_breakdown' => $this->buildUrgencyBreakdown($referrals),
             'case_type_breakdown' => $this->buildCaseTypeBreakdown($referrals),
             'patient_status_breakdown' => $this->buildPatientStatusBreakdown($referrals),
             'ward_breakdown' => $this->buildWardBreakdown($referrals),
@@ -270,6 +271,57 @@ class VisitReportService
         }
 
         return $buckets;
+    }
+
+    /**
+     * ตารางความทันเวลาแยกตามความเร่งด่วน (ด่วน = กลุ่ม 3 บ้านแดง เกณฑ์ 5 วัน, ทั่วไป = กลุ่ม 1/2 เขียว/เหลือง
+     * เกณฑ์ 14/30 วัน ตาม Referral::SEVERITY_FIRST_VISIT_DEADLINE_DAYS) × เขต (ในเขต/นอกเขต) ตามที่
+     * monthly-visit-report.html/visit-summary.html กำหนด — Palliative ไม่มีเกณฑ์วันตายตัว (ใช้ PPS Score
+     * กำหนดรอบเยี่ยมเอง) จึงไม่รวมอยู่ในตารางนี้ เช่นเดียวกับเคสที่ยังไม่ระบุกลุ่มความรุนแรง
+     *
+     * @param  Collection<int, Referral>  $referrals
+     * @return array<string, array<string, int>>
+     */
+    protected function buildUrgencyBreakdown(Collection $referrals): array
+    {
+        $result = [
+            'urgent' => ['in_area' => ['on_time' => 0, 'late' => 0], 'out_area' => ['on_time' => 0, 'late' => 0]],
+            'general' => ['in_area' => ['on_time' => 0, 'late' => 0], 'out_area' => ['on_time' => 0, 'late' => 0]],
+        ];
+
+        $referralIds = $referrals->pluck('id');
+
+        if ($referralIds->isEmpty()) {
+            return $result;
+        }
+
+        $firstPlans = FollowUpPlan::query()
+            ->whereIn('referral_id', $referralIds)
+            ->where('plan_number', 1)
+            ->with('record')
+            ->get()
+            ->keyBy('referral_id');
+
+        foreach ($referrals as $referral) {
+            $deadlineDays = Referral::SEVERITY_FIRST_VISIT_DEADLINE_DAYS[$referral->severity_group] ?? null;
+
+            if ($deadlineDays === null) {
+                continue; // Palliative หรือยังไม่ระบุกลุ่ม — ไม่เข้าตารางนี้
+            }
+
+            $urgencyKey = $referral->severity_group === Referral::SEVERITY_RED ? 'urgent' : 'general';
+            $zoneKey = $referral->zone === 'in_area' ? 'in_area' : 'out_area';
+
+            $plan = $firstPlans->get($referral->id);
+            $record = $plan?->record;
+            $visitedAt = $record?->visited_at;
+
+            $onTime = $visitedAt && $referral->created_at->diffInDays($visitedAt) <= $deadlineDays;
+
+            $result[$urgencyKey][$zoneKey][$onTime ? 'on_time' : 'late']++;
+        }
+
+        return $result;
     }
 
     /**
@@ -417,10 +469,11 @@ class VisitReportService
     }
 
     /**
-     * ค่าเฉลี่ยความพึงพอใจของ 12 เดือนล่าสุด (รวมเดือนที่เลือก) ทั้งโดยรวมและเฉพาะในเขต
+     * ค่าเฉลี่ยความพึงพอใจของ 12 เดือนล่าสุด (รวมเดือนที่เลือก) — 2 แถวตามที่ monthly-visit-report.html
+     * กำหนดไว้: "ในเขต" (ผู้รับบริการในเขตทั่วไป) และ "ประคับประคอง" (ผู้ป่วย/ญาติ Palliative Care)
      * เดือนไหนไม่มีแบบประเมินที่ตอบแล้วเลย จะคืน null (view แสดง "ไม่มี case")
      *
-     * @return array<int, array{month: string, overall_average: ?float, in_area_average: ?float}>
+     * @return array<int, array{month: string, in_area_average: ?float, palliative_average: ?float}>
      */
     protected function buildSatisfactionTrend(Carbon $month): array
     {
@@ -437,15 +490,17 @@ class VisitReportService
                 ->with('referral')
                 ->get();
 
-            $overallAverage = $this->averageOfSurveys($surveys);
             $inAreaAverage = $this->averageOfSurveys(
                 $surveys->filter(fn (SatisfactionSurvey $s) => $s->referral?->zone === 'in_area')
+            );
+            $palliativeAverage = $this->averageOfSurveys(
+                $surveys->filter(fn (SatisfactionSurvey $s) => $s->referral?->severity_group === Referral::SEVERITY_PALLIATIVE)
             );
 
             $trend[] = [
                 'month' => $periodMonth->format('Y-m'),
-                'overall_average' => $overallAverage,
                 'in_area_average' => $inAreaAverage,
+                'palliative_average' => $palliativeAverage,
             ];
         }
 

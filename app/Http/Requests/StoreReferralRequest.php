@@ -48,13 +48,15 @@ class StoreReferralRequest extends FormRequest
                 Referral::PATIENT_STATUS_MILITARY_FAMILY,
             ])],
             'military_unit' => ['nullable', 'required_if:patient_status,military,military_family', 'string', 'max:255'],
+            'military_unit_other' => ['nullable', 'required_if:military_unit,other', 'string', 'max:255'],
             'coverage_type' => ['nullable', 'string', 'max:255'],
 
-            'diagnosis' => ['nullable', 'string', 'max:255'],
+            'diagnosis' => ['required', 'string', 'max:255'],
             'underlying_disease' => ['nullable', 'string'],
             'surgery_history' => ['nullable', 'string'],
             'equipment' => ['nullable', 'array'],
             'equipment.*' => ['string', 'max:255'],
+            'equipment_other' => ['nullable', 'string', 'max:255'],
             'clinical_tracers' => ['nullable', 'array'],
             'clinical_tracers.*' => ['string', 'max:255'],
 
@@ -63,7 +65,8 @@ class StoreReferralRequest extends FormRequest
             'opd_followup_date' => ['nullable', 'date'],
             'attending_physician' => ['nullable', 'string', 'max:255'],
 
-            'severity_group' => ['required', 'in:'.implode(',', [
+            // ไม่บังคับ (ตาม referral-create.html — เว้นว่างได้) แต่ VisitPlanService รองรับกรณีไม่ระบุอยู่แล้ว
+            'severity_group' => ['nullable', 'in:'.implode(',', [
                 Referral::SEVERITY_GREEN,
                 Referral::SEVERITY_YELLOW,
                 Referral::SEVERITY_RED,

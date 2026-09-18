@@ -6,8 +6,16 @@
         <p class="sub">HN {{ $referral->patient->hn }}</p>
     </div>
 
+    @php
+        $age = null;
+        if ($referral->patient->dob) {
+            $age = $referral->patient->dob->age;
+        }
+    @endphp
+
     <div class="card">
-        <div class="card-body" style="padding-top:var(--space-5);">
+        <div class="card-head"><span class="h2">ข้อมูลผู้ป่วย</span></div>
+        <div class="card-body">
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:var(--space-4);">
                 <span class="chip {{ $referral->zone === 'in_area' ? 'chip-inzone' : 'chip-outzone' }}">
                     {{ $referral->zone === 'in_area' ? 'ในเขต' : 'นอกเขต' }}
@@ -16,27 +24,44 @@
                     <span class="chip chip-casetype">{{ $referral->caseType->name }}</span>
                 @endif
                 @if ($referral->severityLabel())
-                    <span class="chip chip-warning">{{ $referral->severityLabel() }}</span>
+                    <span class="chip {{ $referral->severityChipClass() }}">{{ $referral->severityLabel() }}</span>
                 @endif
-                <span class="chip chip-method">{{ $referral->patientStatusLabel() }}</span>
             </div>
 
             <div class="info-list">
                 <div class="info-row">
-                    <div class="info-label">แหล่งข้อมูล</div>
+                    <div class="info-label">HN</div>
+                    <div class="info-value">{{ $referral->patient->hn }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">เลขบัตรประชาชน</div>
+                    <div class="info-value">{{ $referral->patient->national_id ?: '—' }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">วันเดือนปีเกิด / อายุ</div>
                     <div class="info-value">
-                        {{ match($referral->source_type) {
-                            'ward' => 'หอผู้ป่วย', 'opd' => 'OPD',
-                            'internal_dept' => 'หน่วยงานภายใน รพ.', 'external_hospital' => 'โรงพยาบาลอื่น',
-                            default => $referral->source_type,
-                        } }}
-                        @if ($referral->source_detail) — {{ $referral->source_detail }} @endif
-                        @if ($referral->ward) ({{ $referral->ward->name }}) @endif
+                        {{ $referral->patient->dob?->format('d/m/Y') ?? '—' }}
+                        @if ($age !== null) ({{ $age }} ปี) @endif
+                    </div>
+                </div>
+                @if ($referral->coverage_type)
+                    <div class="info-row">
+                        <div class="info-label">สิทธิการรักษา</div>
+                        <div class="info-value">{{ $referral->coverage_type }}</div>
+                    </div>
+                @endif
+                <div class="info-row">
+                    <div class="info-label">สถานะผู้ป่วย</div>
+                    <div class="info-value">
+                        {{ $referral->patientStatusLabel() }}
+                        @if ($referral->patient_status !== 'civilian' && $referral->military_unit)
+                            <span style="color:var(--color-neutral-500);">— หน่วยต้นสังกัด: {{ $referral->military_unit }}</span>
+                        @endif
                     </div>
                 </div>
                 <div class="info-row">
-                    <div class="info-label">วันที่ส่งต่อข้อมูล / ส่งข้อมูลโดย</div>
-                    <div class="info-value">{{ $referral->created_at->format('d/m/Y H:i') }} — {{ $referral->creator->name }}</div>
+                    <div class="info-label">เบอร์โทรผู้ป่วย</div>
+                    <div class="info-value">{{ $referral->patient->phone ?: 'ไม่มี (สื่อสารผ่านผู้ดูแลหลัก)' }}</div>
                 </div>
                 <div class="info-row">
                     <div class="info-label">ที่อยู่</div>
@@ -47,40 +72,109 @@
                         @if ($referral->patient->province) จ.{{ $referral->patient->province }} @endif
                     </div>
                 </div>
-                <div class="info-row">
-                    <div class="info-label">เบอร์โทรผู้ป่วย</div>
-                    <div class="info-value">{{ $referral->patient->phone ?: '—' }}</div>
-                </div>
+
                 @if ($referral->caregiver_name)
+                    <div class="info-subgroup" style="margin-top:var(--space-4);padding-top:var(--space-2);border-top:1px solid var(--color-neutral-200);font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--color-neutral-500);">
+                        ผู้ดูแลหลัก (กรณีผู้ป่วยสื่อสารเองไม่ได้)
+                    </div>
                     <div class="info-row">
-                        <div class="info-label">ผู้ดูแลหลัก</div>
-                        <div class="info-value">
-                            {{ $referral->caregiver_name }}
-                            @if ($referral->caregiver_relationship) ({{ $referral->caregiver_relationship }}) @endif
-                            @if ($referral->caregiver_phone) — {{ $referral->caregiver_phone }} @endif
+                        <div class="info-label">ชื่อผู้ดูแลหลัก</div>
+                        <div class="info-value">{{ $referral->caregiver_name }}</div>
+                    </div>
+                    @if ($referral->caregiver_relationship)
+                        <div class="info-row">
+                            <div class="info-label">ความสัมพันธ์กับผู้ป่วย</div>
+                            <div class="info-value">{{ $referral->caregiver_relationship }}</div>
                         </div>
-                    </div>
-                @endif
-                @if ($referral->patient_status !== 'civilian' && $referral->military_unit)
-                    <div class="info-row">
-                        <div class="info-label">หน่วยต้นสังกัด</div>
-                        <div class="info-value">{{ $referral->military_unit }}</div>
-                    </div>
-                @endif
-                @if ($referral->coverage_type)
-                    <div class="info-row">
-                        <div class="info-label">สิทธิการรักษา</div>
-                        <div class="info-value">{{ $referral->coverage_type }}</div>
-                    </div>
-                @endif
-                @if ($referral->diagnosis || $referral->underlying_disease || $referral->surgery_history)
-                    <div class="info-row">
-                        <div class="info-label">วินิจฉัย/โรคประจำตัว/ผ่าตัด</div>
-                        <div class="info-value">
-                            @if ($referral->diagnosis) <div>วินิจฉัย: {{ $referral->diagnosis }}</div> @endif
-                            @if ($referral->underlying_disease) <div>โรคประจำตัว: {{ $referral->underlying_disease }}</div> @endif
-                            @if ($referral->surgery_history) <div>ผ่าตัด: {{ $referral->surgery_history }}</div> @endif
+                    @endif
+                    @if ($referral->caregiver_phone)
+                        <div class="info-row">
+                            <div class="info-label">เบอร์โทรผู้ดูแลหลัก</div>
+                            <div class="info-value">{{ $referral->caregiver_phone }}</div>
                         </div>
+                    @endif
+                @endif
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-head"><span class="h2">แหล่งที่มาและการส่งต่อ</span></div>
+        <div class="card-body">
+            <div class="info-list">
+                <div class="info-row">
+                    <div class="info-label">แหล่งที่มา</div>
+                    <div class="info-value">
+                        {{ $referral->source_detail ?: match($referral->source_type) {
+                            'ward' => 'หอผู้ป่วย', 'opd' => 'OPD',
+                            'internal_dept' => 'หน่วยงานภายใน รพ.', 'external_hospital' => 'โรงพยาบาลอื่น',
+                            default => $referral->source_type,
+                        } }}
+                        ({{ match($referral->source_type) { 'ward' => 'ward', 'opd' => 'opd', 'internal_dept' => 'internal_dept', 'external_hospital' => 'external_hospital', default => $referral->source_type } }})
+                    </div>
+                </div>
+                @if ($referral->caseType)
+                    <div class="info-row">
+                        <div class="info-label">ประเภทผู้ป่วย</div>
+                        <div class="info-value">{{ $referral->caseType->name }}</div>
+                    </div>
+                @endif
+                @if ($referral->admit_date)
+                    <div class="info-row">
+                        <div class="info-label">วันที่ Admit</div>
+                        <div class="info-value due-date">{{ $referral->admit_date->format('d/m/Y') }}</div>
+                    </div>
+                @endif
+                @if ($referral->discharge_date)
+                    <div class="info-row">
+                        <div class="info-label">วันที่จำหน่าย</div>
+                        <div class="info-value due-date">{{ $referral->discharge_date->format('d/m/Y') }}</div>
+                    </div>
+                @endif
+                @if ($referral->opd_followup_date)
+                    <div class="info-row">
+                        <div class="info-label">วันที่นัดติดตามอาการ</div>
+                        <div class="info-value due-date">{{ $referral->opd_followup_date->format('d/m/Y') }}</div>
+                    </div>
+                @endif
+                @if ($referral->attending_physician)
+                    <div class="info-row">
+                        <div class="info-label">ชื่อแพทย์เจ้าของไข้</div>
+                        <div class="info-value">{{ $referral->attending_physician }}</div>
+                    </div>
+                @endif
+                <div class="info-row">
+                    <div class="info-label">ส่งข้อมูลโดย</div>
+                    <div class="info-value">{{ $referral->creator->name }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">วันที่ส่งต่อข้อมูล</div>
+                    <div class="info-value due-date">{{ $referral->created_at->format('d/m/Y') }} · {{ $referral->created_at->format('H:i') }} น.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-head"><span class="h2">ปัญหา/อาการปัจจุบัน</span></div>
+        <div class="card-body">
+            <div class="info-list" style="margin-bottom:var(--space-4);">
+                @if ($referral->diagnosis)
+                    <div class="info-row">
+                        <div class="info-label">การวินิจฉัยโรค</div>
+                        <div class="info-value">{{ $referral->diagnosis }}</div>
+                    </div>
+                @endif
+                @if ($referral->underlying_disease)
+                    <div class="info-row">
+                        <div class="info-label">โรคประจำตัว</div>
+                        <div class="info-value">{{ $referral->underlying_disease }}</div>
+                    </div>
+                @endif
+                @if ($referral->surgery_history)
+                    <div class="info-row">
+                        <div class="info-label">ประวัติการผ่าตัด</div>
+                        <div class="info-value">{{ $referral->surgery_history }}</div>
                     </div>
                 @endif
                 @if (!empty($referral->equipment))
@@ -95,46 +189,31 @@
                         <div class="info-value">{{ implode(', ', $referral->clinical_tracers) }}</div>
                     </div>
                 @endif
-                @if ($referral->admit_date || $referral->discharge_date || $referral->opd_followup_date)
-                    <div class="info-row">
-                        <div class="info-label">วันที่ Admit/จำหน่าย/นัด OPD</div>
-                        <div class="info-value">
-                            {{ $referral->admit_date?->format('d/m/Y') ?? '—' }} /
-                            {{ $referral->discharge_date?->format('d/m/Y') ?? '—' }} /
-                            {{ $referral->opd_followup_date?->format('d/m/Y') ?? '—' }}
-                        </div>
-                    </div>
-                @endif
-                @if ($referral->attending_physician)
-                    <div class="info-row">
-                        <div class="info-label">แพทย์เจ้าของไข้</div>
-                        <div class="info-value">{{ $referral->attending_physician }}</div>
-                    </div>
-                @endif
             </div>
 
-            <div style="margin-top:var(--space-5);">
-                <div class="label" style="margin-bottom:6px;">ข้อความสรุปอาการ / สถานการณ์</div>
-                <div class="field-value multiline">{{ $referral->raw_notes }}</div>
-            </div>
-
-            @if ($referral->attachments->isNotEmpty())
-                <div style="margin-top:var(--space-5);">
-                    <div class="label" style="margin-bottom:6px;">เอกสารแนบ</div>
-                    <ul style="margin:0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:6px;">
-                        @foreach ($referral->attachments as $attachment)
-                            <li>
-                                <a href="{{ route('referrals.attachments.download', [$referral, $attachment]) }}"
-                                   style="color:var(--color-primary-700);font-weight:600;">
-                                    📄 {{ $attachment->original_name }}
-                                </a>
-                            </li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
+            <div class="section-title" style="margin-top:var(--space-5);"><span class="h3">บันทึกดิบจากผู้ส่งต่อ</span></div>
+            <div class="field-value multiline">{{ $referral->raw_notes }}</div>
         </div>
     </div>
+
+    @if ($referral->attachments->isNotEmpty())
+        <div class="card">
+            <div class="card-head"><span class="h2">เอกสารแนบ</span></div>
+            <div class="card-body">
+                <ul style="margin:0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:6px;">
+                    @foreach ($referral->attachments as $attachment)
+                        <li>
+                            <a href="{{ route('referrals.attachments.download', [$referral, $attachment]) }}"
+                               style="color:var(--color-primary-700);font-weight:600;">
+                                📄 {{ $attachment->original_name }}
+                            </a>
+                            <span class="caption">อัปโหลดโดย {{ $attachment->uploader->name }}</span>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+    @endif
 
     @if ($referral->isConfirmed())
         <div class="confirmed-box">

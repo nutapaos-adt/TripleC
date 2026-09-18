@@ -26,7 +26,7 @@
 
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin:var(--space-3) 0;">
             @if ($referral->severityLabel())
-                <span class="chip chip-warning">{{ $referral->severityLabel() }}</span>
+                <span class="chip {{ $referral->severityChipClass() }}">{{ $referral->severityLabel() }}</span>
             @endif
             <span class="chip {{ $referral->zone === 'in_area' ? 'chip-inzone' : 'chip-outzone' }}">
                 {{ $referral->zone === 'in_area' ? 'ในเขต' : 'นอกเขต' }}

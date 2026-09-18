@@ -36,7 +36,7 @@
         $mainItems = [
             $item('แดชบอร์ด', 'dashboard', 'dashboard', route('dashboard')),
             $item('รายการเคส', 'list', ['referrals.index', 'referrals.create'], route('referrals.index')),
-            $item('บันทึกการเยี่ยมบ้าน', 'calendar', 'follow-up-plans.index', route('follow-up-plans.index')),
+            $item('บันทึกการเยี่ยมบ้าน', 'calendar', ['follow-up-plans.index', 'follow-up-plans.record.*', 'follow-up-plans.review'], route('follow-up-plans.index')),
             $item('ติดตามผลการเยี่ยม', 'users', 'ward.visit-results', route('ward.visit-results')),
             $item('สรุปข้อมูลสำคัญงานเยี่ยมบ้าน', 'chart', 'reports.visit-summary', route('reports.visit-summary')),
             $item('สรุปรายงานประจำเดือน', 'document', 'reports.monthly', route('reports.monthly')),
@@ -47,11 +47,11 @@
             $item('แดชบอร์ด', 'dashboard', 'dashboard', route('dashboard')),
             $item('รายการเคส', 'list', ['referrals.index', 'referrals.create', 'referrals.show'], route('referrals.index')),
             $item('วิเคราะห์แผนการพยาบาล', 'clipboard-check', ['care-plan.pending', 'referrals.care-plan*'], route('care-plan.pending')),
-            $item('บันทึกการเยี่ยมบ้าน', 'calendar', 'follow-up-plans.index', route('follow-up-plans.index')),
+            $item('บันทึกการเยี่ยมบ้าน', 'calendar', ['follow-up-plans.index', 'follow-up-plans.record.*', 'follow-up-plans.review'], route('follow-up-plans.index')),
             $item('ติดตามผลการเยี่ยม', 'users', 'ward.visit-results', route('ward.visit-results')),
             $item('สรุปข้อมูลสำคัญงานเยี่ยมบ้าน', 'chart', 'reports.visit-summary', route('reports.visit-summary')),
             $item('สรุปรายงานประจำเดือน', 'document', 'reports.monthly', route('reports.monthly')),
-            $item('ประเมินความพึงพอใจ', 'star', 'satisfaction-surveys.index', route('satisfaction-surveys.index')),
+            $item('ประเมินความพึงพอใจ', 'star', 'satisfaction-surveys.*', route('satisfaction-surveys.index')),
         ];
     }
 

@@ -28,28 +28,53 @@
                     <h2 class="h2">แหล่งที่มาของเคส</h2>
                 </div>
                 <div class="grid-3" style="margin-bottom:var(--space-6);">
-                    <div class="field">
-                        <label>แหล่งข้อมูล</label>
-                        <select name="source_type">
-                            <option value="ward" @selected(old('source_type') === 'ward')>หอผู้ป่วย</option>
-                            <option value="opd" @selected(old('source_type') === 'opd')>OPD</option>
-                            <option value="internal_dept" @selected(old('source_type') === 'internal_dept')>หน่วยงานภายในโรงพยาบาล</option>
-                            <option value="external_hospital" @selected(old('source_type') === 'external_hospital')>โรงพยาบาลอื่น</option>
-                        </select>
+                    @php $userWard = auth()->user()->ward; @endphp
+                    <div class="field full" style="grid-column:1 / -1;">
+                        <label>แหล่งข้อมูล (source_type)</label>
+                        @if ($userWard)
+                            <div class="zone-box" style="display:flex;flex-direction:row;align-items:center;gap:var(--space-3);background:var(--color-primary-50);border:1px dashed var(--color-primary-300);border-radius:var(--radius-md);padding:var(--space-3);">
+                                <span>&#9432;</span>
+                                <span>
+                                    <span class="chip chip-inzone">หอผู้ป่วย (ward)</span>
+                                    <strong style="margin-left:6px;">{{ $userWard->name }}</strong>
+                                    <br><span class="hint" style="margin:0;">ดึงข้อมูลอัตโนมัติจากบัญชีผู้ใช้งานที่เข้าสู่ระบบ ({{ auth()->user()->name }})</span>
+                                </span>
+                            </div>
+                            <input type="hidden" name="source_type" value="ward">
+                            <input type="hidden" name="source_detail" value="{{ $userWard->name }}">
+                        @else
+                            <div class="grid-2">
+                                <select name="source_type">
+                                    <option value="ward" @selected(old('source_type') === 'ward')>หอผู้ป่วย</option>
+                                    <option value="opd" @selected(old('source_type') === 'opd')>OPD</option>
+                                    <option value="internal_dept" @selected(old('source_type') === 'internal_dept')>หน่วยงานภายในโรงพยาบาล</option>
+                                    <option value="external_hospital" @selected(old('source_type') === 'external_hospital')>โรงพยาบาลอื่น</option>
+                                </select>
+                                <input type="text" name="source_detail" value="{{ old('source_detail') }}" placeholder="รายละเอียดแหล่งที่มา เช่น ชื่อหอผู้ป่วย/แผนกต้นทาง">
+                            </div>
+                            <span class="hint">บัญชีนี้ยังไม่ผูกกับหอผู้ป่วย — เลือกแหล่งที่มาเอง (ติดต่อแอดมินเพื่อผูกวอร์ดให้บัญชีนี้)</span>
+                        @endif
                     </div>
+
                     <div class="field">
-                        <label>รายละเอียดแหล่งที่มา</label>
-                        <input type="text" name="source_detail" value="{{ old('source_detail') }}">
-                        <span class="hint">เช่น ชื่อหอผู้ป่วย/แผนกต้นทาง</span>
-                    </div>
-                    <div class="field">
-                        <label>ประเภทเคส</label>
-                        <select name="case_type_id" required>
-                            <option value="">— เลือกประเภทเคส —</option>
+                        <label for="case_type">ประเภทผู้ป่วย (case_type)</label>
+                        <select name="case_type_id" id="case_type" required>
+                            <option value="">— เลือกประเภทผู้ป่วย —</option>
                             @foreach ($caseTypes as $caseType)
                                 <option value="{{ $caseType->id }}" data-slug="{{ $caseType->slug }}" @selected((string) old('case_type_id') === (string) $caseType->id)>{{ $caseType->name }}</option>
                             @endforeach
                         </select>
+                        <span class="hint">เลือกประเภทที่ตรงกับผู้ป่วยที่สุด — ใช้กำหนดเกณฑ์การเยี่ยม/ติดตาม</span>
+                    </div>
+                    <div class="field">
+                        <label>การจำแนกผู้ป่วยตามระดับความรุนแรง</label>
+                        <select name="severity_group" id="severity_group">
+                            <option value="">— เลือกกลุ่ม —</option>
+                            @foreach (\App\Models\Referral::SEVERITY_LABELS as $value => $label)
+                                <option value="{{ $value }}" @selected(old('severity_group') === $value)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                        <span class="hint">กำหนดความถี่/กำหนดเยี่ยมครั้งแรกตามกลุ่มนี้</span>
                     </div>
 
                     <div class="field">
@@ -62,14 +87,28 @@
                     </div>
                     <div class="field" id="military_unit_field" @if(old('patient_status', 'civilian') === 'civilian') hidden @endif>
                         <label>หน่วยต้นสังกัด</label>
-                        <input type="text" name="military_unit" value="{{ old('military_unit') }}">
-                        <span class="hint">กรณีครอบครัวกำลังพล ให้กรอกหน่วยของผู้มีสิทธิ</span>
+                        <select name="military_unit" id="military_unit">
+                            <option value="">— เลือกหน่วยต้นสังกัด —</option>
+                            @foreach (['มทบ.31', 'ร้อย.มทบ.31', 'ร้อย.สห.มทบ.31', 'ศฝ.นศท.มทบ.31', 'รพ.ค่ายจิรประวัติ', 'ร.4', 'ร.4 พัน.1', 'ร.4 พัน.2', 'ข.พัน.4 พล.ร.4', 'ป.4 พัน.4', 'คลังแสง3.คส.สพ.ทบ.', 'ผอส.กษส.3 กส.ทบ.', 'มว.ขบร.สน.3 กอง สพ.พล.ร.4', 'สง.สด.จว.นว.', 'สง.สด.จว.อน.'] as $unit)
+                                <option value="{{ $unit }}" @selected(old('military_unit') === $unit)>{{ $unit }}</option>
+                            @endforeach
+                            <option value="other" @selected(old('military_unit') === 'other')>อื่นๆ (ระบุ)</option>
+                        </select>
+                        <input type="text" name="military_unit_other" id="military_unit_other" value="{{ old('military_unit_other') }}" placeholder="ระบุหน่วยต้นสังกัด" style="margin-top:var(--space-2);" hidden>
+                        <span class="hint">กรณีครอบครัวกำลังพล ให้ระบุหน่วยต้นสังกัดของผู้มีสิทธิ (กำลังพล)</span>
                     </div>
                     <div class="field">
                         <label>สิทธิการรักษา</label>
                         <select name="coverage_type">
-                            <option value="">— ไม่ระบุ —</option>
-                            @foreach (['บัตรทอง', 'ประกันสังคม', 'ข้าราชการ/รัฐวิสาหกิจ', 'ชำระเงินเอง', 'ประกันเอกชน', 'อื่นๆ'] as $coverage)
+                            <option value="">— เลือกสิทธิการรักษา —</option>
+                            @foreach ([
+                                'บัตรทอง (สิทธิหลักประกันสุขภาพแห่งชาติ)',
+                                'ประกันสังคม',
+                                'ข้าราชการ/รัฐวิสาหกิจ',
+                                'ชำระเงินเอง',
+                                'ประกันเอกชน',
+                                'อื่นๆ',
+                            ] as $coverage)
                                 <option value="{{ $coverage }}" @selected(old('coverage_type') === $coverage)>{{ $coverage }}</option>
                             @endforeach
                         </select>
@@ -87,23 +126,25 @@
                             ปรับเขตเอง (ไม่ใช้ผลตรวจจับอัตโนมัติ)
                         </label>
                     </div>
+                </div>
+
+                <div class="grid-3" style="margin-bottom:var(--space-6);">
                     <div class="field">
-                        <label>การจำแนกผู้ป่วยตามระดับความรุนแรง</label>
-                        <select name="severity_group" id="severity_group" required>
-                            @foreach (\App\Models\Referral::SEVERITY_LABELS as $value => $label)
-                                <option value="{{ $value }}" @selected(old('severity_group') === $value)>{{ $label }}</option>
-                            @endforeach
-                        </select>
-                        <span class="hint">กำหนดความถี่/กำหนดเยี่ยมครั้งแรกตามกลุ่มนี้</span>
+                        <label>วันที่ Admit</label>
+                        <input type="date" name="admit_date" value="{{ old('admit_date') }}">
                     </div>
-                    @php $selectedCaseType = $caseTypes->firstWhere('id', (int) old('case_type_id')); @endphp
-                    <div class="field" id="pps_field" @if($selectedCaseType?->slug !== 'palliative-care') hidden @endif>
-                        <label>PPS Score เริ่มต้น (ประเมินโดยพยาบาลหอผู้ป่วย)</label>
-                        <div class="pps-row">
-                            <input type="range" name="initial_pps_score" id="pps_range" min="0" max="100" step="10" value="{{ old('initial_pps_score', 50) }}">
-                            <span class="pps-readout" id="pps_readout">{{ old('initial_pps_score', 50) }}</span>
-                        </div>
-                        <span class="hint">ใช้เฉพาะกรณี Palliative Care — กำหนดความถี่การเยี่ยมครั้งแรก</span>
+                    <div class="field">
+                        <label>วันที่จำหน่าย</label>
+                        <input type="date" name="discharge_date" value="{{ old('discharge_date') }}">
+                    </div>
+                    <div class="field">
+                        <label>วันที่นัดติดตามอาการ</label>
+                        <input type="date" name="opd_followup_date" value="{{ old('opd_followup_date') }}">
+                        <span class="hint">วันนัด OPD/แพทย์เจ้าของไข้ครั้งถัดไป</span>
+                    </div>
+                    <div class="field full" style="grid-column:1 / -1;">
+                        <label>ชื่อแพทย์เจ้าของไข้</label>
+                        <input type="text" name="attending_physician" value="{{ old('attending_physician') }}" placeholder="เช่น นพ.สมชาย ตั้งใจ">
                     </div>
                 </div>
 
@@ -116,23 +157,26 @@
                         <input type="text" name="patient_hn" value="{{ old('patient_hn') }}" required>
                     </div>
                     <div class="field">
-                        <label>ชื่อ-สกุลผู้ป่วย</label>
-                        <input type="text" name="patient_name" value="{{ old('patient_name') }}" required>
-                    </div>
-                    <div class="field">
                         <label>เลขบัตรประชาชน</label>
                         <input type="text" name="patient_national_id" value="{{ old('patient_national_id') }}">
                     </div>
+                    <div class="field">
+                        <label>ชื่อ-นามสกุล</label>
+                        <input type="text" name="patient_name" value="{{ old('patient_name') }}" required>
+                    </div>
 
                     <div class="field">
-                        <label>วันเกิด</label>
-                        <input type="date" name="patient_dob" value="{{ old('patient_dob') }}">
+                        <label>วันเดือนปีเกิด</label>
+                        <input type="date" name="patient_dob" id="patient_dob" value="{{ old('patient_dob') }}">
+                    </div>
+                    <div class="field">
+                        <label>อายุ</label>
+                        <input type="text" id="age_display" readonly placeholder="คำนวณอัตโนมัติจากวันเกิด" style="background:var(--color-neutral-200);color:var(--color-neutral-700);">
                     </div>
                     <div class="field">
                         <label>เบอร์โทร</label>
                         <input type="text" name="patient_phone" value="{{ old('patient_phone') }}">
                     </div>
-                    <div></div>
 
                     <div class="field full" style="grid-column:1 / -1;">
                         <label>ที่อยู่</label>
@@ -158,14 +202,14 @@
                     <div class="field">
                         <label>ความสัมพันธ์กับผู้ป่วย</label>
                         <select name="caregiver_relationship">
-                            <option value="">— ไม่ระบุ —</option>
+                            <option value="">— เลือกความสัมพันธ์ —</option>
                             @foreach (['บุตร/ธิดา', 'คู่สมรส', 'บิดา/มารดา', 'พี่/น้อง', 'ญาติ', 'ผู้ดูแลจ้าง/ไม่ใช่ญาติ', 'อื่นๆ'] as $rel)
                                 <option value="{{ $rel }}" @selected(old('caregiver_relationship') === $rel)>{{ $rel }}</option>
                             @endforeach
                         </select>
                     </div>
                     <div class="field">
-                        <label>เบอร์โทรผู้ดูแลหลัก</label>
+                        <label>เบอร์โทรศัพท์ผู้ดูแลหลัก</label>
                         <input type="text" name="caregiver_phone" value="{{ old('caregiver_phone') }}">
                     </div>
                 </div>
@@ -176,71 +220,73 @@
                 <div class="grid-2" style="margin-bottom:var(--space-4);">
                     <div class="field">
                         <label>การวินิจฉัยโรค</label>
-                        <input type="text" name="diagnosis" value="{{ old('diagnosis') }}">
+                        <input type="text" name="diagnosis" value="{{ old('diagnosis') }}" required placeholder="เช่น Stroke with right hemiplegia, CKD stage 4">
                     </div>
                     <div class="field">
                         <label>โรคประจำตัว (ถ้ามี)</label>
-                        <input type="text" name="underlying_disease" value="{{ old('underlying_disease') }}" id="underlying_disease">
+                        <input type="text" name="underlying_disease" value="{{ old('underlying_disease') }}" id="underlying_disease" placeholder="เว้นว่างได้หากไม่มี">
                         <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;">
-                            @foreach (['DM', 'HT', 'DLP', 'COPD', 'CKD', 'โรคหัวใจ'] as $tag)
-                                <button type="button" class="btn btn-secondary btn-sm disease-tag" data-tag="{{ $tag }}">+ {{ $tag }}</button>
+                            @foreach ([
+                                'เบาหวาน (DM)', 'ความดันโลหิตสูง (HT)', 'ไขมันในเลือดสูง (DLP)',
+                                'โรคปอดอุดกั้นเรื้อรัง (COPD)', 'โรคไตเรื้อรัง (CKD)', 'โรคหัวใจ',
+                            ] as $tag)
+                                <button type="button" class="btn btn-secondary btn-sm disease-tag" data-tag="{{ $tag }}">{{ $tag }}</button>
                             @endforeach
+                            <button type="button" class="btn btn-secondary btn-sm" id="disease_other_btn">+ อื่นๆ (ระบุเอง)</button>
                         </div>
-                    </div>
-                    <div class="field">
-                        <label>ประวัติการผ่าตัด (ถ้ามี)</label>
-                        <textarea name="surgery_history" rows="2">{{ old('surgery_history') }}</textarea>
-                    </div>
-                    <div class="field">
-                        <div class="choice-group">
-                            <span class="glabel">อุปกรณ์ของผู้ป่วย</span>
-                            <div class="choice-row">
-                                @foreach (['NG-Tube', 'TT-Tube', 'Foley cath', 'Colostomy bag', 'Oxygen', 'ไม่มี'] as $eq)
-                                    <label class="choice-opt">
-                                        <input type="checkbox" name="equipment[]" value="{{ $eq }}" @checked(in_array($eq, old('equipment', [])))>
-                                        {{ $eq }}
-                                    </label>
-                                @endforeach
-                            </div>
-                        </div>
-                    </div>
-                    <div class="field full" style="grid-column:1 / -1;">
-                        <div class="choice-group">
-                            <span class="glabel">การติดตามต่อเนื่องตาม clinical tracer</span>
-                            <div class="choice-row">
-                                @foreach (['Sepsis', 'Stroke', 'Heat stroke', 'STEMI', 'Pneumonia'] as $tracer)
-                                    <label class="choice-opt">
-                                        <input type="checkbox" name="clinical_tracers[]" value="{{ $tracer }}" @checked(in_array($tracer, old('clinical_tracers', [])))>
-                                        {{ $tracer }}
-                                    </label>
-                                @endforeach
-                            </div>
-                        </div>
+                        <span class="hint">กดเลือกจากตัวเลือกด่วนด้านบนเพื่อเติมลงในช่องอัตโนมัติ (แก้ไขข้อความเองเพิ่มเติมได้) — การระบุ DM/COPD ที่นี่จะใช้เชื่อมโยงกับการเก็บข้อมูลภาวะแทรกซ้อน DM/COPD ในรายงานสรุปประจำเดือนด้วย</span>
                     </div>
                 </div>
 
-                <div class="grid-3" style="margin-bottom:var(--space-6);">
-                    <div class="field">
-                        <label>วันที่ Admit</label>
-                        <input type="date" name="admit_date" value="{{ old('admit_date') }}">
+                <div class="field full" style="margin-bottom:var(--space-4);">
+                    <label>การติดตามต่อเนื่องตาม clinical tracer (เลือกได้หลายรายการ หากเข้าเงื่อนไข)</label>
+                    <div class="radio-cards" style="grid-template-columns:repeat(3,1fr);" id="tracer_group">
+                        @foreach (['Sepsis' => 'sepsis', 'Stroke' => 'stroke', 'Heat stroke' => 'heat_stroke', 'STEMI' => 'stemi', 'Pneumonia' => 'pneumonia'] as $label => $value)
+                            <div class="radio-card">
+                                <input type="checkbox" name="clinical_tracers[]" id="tr_{{ $value }}" value="{{ $label }}" class="tracer-opt" @checked(in_array($label, old('clinical_tracers', [])))>
+                                <label for="tr_{{ $value }}">{{ $label }}</label>
+                            </div>
+                        @endforeach
+                        <div class="radio-card">
+                            <input type="checkbox" id="tr_none" checked>
+                            <label for="tr_none">ไม่เข้าเงื่อนไข</label>
+                        </div>
                     </div>
-                    <div class="field">
-                        <label>วันที่จำหน่าย</label>
-                        <input type="date" name="discharge_date" value="{{ old('discharge_date') }}">
+                    <span class="hint">ใช้สำหรับติดตามอุบัติการณ์เฉพาะโรคในรายงานสรุปประจำเดือน — เลือกตามการวินิจฉัยจริง ไม่ได้ผูกอัตโนมัติกับช่อง "การวินิจฉัยโรค" ด้านบน</span>
+                </div>
+
+                @php $selectedCaseType = $caseTypes->firstWhere('id', (int) old('case_type_id')); @endphp
+                <div class="field" id="pps_field" style="max-width:220px;margin-bottom:var(--space-4);" @if($selectedCaseType?->slug !== 'palliative-care') hidden @endif>
+                    <label>PPS Score (ประเมินโดยพยาบาลหอผู้ป่วย)</label>
+                    <input type="number" name="initial_pps_score" id="pps_score" min="0" max="100" step="10" value="{{ old('initial_pps_score') }}" placeholder="0-100">
+                    <span class="hint">ประเมิน ณ วันที่ส่งต่อ โดยพยาบาลผู้ดูแลที่เห็นสภาพผู้ป่วยจริง — ทีมเยี่ยมบ้านจะตรวจสอบและแก้ไขได้อีกครั้งตอนยืนยันแผน</span>
+                </div>
+
+                <div class="field" style="margin-bottom:var(--space-4);">
+                    <label>ประวัติการผ่าตัด (ถ้ามี)</label>
+                    <input type="text" name="surgery_history" value="{{ old('surgery_history') }}" placeholder="เช่น ผ่าตัดไส้ติ่ง 15 ส.ค. 2569 — เว้นว่างได้หากไม่มี">
+                </div>
+
+                <div class="field full" style="margin-bottom:var(--space-4);">
+                    <label>อุปกรณ์ของผู้ป่วย (เลือกได้หลายรายการ)</label>
+                    <div class="radio-cards" style="grid-template-columns:repeat(3,1fr);" id="equipment_group">
+                        @foreach (['NG-Tube', 'TT-Tube', 'Foley cath', 'Colostomy bag', 'Oxygen'] as $eq)
+                            <div class="radio-card">
+                                <input type="checkbox" name="equipment[]" id="eq_{{ Str::slug($eq) }}" value="{{ $eq }}" class="equipment-opt" @checked(in_array($eq, old('equipment', [])))>
+                                <label for="eq_{{ Str::slug($eq) }}">{{ $eq }}</label>
+                            </div>
+                        @endforeach
+                        <div class="radio-card">
+                            <input type="checkbox" id="eq_none" checked>
+                            <label for="eq_none">ไม่มี</label>
+                        </div>
                     </div>
-                    <div class="field">
-                        <label>วันที่นัดติดตามอาการ (OPD)</label>
-                        <input type="date" name="opd_followup_date" value="{{ old('opd_followup_date') }}">
-                    </div>
-                    <div class="field full" style="grid-column:1 / -1;">
-                        <label>ชื่อแพทย์เจ้าของไข้</label>
-                        <input type="text" name="attending_physician" value="{{ old('attending_physician') }}">
-                    </div>
+                    <input type="text" name="equipment_other" value="{{ old('equipment_other') }}" placeholder="อื่นๆ (ระบุ) — เช่น Tracheostomy tube, IV line" style="margin-top:var(--space-2);">
                 </div>
 
                 <div class="field">
-                    <label>ข้อความสรุปอาการ / สถานการณ์ผู้ป่วย</label>
-                    <span class="hint">พิมพ์เป็นข้อความอิสระ AI จะช่วยอ่านสรุปในขั้นถัดไป</span>
+                    <label>ข้อความสรุปอาการ / สถานการณ์ผู้ป่วย (raw_notes)</label>
+                    <span class="hint">พิมพ์เป็นข้อความอิสระ — AI จะช่วยอ่านสรุปและประเมินความเสี่ยงในขั้นตอนถัดไป</span>
                     <textarea name="raw_notes" rows="5" required style="margin-top:6px;">{{ old('raw_notes') }}</textarea>
                 </div>
 
@@ -296,8 +342,15 @@
                 militaryUnitField.hidden = patientStatus.value === 'civilian';
             });
 
+            // หน่วยต้นสังกัด "อื่นๆ" → แสดงช่องระบุเอง
+            const militaryUnit = document.getElementById('military_unit');
+            const militaryUnitOther = document.getElementById('military_unit_other');
+            militaryUnit.addEventListener('change', function () {
+                militaryUnitOther.hidden = militaryUnit.value !== 'other';
+            });
+
             // ประเภทเคส Palliative → แสดงช่อง PPS Score
-            const caseTypeSelect = document.querySelector('select[name="case_type_id"]');
+            const caseTypeSelect = document.getElementById('case_type');
             const ppsField = document.getElementById('pps_field');
             function togglePpsField() {
                 const opt = caseTypeSelect.options[caseTypeSelect.selectedIndex];
@@ -306,23 +359,69 @@
             caseTypeSelect.addEventListener('change', togglePpsField);
             togglePpsField();
 
-            const ppsRange = document.getElementById('pps_range');
-            const ppsReadout = document.getElementById('pps_readout');
-            ppsRange.addEventListener('input', function () {
-                ppsReadout.textContent = ppsRange.value;
+            // อายุ — คำนวณอัตโนมัติจากวันเกิด
+            const dobInput = document.getElementById('patient_dob');
+            const ageDisplay = document.getElementById('age_display');
+            dobInput.addEventListener('change', function () {
+                if (! dobInput.value) { ageDisplay.value = ''; return; }
+                const d = new Date(dobInput.value);
+                const t = new Date();
+                let age = t.getFullYear() - d.getFullYear();
+                const m = t.getMonth() - d.getMonth();
+                if (m < 0 || (m === 0 && t.getDate() < d.getDate())) age--;
+                ageDisplay.value = age + ' ปี';
             });
 
-            // ชิปโรคประจำตัวที่พบบ่อย
+            // ชิปโรคประจำตัวที่พบบ่อย — กดแล้วเติม/ตัดออกจากช่องข้อความ (toggle)
+            const underlyingField = document.getElementById('underlying_disease');
+            function partsOf(field) {
+                return field.value.split(',').map((s) => s.trim()).filter(Boolean);
+            }
             document.querySelectorAll('.disease-tag').forEach(function (btn) {
                 btn.addEventListener('click', function () {
-                    const field = document.getElementById('underlying_disease');
                     const tag = btn.dataset.tag;
-                    const current = field.value.split(',').map((s) => s.trim()).filter(Boolean);
-                    if (! current.includes(tag)) {
-                        current.push(tag);
-                        field.value = current.join(', ');
+                    const parts = partsOf(underlyingField);
+                    const idx = parts.indexOf(tag);
+                    if (idx === -1) {
+                        parts.push(tag);
+                        btn.classList.add('btn-primary');
+                    } else {
+                        parts.splice(idx, 1);
+                        btn.classList.remove('btn-primary');
                     }
+                    underlyingField.value = parts.join(', ');
                 });
+            });
+            document.getElementById('disease_other_btn').addEventListener('click', function () {
+                if (underlyingField.value.trim() && ! /,\s*$/.test(underlyingField.value)) {
+                    underlyingField.value = underlyingField.value.replace(/\s*$/, '') + ', ';
+                }
+                underlyingField.focus();
+                underlyingField.setSelectionRange(underlyingField.value.length, underlyingField.value.length);
+            });
+
+            // Clinical tracer — เลือก tracer ใดก็ได้ ต้องยกเลิก "ไม่เข้าเงื่อนไข" โดยอัตโนมัติ และกลับกัน
+            const tracerNone = document.getElementById('tr_none');
+            const tracerOpts = document.querySelectorAll('.tracer-opt');
+            tracerOpts.forEach(function (opt) {
+                opt.addEventListener('change', function () {
+                    if (opt.checked) tracerNone.checked = false;
+                });
+            });
+            tracerNone.addEventListener('change', function () {
+                if (tracerNone.checked) tracerOpts.forEach((opt) => opt.checked = false);
+            });
+
+            // อุปกรณ์ผู้ป่วย — เลือกอุปกรณ์ใดก็ได้ ต้องยกเลิก "ไม่มี" โดยอัตโนมัติ และกลับกัน
+            const eqNone = document.getElementById('eq_none');
+            const eqOpts = document.querySelectorAll('.equipment-opt');
+            eqOpts.forEach(function (opt) {
+                opt.addEventListener('change', function () {
+                    if (opt.checked) eqNone.checked = false;
+                });
+            });
+            eqNone.addEventListener('change', function () {
+                if (eqNone.checked) eqOpts.forEach((opt) => opt.checked = false);
             });
         })();
     </script>

@@ -101,7 +101,7 @@
                                     @if ($row['is_risk'])
                                         <span class="chip chip-risk">พบความเสี่ยง</span>
                                     @elseif ($row['is_closed'])
-                                        <span class="chip chip-success">ปิดเคสแล้ว</span>
+                                        <span class="chip chip-closed">ปิดเคสแล้ว</span>
                                     @else
                                         <span class="chip chip-success">ปกติ</span>
                                     @endif

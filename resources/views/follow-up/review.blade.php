@@ -9,13 +9,13 @@
         $isConfirmed = $record->isConfirmed();
         $decisionLabels = [
             'repeat' => 'ติดตามซ้ำ',
-            'refer' => 'ส่งต่อแพทย์',
+            'refer' => 'ส่งต่อ',
             'close' => 'ปิดเคส',
         ];
         $decisionDescriptions = [
-            'repeat' => 'สร้างกำหนดการติดตามครั้งถัดไปโดยอัตโนมัติ ใช้เมื่อยังต้องเฝ้าดูอาการต่อเนื่อง',
-            'refer' => 'ส่งต่อแพทย์/ทีมที่เกี่ยวข้องเพื่อประเมินเพิ่มเติม ระบบยังสร้างกำหนดการติดตามครั้งถัดไปให้',
-            'close' => 'ยุติการติดตามต่อเนื่อง ระบบจะยกเลิกกำหนดการที่เหลือทั้งหมดและปิดเคส',
+            'repeat' => 'สร้างกำหนดการติดตามครั้งถัดไปโดยอัตโนมัติ ใช้เมื่อยังต้องเฝ้าดูอาการต่อเนื่องแต่ยังไม่ถึงระดับที่ต้องส่งต่อ',
+            'refer' => 'ส่งต่อให้ทีม/แผนกที่เกี่ยวข้อง (เช่น ทีมจิตสังคม, แพทย์เจ้าของไข้) ประเมินเพิ่มเติมนอกเหนือจากทีมเยี่ยมบ้าน',
+            'close' => 'ยุติการติดตามต่อเนื่อง ใช้เมื่อผู้ป่วยพ้นภาวะที่ต้องติดตาม เสียชีวิต หรือย้ายออกจากพื้นที่รับผิดชอบ',
         ];
         $suggested = $analysis['suggested_decision'] ?? null;
         $selectedDecision = old('nurse_decision', $suggested);
@@ -133,6 +133,17 @@
 
                 <div class="field-group">
                     <div class="checkbox-row">
+                        <input type="checkbox" id="ai_review_confirmed" name="ai_review_confirmed" value="1" required
+                               @checked(old('ai_review_confirmed'))>
+                        <label for="ai_review_confirmed">
+                            <span class="cb-title">ยืนยันความเสี่ยง</span>
+                            <span class="cb-sub">ข้าพเจ้าได้ตรวจสอบผลวิเคราะห์ความเสี่ยงจาก AI ข้างต้นแล้ว และยืนยันว่าตรงกับการประเมินทางคลินิกของข้าพเจ้า</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <div class="checkbox-row" style="background:var(--color-neutral-100);border-color:var(--color-neutral-300);">
                         <input type="checkbox" id="risk_flag" name="risk_flag" value="1"
                                @checked(old('risk_flag', $analysis['risk_detected'] ?? false))>
                         <label for="risk_flag">ยืนยันว่าพบสัญญาณเสี่ยงจริง</label>
@@ -141,15 +152,24 @@
 
                 <div class="field-group">
                     <label for="decision_notes">
-                        หมายเหตุ <span class="hint" style="display:inline;">(เช่น ส่งต่อถึงใคร/แผนกไหน)</span>
+                        หมายเหตุการตัดสินใจ
                     </label>
-                    <textarea id="decision_notes" name="decision_notes" rows="2">{{ old('decision_notes', $analysis['recommendation'] ?? '') }}</textarea>
+                    <textarea id="decision_notes" name="decision_notes" rows="3">{{ old('decision_notes', $analysis['recommendation'] ?? '') }}</textarea>
+                    <span class="hint">ข้อความเริ่มต้นดึงมาจากคำแนะนำของ AI — สามารถแก้ไขได้ก่อนยืนยัน</span>
                 </div>
 
                 <div class="btn-row">
-                    <button type="submit" class="btn btn-primary">ยืนยันการตัดสินใจ</button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">ยืนยันการตัดสินใจ</button>
+                    <a href="{{ route('referrals.show', $plan->referral) }}" class="btn btn-secondary">ยกเลิก</a>
                 </div>
             </form>
+        </div>
+
+        <div class="banner" style="margin-top:var(--space-4);">
+            <div class="banner-text">
+                <p class="h3">จะเกิดอะไรขึ้นต่อ</p>
+                <p>หากเลือก "ติดตามซ้ำ" หรือ "ส่งต่อ" ระบบจะสร้างกำหนดการติดตามครั้งถัดไปให้อัตโนมัติ (คำนวณช่วงเวลาใหม่จาก PPS Score หากเป็นเคส Palliative) — หากเลือก "ปิดเคส" ระบบจะยกเลิกกำหนดการที่เหลือทั้งหมดและปิดเคส</p>
+            </div>
         </div>
     @endif
 

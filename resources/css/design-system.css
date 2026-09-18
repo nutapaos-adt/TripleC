@@ -248,6 +248,14 @@ h1,h2,h3{margin:0;}
 .chip-warning{background:var(--color-warning-tint);color:var(--color-warning);}
 .chip-success{background:var(--color-success-tint);color:var(--color-success);}
 .chip-casetype{background:var(--color-neutral-100);color:var(--color-primary-700);}
+.chip-primary{background:var(--color-primary-100);color:var(--color-primary-700);}
+.chip-neutral{background:var(--color-neutral-100);color:var(--color-neutral-700);}
+.chip-closed{background:var(--color-neutral-200);color:var(--color-neutral-700);}
+/* การจำแนกผู้ป่วยตามระดับความรุนแรง (§referral-create) — เขียว/เหลือง/แดง/primary-tint ตามกลุ่ม 1-4 */
+.chip-severity-green{background:var(--color-success-tint);color:var(--color-success);}
+.chip-severity-yellow{background:var(--color-warning-tint);color:var(--color-warning);}
+.chip-severity-red{background:var(--color-risk-tint);color:var(--color-risk);}
+.chip-severity-palliative{background:var(--color-primary-100);color:var(--color-primary-700);}
 
 /* ============ Table (§3.9) ============ */
 table{width:100%;border-collapse:collapse;}

@@ -113,6 +113,40 @@
                             </div>
                         </div>
                     </div>
+
+                    @php $u = $report['urgency_breakdown']; @endphp
+                    <div style="margin-top:var(--space-5);">
+                        <p class="label">ความทันเวลาแยกตามความเร่งด่วน (ด่วน = บ้านแดง เกณฑ์ 5 วัน, ทั่วไป = บ้านเขียว/เหลือง เกณฑ์ 14/30 วัน — ไม่รวม Palliative ซึ่งใช้ PPS Score กำหนดรอบเยี่ยมเอง)</p>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>เขต</th>
+                                        <th style="text-align:right;">ด่วน — ทันกำหนด</th>
+                                        <th style="text-align:right;">ด่วน — ไม่ทัน</th>
+                                        <th style="text-align:right;">ทั่วไป — ทันกำหนด</th>
+                                        <th style="text-align:right;">ทั่วไป — ไม่ทัน</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>ในเขต</td>
+                                        <td style="text-align:right;">{{ $u['urgent']['in_area']['on_time'] }}</td>
+                                        <td style="text-align:right;">{{ $u['urgent']['in_area']['late'] }}</td>
+                                        <td style="text-align:right;">{{ $u['general']['in_area']['on_time'] }}</td>
+                                        <td style="text-align:right;">{{ $u['general']['in_area']['late'] }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>นอกเขต</td>
+                                        <td style="text-align:right;">{{ $u['urgent']['out_area']['on_time'] }}</td>
+                                        <td style="text-align:right;">{{ $u['urgent']['out_area']['late'] }}</td>
+                                        <td style="text-align:right;">{{ $u['general']['out_area']['on_time'] }}</td>
+                                        <td style="text-align:right;">{{ $u['general']['out_area']['late'] }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -245,15 +279,15 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>ค่าเฉลี่ยความพึงพอใจโดยรวม (คะแนนเต็ม 5)</td>
+                                    <td>ความพึงพอใจของผู้รับบริการในชุมชน — ในเขต (คะแนนเต็ม 5)</td>
                                     @foreach ($report['satisfaction_trend'] as $point)
-                                        <td style="text-align:right;">{{ $point['overall_average'] !== null ? number_format($point['overall_average'], 2) : 'ไม่มี case' }}</td>
+                                        <td style="text-align:right;">{{ $point['in_area_average'] !== null ? number_format($point['in_area_average'], 2) : 'ไม่มี case' }}</td>
                                     @endforeach
                                 </tr>
                                 <tr>
-                                    <td>ค่าเฉลี่ยความพึงพอใจ — เฉพาะในเขต (คะแนนเต็ม 5)</td>
+                                    <td>ความพึงพอใจของผู้ป่วยและญาติ — ประคับประคอง (คะแนนเต็ม 5)</td>
                                     @foreach ($report['satisfaction_trend'] as $point)
-                                        <td style="text-align:right;">{{ $point['in_area_average'] !== null ? number_format($point['in_area_average'], 2) : 'ไม่มี case' }}</td>
+                                        <td style="text-align:right;">{{ $point['palliative_average'] !== null ? number_format($point['palliative_average'], 2) : 'ไม่มี case' }}</td>
                                     @endforeach
                                 </tr>
                             </tbody>

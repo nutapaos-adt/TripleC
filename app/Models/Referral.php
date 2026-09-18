@@ -37,10 +37,17 @@ class Referral extends Model
     public const SEVERITY_PALLIATIVE = 'palliative';
 
     public const SEVERITY_LABELS = [
-        self::SEVERITY_GREEN => 'กลุ่ม 1 บ้านสีเขียว',
-        self::SEVERITY_YELLOW => 'กลุ่ม 2 บ้านสีเหลือง',
-        self::SEVERITY_RED => 'กลุ่ม 3 บ้านสีแดง',
+        self::SEVERITY_GREEN => 'กลุ่ม 1 บ้านสีเขียว (ช่วยเหลือตนเองได้ทั้งหมด)',
+        self::SEVERITY_YELLOW => 'กลุ่ม 2 บ้านสีเหลือง (ช่วยเหลือตนเองได้บางส่วน)',
+        self::SEVERITY_RED => 'กลุ่ม 3 บ้านสีแดง (ช่วยเหลือตนเองไม่ได้เลย)',
         self::SEVERITY_PALLIATIVE => 'กลุ่ม 4 Palliative Care',
+    ];
+
+    public const SEVERITY_CHIP_CLASSES = [
+        self::SEVERITY_GREEN => 'chip-severity-green',
+        self::SEVERITY_YELLOW => 'chip-severity-yellow',
+        self::SEVERITY_RED => 'chip-severity-red',
+        self::SEVERITY_PALLIATIVE => 'chip-severity-palliative',
     ];
 
     // นัดเยี่ยมครั้งแรกต้องไม่เกินกี่วัน ตามกลุ่มความรุนแรง (Palliative ใช้ตาม PPS Score แทน ไม่มีเพดานนี้)
@@ -149,6 +156,11 @@ class Referral extends Model
     public function severityLabel(): ?string
     {
         return self::SEVERITY_LABELS[$this->severity_group] ?? null;
+    }
+
+    public function severityChipClass(): string
+    {
+        return self::SEVERITY_CHIP_CLASSES[$this->severity_group] ?? 'chip-neutral';
     }
 
     public function patientStatusLabel(): string

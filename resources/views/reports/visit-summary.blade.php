@@ -109,6 +109,40 @@
                     <span class="kpi-split-sub">ราย</span>
                 </div>
             </div>
+
+            @php $u = $summary['urgency_breakdown']; @endphp
+            <div style="margin-top:var(--space-5);">
+                <p class="label">ความทันเวลาแยกตามความเร่งด่วน (ด่วน = บ้านแดง 5 วัน, ทั่วไป = บ้านเขียว/เหลือง 14/30 วัน)</p>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>เขต</th>
+                                <th style="text-align:right;">ด่วน — ทันกำหนด</th>
+                                <th style="text-align:right;">ด่วน — ไม่ทัน</th>
+                                <th style="text-align:right;">ทั่วไป — ทันกำหนด</th>
+                                <th style="text-align:right;">ทั่วไป — ไม่ทัน</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>ในเขต</td>
+                                <td style="text-align:right;">{{ $u['urgent']['in_area']['on_time'] }}</td>
+                                <td style="text-align:right;">{{ $u['urgent']['in_area']['late'] }}</td>
+                                <td style="text-align:right;">{{ $u['general']['in_area']['on_time'] }}</td>
+                                <td style="text-align:right;">{{ $u['general']['in_area']['late'] }}</td>
+                            </tr>
+                            <tr>
+                                <td>นอกเขต</td>
+                                <td style="text-align:right;">{{ $u['urgent']['out_area']['on_time'] }}</td>
+                                <td style="text-align:right;">{{ $u['urgent']['out_area']['late'] }}</td>
+                                <td style="text-align:right;">{{ $u['general']['out_area']['on_time'] }}</td>
+                                <td style="text-align:right;">{{ $u['general']['out_area']['late'] }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 

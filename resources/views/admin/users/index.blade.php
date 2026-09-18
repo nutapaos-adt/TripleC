@@ -26,7 +26,7 @@
                             <tr>
                                 <td class="patient-name">{{ $user->name }}</td>
                                 <td>{{ $user->email }}</td>
-                                <td><span class="chip chip-casetype">{{ $user->roleLabel() }}</span></td>
+                                <td><span class="chip {{ $user->roleChipClass() }}">{{ $user->roleLabel() }}</span></td>
                                 <td>{{ $user->department ?: '—' }}</td>
                                 <td style="text-align:right;">
                                     <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-secondary btn-sm">แก้ไขสิทธิ์</a>

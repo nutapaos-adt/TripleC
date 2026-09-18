@@ -1,16 +1,16 @@
 {{-- สรุปผลแบบประเมิน (อ่านอย่างเดียว) — ใช้ร่วมกันทั้งหน้า show (staff) และ token-thankyou (public) --}}
 @php
     $sexLabels = ['male' => 'ชาย', 'female' => 'หญิง'];
-    $respondentLabels = ['patient' => 'ผู้ป่วยเอง', 'family' => 'ญาติ/ผู้ดูแล'];
+    $respondentLabels = ['patient' => 'ผู้ป่วย', 'family' => 'ญาติ'];
     $maritalLabels = [
         'single' => 'โสด',
         'married' => 'สมรส',
-        'widowed_divorced_separated' => 'หม้าย/หย่า/แยกกันอยู่',
+        'widowed_divorced_separated' => 'หม้าย/หย่า/แยก',
         'other' => 'อื่นๆ',
     ];
     $educationLabels = [
-        'primary_or_below' => 'ประถมหรือต่ำกว่า',
-        'secondary_or_diploma' => 'มัธยม/อนุปริญญา',
+        'primary_or_below' => 'ประถมศึกษาหรือต่ำกว่า',
+        'secondary_or_diploma' => 'มัธยมศึกษาหรืออนุปริญญา',
         'bachelor_or_above' => 'ปริญญาตรีหรือสูงกว่า',
         'other' => 'อื่นๆ',
     ];
@@ -19,7 +19,7 @@
         'employed' => 'รับจ้าง',
         'business' => 'ธุรกิจส่วนตัว',
         'farmer' => 'เกษตรกร',
-        'student' => 'นักเรียน/นักศึกษา',
+        'student' => 'นักเรียนหรือนักศึกษา',
         'other' => 'อื่นๆ',
     ];
 @endphp

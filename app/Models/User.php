@@ -21,6 +21,14 @@ class User extends Authenticatable
         self::ROLE_ADMIN => 'แอดมิน/หัวหน้าแผนก',
     ];
 
+    // สีป้ายบทบาทในหน้าแอดมิน/ผู้ใช้งาน ตาม admin-users-list.html: ward_staff=primary(ฟ้า),
+    // home_visit_team=success(เขียว), admin=warning(เหลือง)
+    public const ROLE_CHIP_CLASSES = [
+        self::ROLE_WARD_STAFF => 'chip-primary',
+        self::ROLE_HOME_VISIT_TEAM => 'chip-success',
+        self::ROLE_ADMIN => 'chip-warning',
+    ];
+
     /**
      * @var list<string>
      */
@@ -72,6 +80,11 @@ class User extends Authenticatable
     public function roleLabel(): string
     {
         return self::ROLES[$this->role] ?? $this->role;
+    }
+
+    public function roleChipClass(): string
+    {
+        return self::ROLE_CHIP_CLASSES[$this->role] ?? 'chip-neutral';
     }
 
     public function ward(): \Illuminate\Database\Eloquent\Relations\BelongsTo
