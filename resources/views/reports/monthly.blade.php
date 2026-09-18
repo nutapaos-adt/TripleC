@@ -55,97 +55,96 @@
                         <div class="kpi-tile">
                             <span class="caption">จำนวนการส่งเยี่ยมทั้งหมด</span>
                             <span class="kpi-value">{{ $report['total_referrals'] }}</span>
-                            <span class="caption">ราย</span>
+                            <span class="hint">ราย</span>
                         </div>
                         <div class="kpi-tile">
                             <span class="caption">ในเขต</span>
                             <span class="kpi-value">{{ $report['in_area_count'] }}</span>
-                            <span class="caption">ราย</span>
+                            <span class="hint">ราย</span>
                         </div>
                         <div class="kpi-tile">
                             <span class="caption">นอกเขต</span>
                             <span class="kpi-value">{{ $report['out_area_count'] }}</span>
-                            <span class="caption">ราย</span>
+                            <span class="hint">ราย</span>
                         </div>
                         <div class="kpi-tile">
+                            <span class="caption">ทันใน 5 วัน (ด่วน)</span>
+                            <span class="kpi-value">{{ $report['timeliness']['within_5'] }}</span>
+                            <span class="hint">ราย</span>
+                        </div>
+                        <div class="kpi-tile">
+                            <span class="caption">ทันใน 14 วัน</span>
+                            <span class="kpi-value">{{ $report['timeliness']['within_14'] }}</span>
+                            <span class="hint">ราย</span>
+                        </div>
+                        <div class="kpi-tile">
+                            <span class="caption">ทันใน 30 วัน</span>
+                            <span class="kpi-value">{{ $report['timeliness']['within_30'] }}</span>
+                            <span class="hint">ราย</span>
+                        </div>
+                        <div class="kpi-tile alert">
                             <span class="caption">ยังไม่ได้รับการเยี่ยม/ยืนยันแผน</span>
-                            <span class="kpi-value {{ $report['not_yet_visited_count'] > 0 ? 'risk' : '' }}">{{ $report['not_yet_visited_count'] }}</span>
-                            <span class="caption">ราย — ในเขต {{ $report['not_yet_visited_in_area'] }} &middot; นอกเขต {{ $report['not_yet_visited_out_area'] }}</span>
+                            <span class="kpi-value risk">{{ $report['not_yet_visited_count'] }}</span>
+                            <span class="hint">ราย — ในเขต {{ $report['not_yet_visited_in_area'] }} &middot; นอกเขต {{ $report['not_yet_visited_out_area'] }}</span>
                         </div>
                     </section>
 
-                    <div style="margin-top:var(--space-5);">
-                        <div class="kpi-split-row">
-                            <div class="kpi-split-item">
-                                <div class="kpi-split-top">
-                                    <span class="kpi-split-label">ทันใน 5 วัน (ด่วน)</span>
-                                    <span class="kpi-split-value">{{ $report['timeliness']['within_5'] }}</span>
-                                </div>
-                                <span class="kpi-split-sub">ราย</span>
-                            </div>
-                            <div class="kpi-split-item">
-                                <div class="kpi-split-top">
-                                    <span class="kpi-split-label">ทันใน 14 วัน</span>
-                                    <span class="kpi-split-value">{{ $report['timeliness']['within_14'] }}</span>
-                                </div>
-                                <span class="kpi-split-sub">ราย</span>
-                            </div>
-                            <div class="kpi-split-item">
-                                <div class="kpi-split-top">
-                                    <span class="kpi-split-label">ทันใน 30 วัน</span>
-                                    <span class="kpi-split-value">{{ $report['timeliness']['within_30'] }}</span>
-                                </div>
-                                <span class="kpi-split-sub">ราย</span>
-                            </div>
-                            <div class="kpi-split-item">
-                                <div class="kpi-split-top">
-                                    <span class="kpi-split-label">เกิน 30 วัน</span>
-                                    <span class="kpi-split-value">{{ $report['timeliness']['over_30'] }}</span>
-                                </div>
-                                <span class="kpi-split-sub">ราย</span>
-                            </div>
-                            <div class="kpi-split-item">
-                                <div class="kpi-split-top">
-                                    <span class="kpi-split-label">ยังไม่ได้เยี่ยมครั้งแรก</span>
-                                    <span class="kpi-split-value">{{ $report['timeliness']['not_visited'] }}</span>
-                                </div>
-                                <span class="kpi-split-sub">ราย</span>
-                            </div>
-                        </div>
+                    @php $t = $report['visit_timeliness_table']; @endphp
+                    <div class="table-wrap" style="margin-top:var(--space-5);">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ประเภท</th>
+                                    <th style="text-align:right;">จำนวนการส่งเยี่ยม</th>
+                                    <th style="text-align:right;">จำนวนเยี่ยมจริง</th>
+                                    <th style="text-align:right;">ทันใน 5 วัน (ด่วน)</th>
+                                    <th style="text-align:right;">ไม่ทัน (ด่วน)</th>
+                                    <th style="text-align:right;">รวม (ด่วน)</th>
+                                    <th style="text-align:right;">ทันใน 14 วัน (ทั่วไป)</th>
+                                    <th style="text-align:right;">ทันใน 30 วัน (ทั่วไป)</th>
+                                    <th style="text-align:right;">เยี่ยมเดือนหน้า (ทั่วไป)</th>
+                                    <th style="text-align:right;">รวม (ทั่วไป)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (['in_area' => 'ในเขต', 'out_area' => 'นอกเขต'] as $zoneKey => $zoneLabel)
+                                    <tr>
+                                        <td>{{ $zoneLabel }}</td>
+                                        <td style="text-align:right;">{{ $t[$zoneKey]['total_referred'] }}</td>
+                                        <td style="text-align:right;">{{ $t[$zoneKey]['visited_actual'] }}</td>
+                                        <td style="text-align:right;">{{ $t[$zoneKey]['urgent']['on_time'] }}</td>
+                                        <td style="text-align:right;">{{ $t[$zoneKey]['urgent']['late'] }}</td>
+                                        <td style="text-align:right;">{{ $t[$zoneKey]['urgent']['total'] }}</td>
+                                        <td style="text-align:right;">{{ $t[$zoneKey]['general']['within_14'] }}</td>
+                                        <td style="text-align:right;">{{ $t[$zoneKey]['general']['within_30'] }}</td>
+                                        <td style="text-align:right;">{{ $t[$zoneKey]['general']['next_month'] }}</td>
+                                        <td style="text-align:right;">{{ $t[$zoneKey]['general']['total'] }}</td>
+                                    </tr>
+                                @endforeach
+                                <tr style="font-weight:700;background:var(--color-neutral-100);">
+                                    <td>รวม</td>
+                                    <td style="text-align:right;">{{ $t['combined']['total_referred'] }}</td>
+                                    <td style="text-align:right;">{{ $t['combined']['visited_actual'] }}</td>
+                                    <td style="text-align:right;">{{ $t['combined']['urgent']['on_time'] }}</td>
+                                    <td style="text-align:right;">{{ $t['combined']['urgent']['late'] }}</td>
+                                    <td style="text-align:right;">{{ $t['combined']['urgent']['total'] }}</td>
+                                    <td style="text-align:right;">{{ $t['combined']['general']['within_14'] }}</td>
+                                    <td style="text-align:right;">{{ $t['combined']['general']['within_30'] }}</td>
+                                    <td style="text-align:right;">{{ $t['combined']['general']['next_month'] }}</td>
+                                    <td style="text-align:right;">{{ $t['combined']['general']['total'] }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
 
-                    @php $u = $report['urgency_breakdown']; @endphp
-                    <div style="margin-top:var(--space-5);">
-                        <p class="label">ความทันเวลาแยกตามความเร่งด่วน (ด่วน = บ้านแดง เกณฑ์ 5 วัน, ทั่วไป = บ้านเขียว/เหลือง เกณฑ์ 14/30 วัน — ไม่รวม Palliative ซึ่งใช้ PPS Score กำหนดรอบเยี่ยมเอง)</p>
-                        <div class="table-wrap">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>เขต</th>
-                                        <th style="text-align:right;">ด่วน — ทันกำหนด</th>
-                                        <th style="text-align:right;">ด่วน — ไม่ทัน</th>
-                                        <th style="text-align:right;">ทั่วไป — ทันกำหนด</th>
-                                        <th style="text-align:right;">ทั่วไป — ไม่ทัน</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>ในเขต</td>
-                                        <td style="text-align:right;">{{ $u['urgent']['in_area']['on_time'] }}</td>
-                                        <td style="text-align:right;">{{ $u['urgent']['in_area']['late'] }}</td>
-                                        <td style="text-align:right;">{{ $u['general']['in_area']['on_time'] }}</td>
-                                        <td style="text-align:right;">{{ $u['general']['in_area']['late'] }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>นอกเขต</td>
-                                        <td style="text-align:right;">{{ $u['urgent']['out_area']['on_time'] }}</td>
-                                        <td style="text-align:right;">{{ $u['urgent']['out_area']['late'] }}</td>
-                                        <td style="text-align:right;">{{ $u['general']['out_area']['on_time'] }}</td>
-                                        <td style="text-align:right;">{{ $u['general']['out_area']['late'] }}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="caption" style="margin-top:var(--space-3);display:flex;flex-direction:column;gap:4px;">
+                        <p>ด่วน = บ้านแดง, ทั่วไป = บ้านเหลืองและเขียว — ตัวเลข "ทันใน 5/14/30 วัน" และ "เยี่ยมเดือนหน้า" นับเฉพาะเคสในกลุ่ม "จำนวนเยี่ยมจริง" (แยกตามกลุ่มบ้านสี) ผลรวมจึงเท่ากับจำนวนเยี่ยมจริงของแต่ละแถวเสมอ ไม่ใช่จำนวนการส่งเยี่ยมทั้งหมด</p>
+                        <p>นอกเขต หมายถึงผู้ป่วยที่ต้องการเยี่ยมบ้านและพักอาศัยนอกเขตพื้นที่รับผิดชอบ</p>
+                        <p>จำนวนเยี่ยมจริง หมายถึงจำนวนเคสที่ได้รับการเยี่ยมแล้ว หรือได้รับการยืนยันแผนการเยี่ยมแล้วในเดือนนั้นๆ (ไม่นับเคสที่ส่งเข้าระบบแล้วแต่ยังไม่มีการตอบกลับ)</p>
+                        <p>ทันใน 14 วัน หมายถึงเยี่ยมเคสที่ขึ้นทะเบียนในเดือนนั้นทันภายใน 14 วัน</p>
+                        <p>ทันใน 30 วัน หมายถึงเยี่ยมไม่ทันใน 14 วัน แต่ทันภายใน 30 วัน</p>
+                        <p>เยี่ยมเดือนหน้า หมายถึงเคสที่ยืนยันแผนแล้ว และมีกำหนดเยี่ยมครั้งถัดไปตกในเดือนถัดไปตามรอบปกติของแผน (คนละความหมายกับเคสที่ยังไม่ได้รับการเยี่ยม/ยืนยันแผนเลย)</p>
+                        <p>ยังไม่ได้รับการเยี่ยม/ยืนยันแผน (KPI ด้านบน) หมายถึงเคสที่ส่งเข้าระบบแล้วแต่ยังไม่มีการตอบกลับจากทีมเยี่ยมบ้าน — ไม่นับรวมอยู่ในตารางนี้</p>
                     </div>
                 </div>
             </div>

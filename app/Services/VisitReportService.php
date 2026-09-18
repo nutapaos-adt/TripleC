@@ -52,6 +52,7 @@ class VisitReportService
         $summary = $this->buildSummary($referrals, $start, $end);
         $summary['case_log'] = $this->buildCaseLog($referrals);
         $summary['satisfaction_trend'] = $this->buildSatisfactionTrend($month);
+        $summary['visit_timeliness_table'] = $this->buildVisitTimelinessTable($referrals, $month);
 
         return $summary;
     }
@@ -346,6 +347,88 @@ class VisitReportService
         }
 
         return $result;
+    }
+
+    /**
+     * ตารางความทันเวลา×เขต แบบละเอียดของ monthly-visit-report.html §1 — ต่างจาก buildUrgencyBreakdown()
+     * (ใช้ในหน้า visit-summary) ตรงที่แยก "ทั่วไป" เป็น 3 ช่วง (14/30 วัน + เยี่ยมเดือนหน้า) และนับเฉพาะเคส
+     * ที่ "เยี่ยมแล้ว" หรือ "ยืนยันแผนแล้ว" เป็น "จำนวนเยี่ยมจริง" (ไม่นับเคสที่ส่งเข้าระบบแล้วยังไม่มีการ
+     * ตอบกลับเลย) — ผลรวมของแต่ละช่วงย่อยจึงเท่ากับ "จำนวนเยี่ยมจริง" ของแถวนั้นเสมอ ตามที่ต้นแบบระบุไว้ใน
+     * table-note ส่วน Palliative/ไม่ระบุกลุ่มความรุนแรง ไม่เข้าเกณฑ์ตารางนี้เช่นเดียวกับ buildUrgencyBreakdown()
+     *
+     * @param  Collection<int, Referral>  $referrals
+     * @return array<string, array{total_referred: int, visited_actual: int, urgent: array{on_time: int, late: int, total: int}, general: array{within_14: int, within_30: int, next_month: int, total: int}}>
+     */
+    protected function buildVisitTimelinessTable(Collection $referrals, Carbon $month): array
+    {
+        $emptyRow = fn () => [
+            'total_referred' => 0,
+            'visited_actual' => 0,
+            'urgent' => ['on_time' => 0, 'late' => 0, 'total' => 0],
+            'general' => ['within_14' => 0, 'within_30' => 0, 'next_month' => 0, 'total' => 0],
+        ];
+
+        $rows = ['in_area' => $emptyRow(), 'out_area' => $emptyRow(), 'combined' => $emptyRow()];
+
+        foreach ($referrals as $referral) {
+            $zoneKey = $referral->zone === 'in_area' ? 'in_area' : 'out_area';
+            $rows[$zoneKey]['total_referred']++;
+            $rows['combined']['total_referred']++;
+        }
+
+        $referralIds = $referrals->pluck('id');
+
+        if ($referralIds->isEmpty()) {
+            return $rows;
+        }
+
+        $nextMonth = $month->copy()->addMonth();
+
+        $firstPlans = FollowUpPlan::query()
+            ->whereIn('referral_id', $referralIds)
+            ->where('plan_number', 1)
+            ->with('record')
+            ->get()
+            ->keyBy('referral_id');
+
+        foreach ($referrals as $referral) {
+            if ($referral->severity_group === null || $referral->severity_group === Referral::SEVERITY_PALLIATIVE) {
+                continue; // Palliative หรือยังไม่ระบุกลุ่ม — ไม่เข้าตารางนี้ (เหมือน buildUrgencyBreakdown())
+            }
+
+            $zoneKey = $referral->zone === 'in_area' ? 'in_area' : 'out_area';
+            $isUrgent = $referral->severity_group === Referral::SEVERITY_RED;
+
+            $plan = $firstPlans->get($referral->id);
+            $record = $plan?->record;
+            $visitedAt = $record?->visited_at;
+
+            $bucket = null;
+
+            if ($visitedAt) {
+                $days = $referral->created_at->diffInDays($visitedAt);
+                $bucket = $isUrgent
+                    ? ($days <= 5 ? 'on_time' : 'late')
+                    : ($days <= 14 ? 'within_14' : 'within_30');
+            } elseif (! $isUrgent && $referral->isConfirmed() && $plan
+                && $plan->due_date->year === $nextMonth->year && $plan->due_date->month === $nextMonth->month) {
+                $bucket = 'next_month';
+            }
+
+            if ($bucket === null) {
+                continue; // ยังไม่ได้รับการเยี่ยม/ยืนยันแผน — ไม่นับใน "จำนวนเยี่ยมจริง"
+            }
+
+            $category = $isUrgent ? 'urgent' : 'general';
+
+            foreach ([$zoneKey, 'combined'] as $target) {
+                $rows[$target][$category][$bucket]++;
+                $rows[$target][$category]['total']++;
+                $rows[$target]['visited_actual']++;
+            }
+        }
+
+        return $rows;
     }
 
     /**
