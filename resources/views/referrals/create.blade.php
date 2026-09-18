@@ -97,7 +97,7 @@
                         <span class="hint">กำหนดความถี่/กำหนดเยี่ยมครั้งแรกตามกลุ่มนี้</span>
                     </div>
                     @php $selectedCaseType = $caseTypes->firstWhere('id', (int) old('case_type_id')); @endphp
-                    <div class="field" id="pps_field" @if($selectedCaseType?->slug !== 'palliative') hidden @endif>
+                    <div class="field" id="pps_field" @if($selectedCaseType?->slug !== 'palliative-care') hidden @endif>
                         <label>PPS Score เริ่มต้น (ประเมินโดยพยาบาลหอผู้ป่วย)</label>
                         <div class="pps-row">
                             <input type="range" name="initial_pps_score" id="pps_range" min="0" max="100" step="10" value="{{ old('initial_pps_score', 50) }}">
@@ -301,7 +301,7 @@
             const ppsField = document.getElementById('pps_field');
             function togglePpsField() {
                 const opt = caseTypeSelect.options[caseTypeSelect.selectedIndex];
-                ppsField.hidden = ! opt || opt.dataset.slug !== 'palliative';
+                ppsField.hidden = ! opt || opt.dataset.slug !== 'palliative-care';
             }
             caseTypeSelect.addEventListener('change', togglePpsField);
             togglePpsField();

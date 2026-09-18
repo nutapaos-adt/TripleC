@@ -33,3 +33,6 @@ yarn-error.log
 
 # Firestore lesson coursework — OpenRouter AI key (week 8 homework), never commit
 /firestore-lesson/js/ai-config.js
+
+# Generated deployment package (zip/production vendor build/SQL dump) — build output, not source
+/deploy
