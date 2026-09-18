@@ -4,7 +4,7 @@
     @php
         $referral = $plan->referral;
         $totalPlans = $referral->caseType?->activeVisitRule()?->fixed_visit_count;
-        $isOrtho = $referral->caseType?->slug === 'ortho';
+        $hadTkaUka = str_contains($referral->surgery_history ?? '', 'TKA') || str_contains($referral->surgery_history ?? '', 'UKA');
         $isPalliative = $referral->caseType?->slug === 'palliative-care';
         $isRedSeverity = $referral->severity_group === \App\Models\Referral::SEVERITY_RED;
     @endphp
@@ -131,7 +131,7 @@
                     </div>
                 </div>
 
-                @if ($isOrtho)
+                @if ($hadTkaUka)
                     <div class="field" id="tkaField">
                         <span class="hint-note">แสดงเฉพาะเคสศัลยกรรมกระดูกที่ได้รับการผ่าตัด TKR/UKA — ติดตามอาการภายใน 14 วันหลังจำหน่าย (หัวข้อที่ต้องเห็นแผล/วัดองศาเข่าจะประเมินไม่ได้ทางโทรศัพท์ — มีข้อความกำกับไว้)</span>
                         <label>การประเมินหลังผ่าตัดเปลี่ยนข้อเข่า (TKR/UKA)</label>

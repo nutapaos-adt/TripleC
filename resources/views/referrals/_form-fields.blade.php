@@ -252,7 +252,11 @@
 
 <div class="field" style="margin-bottom:var(--space-4);">
     <label>ประวัติการผ่าตัด (ถ้ามี)</label>
-    <input type="text" name="surgery_history" value="{{ old('surgery_history', $referral?->surgery_history) }}" placeholder="เช่น ผ่าตัดไส้ติ่ง 15 ส.ค. 2569 — เว้นว่างได้หากไม่มี">
+    <input type="text" name="surgery_history" id="surgery_history" value="{{ old('surgery_history', $referral?->surgery_history) }}" placeholder="เช่น ผ่าตัดไส้ติ่ง 15 ส.ค. 2569 — เว้นว่างได้หากไม่มี">
+    <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;">
+        <button type="button" class="btn btn-secondary btn-sm surgery-tag" data-tag="ผ่าตัดเปลี่ยนข้อเข่า (TKA/UKA)">ผ่าตัดเปลี่ยนข้อเข่า (TKA/UKA)</button>
+    </div>
+    <span class="hint">กดเลือก "ผ่าตัดเปลี่ยนข้อเข่า (TKA/UKA)" เพื่อเชื่อมโยงกับการประเมินหลังผ่าตัดเปลี่ยนข้อเข่าในหน้าบันทึกผลติดตาม</span>
 </div>
 
 <div class="field full" style="margin-bottom:var(--space-4);">

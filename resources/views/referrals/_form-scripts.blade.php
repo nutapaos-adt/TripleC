@@ -87,6 +87,25 @@
                 underlyingField.value = parts.join(', ');
             });
         });
+        // ชิปประวัติผ่าตัดที่พบบ่อย (TKA/UKA) — กดแล้วเติม/ตัดออกจากช่องข้อความ (toggle) เช่นเดียวกับโรคประจำตัว
+        const surgeryField = document.getElementById('surgery_history');
+        document.querySelectorAll('.surgery-tag').forEach(function (btn) {
+            const tag = btn.dataset.tag;
+            if (partsOf(surgeryField).includes(tag)) btn.classList.add('btn-primary');
+            btn.addEventListener('click', function () {
+                const parts = partsOf(surgeryField);
+                const idx = parts.indexOf(tag);
+                if (idx === -1) {
+                    parts.push(tag);
+                    btn.classList.add('btn-primary');
+                } else {
+                    parts.splice(idx, 1);
+                    btn.classList.remove('btn-primary');
+                }
+                surgeryField.value = parts.join(', ');
+            });
+        });
+
         document.getElementById('disease_other_btn').addEventListener('click', function () {
             if (underlyingField.value.trim() && ! /,\s*$/.test(underlyingField.value)) {
                 underlyingField.value = underlyingField.value.replace(/\s*$/, '') + ', ';
