@@ -247,7 +247,11 @@ class VisitReportService
     }
 
     /**
-     * นับจำนวนเคสที่เยี่ยมครั้งแรก (plan_number = 1) ทันภายใน 5/14/30 วันนับจากวันที่ส่งต่อ (created_at)
+     * นับจำนวนเคสที่เยี่ยมครั้งแรก (plan_number = 1) ทันภายใน 5/14/30 วันนับจากวันที่ส่งต่อ (created_at) —
+     * "ทันใน 5 วัน (ด่วน)" นับเฉพาะกลุ่มความรุนแรงแดง (ด่วน), "ทันใน 14/30 วัน"/"เกิน 30 วัน" นับเฉพาะกลุ่ม
+     * เขียว/เหลือง (ทั่วไป) ตามเกณฑ์ที่แต่ละกลุ่มใช้จริง — เคสด่วนที่ไม่ทัน 5 วันจะไม่ถูกนับใน 4 ช่องนี้
+     * (ดูรายละเอียดเต็มได้จากตาราง "ความทันเวลาแยกตามความเร่งด่วน" ที่ใช้ buildUrgencyBreakdown() แทน) เช่นกัน
+     * Palliative/ไม่ระบุกลุ่มก็ไม่นับใน 4 ช่องนี้ "ยังไม่ได้เยี่ยมครั้งแรก" เป็นช่องเดียวที่นับทุกกลุ่มรวมกัน
      *
      * @param  Collection<int, Referral>  $referrals
      * @return array{within_5: int, within_14: int, within_30: int, over_30: int, not_visited: int}
@@ -287,8 +291,19 @@ class VisitReportService
 
             $days = $referral->created_at->diffInDays($record->visited_at);
 
+            if ($referral->severity_group === Referral::SEVERITY_RED) {
+                if ($days <= 5) {
+                    $buckets['within_5']++;
+                }
+
+                continue;
+            }
+
+            if ($referral->severity_group === null || $referral->severity_group === Referral::SEVERITY_PALLIATIVE) {
+                continue;
+            }
+
             match (true) {
-                $days <= 5 => $buckets['within_5']++,
                 $days <= 14 => $buckets['within_14']++,
                 $days <= 30 => $buckets['within_30']++,
                 default => $buckets['over_30']++,
