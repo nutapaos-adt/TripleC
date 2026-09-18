@@ -243,10 +243,11 @@ h1,h2,h3{margin:0;}
 .chip-done{background:var(--color-success-tint);color:var(--color-success);}
 .chip-inzone{background:var(--color-primary-100);color:var(--color-primary-700);}
 .chip-outzone{background:var(--color-neutral-100);color:var(--color-neutral-700);}
-.chip-method{background:var(--color-neutral-100);color:var(--color-neutral-700);}
+.chip-method{background:var(--color-primary-100);color:var(--color-primary-700);}
 .chip-risk{background:var(--color-risk-tint);color:var(--color-risk);}
 .chip-warning{background:var(--color-warning-tint);color:var(--color-warning);}
 .chip-success{background:var(--color-success-tint);color:var(--color-success);}
+.chip-inprogress{background:var(--color-primary-100);color:var(--color-primary-700);border:1px solid var(--color-primary-300);}
 .chip-casetype{background:var(--color-neutral-100);color:var(--color-primary-700);}
 .chip-primary{background:var(--color-primary-100);color:var(--color-primary-700);}
 .chip-neutral{background:var(--color-neutral-100);color:var(--color-neutral-700);}

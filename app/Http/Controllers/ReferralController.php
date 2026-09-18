@@ -174,6 +174,8 @@ class ReferralController extends Controller
 
     public function confirmCarePlan(ConfirmCarePlanRequest $request, Referral $referral, VisitPlanService $visitPlanService): RedirectResponse
     {
+        abort_if($referral->isConfirmed(), 403, 'ยืนยันแผนติดตามไปแล้ว ไม่สามารถยืนยันซ้ำได้');
+
         $referral->update([
             'case_type_id' => $request->validated('case_type_id'),
             'confirmed_summary' => [

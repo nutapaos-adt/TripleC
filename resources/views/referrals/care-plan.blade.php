@@ -42,68 +42,115 @@
         </div>
     </div>
 
-    <form method="POST" action="{{ route('referrals.care-plan.confirm', $referral) }}">
-        @csrf
-
-        <div class="{{ $isConfirmed ? 'confirmed-box' : 'ai-box' }}">
+    @if ($isConfirmed)
+        <div class="confirmed-box">
             <div class="box-label">
                 <span class="dot"></span>
-                @if ($isConfirmed)
-                    ยืนยันแล้วโดย {{ $referral->confirmer->name }} เมื่อ {{ $referral->confirmed_at->format('d/m/Y H:i') }}
-                @else
-                    ร่างจาก AI — ยังไม่ยืนยัน
-                @endif
+                ยืนยันแล้วโดย {{ $referral->confirmer->name }} เมื่อ {{ $referral->confirmed_at->format('d/m/Y H:i') }}
             </div>
 
             <div class="field-grid">
                 <div class="field">
                     <label>ประเภทผู้ป่วย</label>
-                    <select name="case_type_id">
-                        <option value="">— เลือก —</option>
-                        @foreach ($caseTypes as $caseType)
-                            <option value="{{ $caseType->id }}" @selected((string) old('case_type_id', $suggestedCaseTypeId) === (string) $caseType->id)>
-                                {{ $caseType->name }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <div class="field-value">{{ $referral->caseType?->name ?? '—' }}</div>
                 </div>
                 <div class="field">
                     <label>สรุปสภาพผู้ป่วย</label>
-                    <input type="text" name="patient_type" value="{{ old('patient_type', $summary['patient_type'] ?? '') }}">
+                    <div class="field-value">{{ $summary['patient_type'] ?? '—' }}</div>
                 </div>
                 <div class="field full">
                     <label>การวางแผนทางการพยาบาล</label>
-                    <textarea name="follow_up_need" rows="2">{{ old('follow_up_need', $summary['follow_up_need'] ?? '') }}</textarea>
+                    <div class="field-value multiline">{{ $summary['follow_up_need'] ?? '—' }}</div>
                 </div>
                 <div class="field full">
                     <label>ปัญหาสำคัญ</label>
-                    <textarea name="main_problem" rows="2">{{ old('main_problem', $summary['main_problem'] ?? '') }}</textarea>
+                    <div class="field-value multiline">{{ $summary['main_problem'] ?? '—' }}</div>
                 </div>
                 <div class="field full">
-                    <label>ประเด็นที่ต้องติดตาม <span class="hint" style="display:inline;margin:0;">(บรรทัดละ 1 รายการ)</span></label>
-                    <textarea name="risk_signals" rows="3">{{ old('risk_signals', implode("\n", $riskSignals)) }}</textarea>
+                    <label>ประเด็นที่ต้องติดตาม</label>
+                    <div class="field-value">
+                        @if (count($riskSignals))
+                            <ul>
+                                @foreach ($riskSignals as $signal)
+                                    <li>{{ $signal }}</li>
+                                @endforeach
+                            </ul>
+                        @else
+                            —
+                        @endif
+                    </div>
                 </div>
                 <div class="field">
                     <label>PPS Score ปัจจุบัน</label>
-                    <div class="pps-row">
-                        <input type="number" name="initial_pps_score" min="0" max="100" step="10"
-                               value="{{ old('initial_pps_score', $referral->initial_pps_score) }}" style="width:100px;">
-                    </div>
-                    <span class="hint">กรอกเฉพาะกรณี Palliative Care — ใช้กำหนดความถี่การเยี่ยมครั้งแรก</span>
+                    <div class="field-value">{{ $referral->initial_pps_score ?? '—' }}</div>
                 </div>
             </div>
-
-            <p class="box-footnote">แก้ไขข้อความด้านบนได้ก่อนยืนยัน — พยาบาลต้องตรวจสอบและยืนยันทุกครั้งก่อนเริ่มแผนติดตาม</p>
         </div>
 
         <div class="btn-row">
-            <button type="submit" class="btn btn-primary">ยืนยันแผนติดตาม</button>
+            <a href="{{ route('referrals.care-plan.print', $referral) }}" class="btn btn-secondary">🖨 พิมพ์รายงานสรุปแผนการดูแล</a>
             <a href="{{ route('referrals.show', $referral) }}" class="btn btn-secondary">กลับไปหน้าใบส่งต่อ</a>
         </div>
-    </form>
+    @else
+        <form method="POST" action="{{ route('referrals.care-plan.confirm', $referral) }}">
+            @csrf
 
-    <form method="POST" action="{{ route('referrals.ai-summary', $referral) }}" style="margin-top:var(--space-4);">
-        @csrf
-        <button type="submit" class="btn btn-secondary btn-sm">↻ ขอให้ AI สรุปใหม่</button>
-    </form>
+            <div class="ai-box">
+                <div class="box-label">
+                    <span class="dot"></span>
+                    ร่างจาก AI — ยังไม่ยืนยัน
+                </div>
+
+                <div class="field-grid">
+                    <div class="field">
+                        <label>ประเภทผู้ป่วย</label>
+                        <select name="case_type_id">
+                            <option value="">— เลือก —</option>
+                            @foreach ($caseTypes as $caseType)
+                                <option value="{{ $caseType->id }}" @selected((string) old('case_type_id', $suggestedCaseTypeId) === (string) $caseType->id)>
+                                    {{ $caseType->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>สรุปสภาพผู้ป่วย</label>
+                        <input type="text" name="patient_type" value="{{ old('patient_type', $summary['patient_type'] ?? '') }}">
+                    </div>
+                    <div class="field full">
+                        <label>การวางแผนทางการพยาบาล</label>
+                        <textarea name="follow_up_need" rows="2">{{ old('follow_up_need', $summary['follow_up_need'] ?? '') }}</textarea>
+                    </div>
+                    <div class="field full">
+                        <label>ปัญหาสำคัญ</label>
+                        <textarea name="main_problem" rows="2">{{ old('main_problem', $summary['main_problem'] ?? '') }}</textarea>
+                    </div>
+                    <div class="field full">
+                        <label>ประเด็นที่ต้องติดตาม <span class="hint" style="display:inline;margin:0;">(บรรทัดละ 1 รายการ)</span></label>
+                        <textarea name="risk_signals" rows="3">{{ old('risk_signals', implode("\n", $riskSignals)) }}</textarea>
+                    </div>
+                    <div class="field">
+                        <label>PPS Score ปัจจุบัน</label>
+                        <div class="pps-row">
+                            <input type="number" name="initial_pps_score" min="0" max="100" step="10"
+                                   value="{{ old('initial_pps_score', $referral->initial_pps_score) }}" style="width:100px;">
+                        </div>
+                        <span class="hint">กรอกเฉพาะกรณี Palliative Care — ใช้กำหนดความถี่การเยี่ยมครั้งแรก</span>
+                    </div>
+                </div>
+
+                <p class="box-footnote">แก้ไขข้อความด้านบนได้ก่อนยืนยัน — พยาบาลต้องตรวจสอบและยืนยันทุกครั้งก่อนเริ่มแผนติดตาม</p>
+            </div>
+
+            <div class="btn-row">
+                <button type="submit" class="btn btn-primary">ยืนยันแผนติดตาม</button>
+                <a href="{{ route('referrals.show', $referral) }}" class="btn btn-secondary">กลับไปหน้าใบส่งต่อ</a>
+            </div>
+        </form>
+
+        <form method="POST" action="{{ route('referrals.ai-summary', $referral) }}" style="margin-top:var(--space-4);">
+            @csrf
+            <button type="submit" class="btn btn-secondary btn-sm">↻ ขอให้ AI สรุปใหม่</button>
+        </form>
+    @endif
 </x-app-layout>

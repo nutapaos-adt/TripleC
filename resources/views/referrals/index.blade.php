@@ -19,6 +19,12 @@
             \App\Models\Referral::STATUS_IN_PROGRESS => 'กำลังติดตาม',
             \App\Models\Referral::STATUS_CLOSED => 'ปิดเคสแล้ว',
         ];
+        $statusChipClasses = [
+            \App\Models\Referral::STATUS_PENDING_REVIEW => 'chip-warning',
+            \App\Models\Referral::STATUS_PLAN_CONFIRMED => 'chip-success',
+            \App\Models\Referral::STATUS_IN_PROGRESS => 'chip-inprogress',
+            \App\Models\Referral::STATUS_CLOSED => 'chip-closed',
+        ];
     @endphp
     <div style="display:flex;gap:var(--space-2);flex-wrap:wrap;">
         @foreach ($statusLabels as $value => $label)
@@ -69,7 +75,11 @@
                                     {{ $referral->zone === 'in_area' ? 'ในเขต' : 'นอกเขต' }}
                                 </span>
                             </td>
-                            <td>{{ $statusLabels[$referral->status] ?? $referral->status }}</td>
+                            <td>
+                                <span class="chip {{ $statusChipClasses[$referral->status] ?? 'chip-neutral' }}">
+                                    {{ $statusLabels[$referral->status] ?? $referral->status }}
+                                </span>
+                            </td>
                             <td class="due-date">{{ $referral->created_at->format('d/m/Y') }}</td>
                         </tr>
                     @empty

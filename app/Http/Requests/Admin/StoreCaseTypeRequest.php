@@ -28,10 +28,10 @@ class StoreCaseTypeRequest extends FormRequest
             'fixed_interval_days' => ['required_if:rule_type,'.VisitRule::TYPE_FIXED_COUNT, 'nullable', 'integer', 'min:1'],
 
             'score_rules' => ['required_if:rule_type,'.VisitRule::TYPE_SCORE_BASED, 'nullable', 'array'],
-            'score_rules.*.min' => ['required', 'integer', 'min:0', 'max:100'],
-            'score_rules.*.max' => ['required', 'integer', 'min:0', 'max:100'],
-            'score_rules.*.interval_days' => ['required', 'integer', 'min:1'],
-            'score_rules.*.label' => ['required', 'string', 'max:255'],
+            'score_rules.*.min' => ['nullable', 'required_if:rule_type,'.VisitRule::TYPE_SCORE_BASED, 'integer', 'min:0', 'max:100'],
+            'score_rules.*.max' => ['nullable', 'required_if:rule_type,'.VisitRule::TYPE_SCORE_BASED, 'integer', 'min:0', 'max:100'],
+            'score_rules.*.interval_days' => ['nullable', 'required_if:rule_type,'.VisitRule::TYPE_SCORE_BASED, 'integer', 'min:1'],
+            'score_rules.*.label' => ['nullable', 'required_if:rule_type,'.VisitRule::TYPE_SCORE_BASED, 'string', 'max:255'],
         ];
     }
 
