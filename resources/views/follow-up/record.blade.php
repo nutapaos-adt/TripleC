@@ -66,7 +66,7 @@
 
                 <div class="field">
                     <label for="visited_at">วันเวลาที่เยี่ยม/โทร</label>
-                    <input type="datetime-local" id="visited_at" name="visited_at" value="{{ old('visited_at', now()->format('Y-m-d\TH:i')) }}">
+                    <input type="datetime-local" id="visited_at" name="visited_at" value="{{ old('visited_at', now()->format('Y-m-d\TH:i')) }}" required>
                     <span class="hint">ระบบจะบันทึกเวลานี้เป็นเวลาที่ทำการติดตามจริง — แก้ไขได้หากบันทึกย้อนหลัง</span>
                 </div>
 
@@ -133,8 +133,9 @@
 
                 @if ($isOrtho)
                     <div class="field" id="tkaField">
-                        <span class="hint-note">แสดงเฉพาะเคสกระดูกและข้อ — ติดตามอาการหลังผ่าตัดเปลี่ยนข้อเข่า (TKR/UKA) ถ้ามี</span>
+                        <span class="hint-note">แสดงเฉพาะเคสศัลยกรรมกระดูกที่ได้รับการผ่าตัด TKR/UKA — ติดตามอาการภายใน 14 วันหลังจำหน่าย (หัวข้อที่ต้องเห็นแผล/วัดองศาเข่าจะประเมินไม่ได้ทางโทรศัพท์ — มีข้อความกำกับไว้)</span>
                         <label>การประเมินหลังผ่าตัดเปลี่ยนข้อเข่า (TKR/UKA)</label>
+                        <p class="hint" style="margin:0 0 12px;">ผ่าตัด: TKR / UKA</p>
 
                         <div class="choice-group" id="tkaWoundGroup">
                             <span class="glabel">แผลผ่าตัด</span>
@@ -266,7 +267,8 @@
 
                 <div class="field" id="findingsField">
                     <label for="raw_notes">บันทึกผลการติดตาม</label>
-                    <textarea id="raw_notes" name="raw_notes" class="textarea-lg" required placeholder="เช่น อาการปวดปัจจุบัน การรับประทานยา ภาวะโภชนาการ สภาพจิตใจผู้ป่วย/ผู้ดูแล และการดำเนินการที่ทำในครั้งนี้">{{ old('raw_notes') }}</textarea>
+                    <textarea id="raw_notes" name="raw_notes" class="textarea-lg" placeholder="เช่น อาการปวดปัจจุบัน การรับประทานยา ภาวะโภชนาการ สภาพจิตใจผู้ป่วย/ผู้ดูแล และการดำเนินการที่ทำในครั้งนี้">{{ old('raw_notes') }}</textarea>
+                    <p class="error-text" id="findingsError">กรุณากรอกบันทึกผลการติดตามก่อนดำเนินการต่อ — ข้อมูลนี้จำเป็นสำหรับการวิเคราะห์ความเสี่ยงโดย AI</p>
                     <span class="hint">บันทึกให้กระชับ ครอบคลุมสิ่งที่พบและสิ่งที่ทำ — ใช้เป็นข้อมูลหลักให้ AI ช่วยวิเคราะห์ความเสี่ยงในขั้นต่อไป</span>
                 </div>
 
@@ -359,6 +361,21 @@
                     }
                 });
             }
+
+            var findingsField = document.getElementById('findingsField');
+            var findings = document.getElementById('raw_notes');
+            document.getElementById('followupForm').addEventListener('submit', function (e) {
+                if (! findings.value.trim()) {
+                    e.preventDefault();
+                    findingsField.classList.add('has-error');
+                    findings.focus();
+                }
+            });
+            findings.addEventListener('input', function () {
+                if (findings.value.trim()) {
+                    findingsField.classList.remove('has-error');
+                }
+            });
         })();
     </script>
 </x-app-layout>

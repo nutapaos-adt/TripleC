@@ -30,7 +30,7 @@
 
 <div class="field-grid">
     <div class="field">
-        <label>เพศ</label>
+        <label>1. เพศ</label>
         <div class="choice-row">
             @foreach ($sexOptions as $value => $label)
                 <label class="choice-opt">
@@ -42,7 +42,7 @@
     </div>
 
     <div class="field">
-        <label>ท่านเป็นผู้รับบริการประเภทใด</label>
+        <label>2. ท่านเป็นผู้รับบริการประเภทใด</label>
         <div class="choice-row">
             @foreach ($respondentOptions as $value => $label)
                 <label class="choice-opt">
@@ -54,12 +54,12 @@
     </div>
 
     <div class="field">
-        <label>อายุ (ปี)</label>
-        <input type="number" name="age" min="0" max="120" class="input" value="{{ old('age', $survey->age) }}" required>
+        <label for="age">3. ปัจจุบันท่านอายุ (ปี)</label>
+        <input type="number" id="age" name="age" min="0" max="120" class="input" value="{{ old('age', $survey->age) }}" required>
     </div>
 
     <div class="field">
-        <label>สถานภาพสมรส</label>
+        <label>4. สถานภาพสมรส</label>
         <div class="choice-row">
             @foreach ($maritalOptions as $value => $label)
                 <label class="choice-opt">
@@ -71,7 +71,7 @@
     </div>
 
     <div class="field">
-        <label>ท่านจบการศึกษาสูงสุด</label>
+        <label>5. ท่านจบการศึกษาสูงสุด</label>
         <div class="choice-row">
             @foreach ($educationOptions as $value => $label)
                 <label class="choice-opt">
@@ -83,7 +83,7 @@
     </div>
 
     <div class="field full">
-        <label>ปัจจุบันท่านประกอบอาชีพ</label>
+        <label>6. ปัจจุบันท่านประกอบอาชีพ</label>
         <div class="choice-row">
             @foreach ($occupationOptions as $value => $label)
                 <label class="choice-opt">
