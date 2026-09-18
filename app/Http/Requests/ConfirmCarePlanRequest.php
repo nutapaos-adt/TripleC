@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Referral;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ConfirmCarePlanRequest extends FormRequest
@@ -15,6 +16,7 @@ class ConfirmCarePlanRequest extends FormRequest
     {
         return [
             'case_type_id' => ['required', 'exists:case_types,id'],
+            'severity_group' => ['nullable', 'in:'.implode(',', array_keys(Referral::SEVERITY_LABELS))],
             'patient_type' => ['required', 'string', 'max:255'],
             'main_problem' => ['required', 'string'],
             'follow_up_need' => ['required', 'string'],
@@ -27,6 +29,7 @@ class ConfirmCarePlanRequest extends FormRequest
     {
         return [
             'case_type_id' => 'ประเภทผู้ป่วย',
+            'severity_group' => 'การจำแนกกลุ่มความรุนแรง',
             'patient_type' => 'ประเภทผู้ป่วย',
             'main_problem' => 'ปัญหาสำคัญ',
             'follow_up_need' => 'ความต้องการติดตาม',

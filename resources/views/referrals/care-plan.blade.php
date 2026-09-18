@@ -24,6 +24,7 @@
         $suggestedCaseTypeId = $referral->case_type_id
             ?? optional($caseTypes->firstWhere('slug', $summary['suggested_case_type_slug'] ?? null))->id;
         $isConfirmed = $referral->isConfirmed();
+        $suggestedCaseType = $caseTypes->firstWhere('id', (int) old('case_type_id', $suggestedCaseTypeId));
     @endphp
 
     @if (($referral->ai_summary['parse_error'] ?? false) && ! $isConfirmed)
@@ -51,20 +52,30 @@
 
             <div class="field-grid">
                 <div class="field">
-                    <label>ประเภทผู้ป่วย</label>
+                    <label>ประเภทเคส</label>
                     <div class="field-value">{{ $referral->caseType?->name ?? '—' }}</div>
+                </div>
+                <div class="field">
+                    <label>การจำแนกกลุ่มความรุนแรง</label>
+                    <div class="field-value">
+                        @if ($referral->severityLabel())
+                            <span class="chip {{ $referral->severityChipClass() }}">{{ $referral->severityLabel() }}</span>
+                        @else
+                            —
+                        @endif
+                    </div>
                 </div>
                 <div class="field">
                     <label>สรุปสภาพผู้ป่วย</label>
                     <div class="field-value">{{ $summary['patient_type'] ?? '—' }}</div>
                 </div>
                 <div class="field full">
-                    <label>การวางแผนทางการพยาบาล</label>
-                    <div class="field-value multiline">{{ $summary['follow_up_need'] ?? '—' }}</div>
+                    <label>ปัญหาหลัก</label>
+                    <div class="field-value multiline">{{ $summary['main_problem'] ?? '—' }}</div>
                 </div>
                 <div class="field full">
-                    <label>ปัญหาสำคัญ</label>
-                    <div class="field-value multiline">{{ $summary['main_problem'] ?? '—' }}</div>
+                    <label>การวางแผนทางการพยาบาล</label>
+                    <div class="field-value multiline">{{ $summary['follow_up_need'] ?? '—' }}</div>
                 </div>
                 <div class="field full">
                     <label>ประเด็นที่ต้องติดตาม</label>
@@ -103,13 +114,22 @@
 
                 <div class="field-grid">
                     <div class="field">
-                        <label>ประเภทผู้ป่วย</label>
-                        <select name="case_type_id">
+                        <label for="care_plan_case_type">ประเภทเคส</label>
+                        <select name="case_type_id" id="care_plan_case_type">
                             <option value="">— เลือก —</option>
                             @foreach ($caseTypes as $caseType)
-                                <option value="{{ $caseType->id }}" @selected((string) old('case_type_id', $suggestedCaseTypeId) === (string) $caseType->id)>
+                                <option value="{{ $caseType->id }}" data-slug="{{ $caseType->slug }}" @selected((string) old('case_type_id', $suggestedCaseTypeId) === (string) $caseType->id)>
                                     {{ $caseType->name }}
                                 </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>การจำแนกกลุ่มความรุนแรง</label>
+                        <select name="severity_group">
+                            <option value="">— เลือกกลุ่ม —</option>
+                            @foreach (\App\Models\Referral::SEVERITY_LABELS as $value => $label)
+                                <option value="{{ $value }}" @selected(old('severity_group', $referral->severity_group) === $value)>{{ $label }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -118,24 +138,24 @@
                         <input type="text" name="patient_type" value="{{ old('patient_type', $summary['patient_type'] ?? '') }}">
                     </div>
                     <div class="field full">
-                        <label>การวางแผนทางการพยาบาล</label>
-                        <textarea name="follow_up_need" rows="2">{{ old('follow_up_need', $summary['follow_up_need'] ?? '') }}</textarea>
+                        <label>ปัญหาหลัก</label>
+                        <textarea name="main_problem" rows="2">{{ old('main_problem', $summary['main_problem'] ?? '') }}</textarea>
                     </div>
                     <div class="field full">
-                        <label>ปัญหาสำคัญ</label>
-                        <textarea name="main_problem" rows="2">{{ old('main_problem', $summary['main_problem'] ?? '') }}</textarea>
+                        <label>การวางแผนทางการพยาบาล</label>
+                        <textarea name="follow_up_need" rows="2">{{ old('follow_up_need', $summary['follow_up_need'] ?? '') }}</textarea>
                     </div>
                     <div class="field full">
                         <label>ประเด็นที่ต้องติดตาม <span class="hint" style="display:inline;margin:0;">(บรรทัดละ 1 รายการ)</span></label>
                         <textarea name="risk_signals" rows="3">{{ old('risk_signals', implode("\n", $riskSignals)) }}</textarea>
                     </div>
-                    <div class="field">
-                        <label>PPS Score ปัจจุบัน</label>
+                    <div class="field" id="care_plan_pps_field" @if($suggestedCaseType?->slug !== 'palliative-care') hidden @endif>
+                        <label>PPS Score เริ่มต้น</label>
                         <div class="pps-row">
                             <input type="number" name="initial_pps_score" min="0" max="100" step="10"
                                    value="{{ old('initial_pps_score', $referral->initial_pps_score) }}" style="width:100px;">
                         </div>
-                        <span class="hint">กรอกเฉพาะกรณี Palliative Care — ใช้กำหนดความถี่การเยี่ยมครั้งแรก</span>
+                        <span class="hint">ประเมินโดยพยาบาลหอผู้ป่วยตอนส่งต่อข้อมูล — ตรวจสอบและแก้ไขได้ก่อนยืนยัน ใช้กำหนดความถี่การเยี่ยมครั้งแรกโดยอัตโนมัติ</span>
                     </div>
                 </div>
 
@@ -152,5 +172,18 @@
             @csrf
             <button type="submit" class="btn btn-secondary btn-sm">↻ ขอให้ AI สรุปใหม่</button>
         </form>
+
+        <script>
+            (function () {
+                const select = document.getElementById('care_plan_case_type');
+                const ppsField = document.getElementById('care_plan_pps_field');
+                function toggle() {
+                    const opt = select.options[select.selectedIndex];
+                    ppsField.hidden = ! opt || opt.dataset.slug !== 'palliative-care';
+                }
+                select.addEventListener('change', toggle);
+                toggle();
+            })();
+        </script>
     @endif
 </x-app-layout>

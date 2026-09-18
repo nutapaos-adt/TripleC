@@ -236,6 +236,8 @@ class ReferralController extends Controller
 
         $referral->update([
             'case_type_id' => $request->validated('case_type_id'),
+            'severity_group' => $request->validated('severity_group'),
+            'initial_pps_score' => $request->validated('initial_pps_score'),
             'confirmed_summary' => [
                 'patient_type' => $request->validated('patient_type'),
                 'main_problem' => $request->validated('main_problem'),
