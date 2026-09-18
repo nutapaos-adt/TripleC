@@ -262,33 +262,44 @@
             </div>
 
             {{-- ============ Section 4: satisfaction trend ============ --}}
+            @php $trend = $report['satisfaction_trend']; @endphp
             <div class="card">
                 <div class="card-head">
-                    <div class="h2">4. ความพึงพอใจในงานเยี่ยมบ้าน (12 เดือนล่าสุด)</div>
+                    <div class="h2">4. ความพึงพอใจในงานเยี่ยมบ้าน ปีงบประมาณ {{ $trend['fiscal_year_be'] }}</div>
                 </div>
                 <div class="card-body">
                     <div class="table-wrap">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>หัวข้อ</th>
-                                    @foreach ($report['satisfaction_trend'] as $point)
+                                    <th>หัวข้อการประเมิน</th>
+                                    <th style="text-align:right;">เป้าหมาย (ร้อยละ)</th>
+                                    @foreach ($trend['months'] as $point)
                                         <th style="text-align:right;">{{ \App\Http\Controllers\Reports\MonthlyReportController::monthShortLabel(\Illuminate\Support\Carbon::createFromFormat('Y-m-d', $point['month'].'-01')) }}</th>
                                     @endforeach
+                                    <th style="text-align:right;">ค่าเฉลี่ย</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>ความพึงพอใจของผู้รับบริการในชุมชน — ในเขต (คะแนนเต็ม 5)</td>
-                                    @foreach ($report['satisfaction_trend'] as $point)
-                                        <td style="text-align:right;">{{ $point['in_area_average'] !== null ? number_format($point['in_area_average'], 2) : 'ไม่มี case' }}</td>
+                                    <td>ความพึงพอใจของผู้รับบริการในชุมชน (ในเขต)</td>
+                                    <td style="text-align:right;">{{ $trend['target_percent'] }}</td>
+                                    @foreach ($trend['months'] as $point)
+                                        <td style="text-align:right;{{ $point['in_area_percent'] !== null && $point['in_area_percent'] < $trend['target_percent'] ? 'color:var(--color-risk);font-weight:600;' : '' }}">
+                                            {{ $point['is_future'] ? '–' : ($point['in_area_percent'] !== null ? $point['in_area_percent'] : 'ไม่มี case') }}
+                                        </td>
                                     @endforeach
+                                    <td style="text-align:right;">{{ $trend['in_area_average_percent'] ?? '–' }}</td>
                                 </tr>
                                 <tr>
-                                    <td>ความพึงพอใจของผู้ป่วยและญาติ — ประคับประคอง (คะแนนเต็ม 5)</td>
-                                    @foreach ($report['satisfaction_trend'] as $point)
-                                        <td style="text-align:right;">{{ $point['palliative_average'] !== null ? number_format($point['palliative_average'], 2) : 'ไม่มี case' }}</td>
+                                    <td>ความพึงพอใจของผู้ป่วยและญาติต่อการดูแลผู้ป่วยแบบประคับประคอง</td>
+                                    <td style="text-align:right;">{{ $trend['target_percent'] }}</td>
+                                    @foreach ($trend['months'] as $point)
+                                        <td style="text-align:right;{{ $point['palliative_percent'] !== null && $point['palliative_percent'] < $trend['target_percent'] ? 'color:var(--color-risk);font-weight:600;' : '' }}">
+                                            {{ $point['is_future'] ? '–' : ($point['palliative_percent'] !== null ? $point['palliative_percent'] : 'ไม่มี case') }}
+                                        </td>
                                     @endforeach
+                                    <td style="text-align:right;">{{ $trend['palliative_average_percent'] ?? '–' }}</td>
                                 </tr>
                             </tbody>
                         </table>

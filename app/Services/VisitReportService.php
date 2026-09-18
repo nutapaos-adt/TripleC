@@ -494,18 +494,33 @@ class VisitReportService
     }
 
     /**
-     * ค่าเฉลี่ยความพึงพอใจของ 12 เดือนล่าสุด (รวมเดือนที่เลือก) — 2 แถวตามที่ monthly-visit-report.html
-     * กำหนดไว้: "ในเขต" (ผู้รับบริการในเขตทั่วไป) และ "ประคับประคอง" (ผู้ป่วย/ญาติ Palliative Care)
-     * เดือนไหนไม่มีแบบประเมินที่ตอบแล้วเลย จะคืน null (view แสดง "ไม่มี case")
+     * ความพึงพอใจตามปีงบประมาณ (ต.ค.-ก.ย.) ที่เดือนที่เลือกอยู่ในนั้น — 2 แถวตามที่
+     * monthly-visit-report.html กำหนดไว้: "ในเขต" (ผู้รับบริการในเขตทั่วไป) และ "ประคับประคอง"
+     * (ผู้ป่วย/ญาติ Palliative Care) แปลงคะแนนเฉลี่ย (เต็ม 5) เป็นร้อยละเทียบกับเป้าหมายที่ผู้ดูแลระบบตั้งไว้
+     * (80% ตามต้นแบบ) เดือนที่ยังไม่ถึงในปีงบประมาณนี้จะถูกคั่นด้วย is_future ไว้ให้ view แสดง "–" แยกจาก
+     * เดือนที่ผ่านมาแล้วแต่ไม่มีแบบประเมินตอบเลย ("ไม่มี case")
      *
-     * @return array<int, array{month: string, in_area_average: ?float, palliative_average: ?float}>
+     * @return array{target_percent: int, months: array<int, array{month: string, in_area_percent: ?int, palliative_percent: ?int, is_future: bool}>, in_area_average_percent: ?int, palliative_average_percent: ?int}
      */
     protected function buildSatisfactionTrend(Carbon $month): array
     {
-        $trend = [];
+        $targetPercent = 80;
+        $fiscalYearStartYear = (int) $month->format('n') >= 10 ? $month->year : $month->year - 1;
+        $fiscalStart = Carbon::create($fiscalYearStartYear, 10, 1)->startOfMonth();
 
-        for ($i = 11; $i >= 0; $i--) {
-            $periodMonth = $month->copy()->subMonths($i)->startOfMonth();
+        $months = [];
+        $inAreaScores = [];
+        $palliativeScores = [];
+
+        for ($i = 0; $i < 12; $i++) {
+            $periodMonth = $fiscalStart->copy()->addMonths($i);
+
+            if ($periodMonth->startOfMonth()->gt(now()->startOfMonth())) {
+                $months[] = ['month' => $periodMonth->format('Y-m'), 'in_area_percent' => null, 'palliative_percent' => null, 'is_future' => true];
+
+                continue;
+            }
+
             $start = $periodMonth->copy()->startOfMonth();
             $end = $periodMonth->copy()->endOfMonth();
 
@@ -522,14 +537,28 @@ class VisitReportService
                 $surveys->filter(fn (SatisfactionSurvey $s) => $s->referral?->severity_group === Referral::SEVERITY_PALLIATIVE)
             );
 
-            $trend[] = [
+            if ($inAreaAverage !== null) {
+                $inAreaScores[] = $inAreaAverage;
+            }
+            if ($palliativeAverage !== null) {
+                $palliativeScores[] = $palliativeAverage;
+            }
+
+            $months[] = [
                 'month' => $periodMonth->format('Y-m'),
-                'in_area_average' => $inAreaAverage,
-                'palliative_average' => $palliativeAverage,
+                'in_area_percent' => $inAreaAverage !== null ? (int) round($inAreaAverage / 5 * 100) : null,
+                'palliative_percent' => $palliativeAverage !== null ? (int) round($palliativeAverage / 5 * 100) : null,
+                'is_future' => false,
             ];
         }
 
-        return $trend;
+        return [
+            'target_percent' => $targetPercent,
+            'fiscal_year_be' => $fiscalYearStartYear + 1 + 543,
+            'months' => $months,
+            'in_area_average_percent' => count($inAreaScores) ? (int) round(array_sum($inAreaScores) / count($inAreaScores) / 5 * 100) : null,
+            'palliative_average_percent' => count($palliativeScores) ? (int) round(array_sum($palliativeScores) / count($palliativeScores) / 5 * 100) : null,
+        ];
     }
 
     /**
