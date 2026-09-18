@@ -218,7 +218,31 @@ class VisitReportService
             'patient_status_breakdown' => $this->buildPatientStatusBreakdown($referrals),
             'ward_breakdown' => $this->buildWardBreakdown($referrals),
             'clinical_tracer_breakdown' => $this->buildTracerBreakdown($referrals),
+            'out_area_responded_count' => $this->countOutAreaResponded($outArea),
+            'out_area_no_response_count' => $outArea->count() - $this->countOutAreaResponded($outArea),
         ];
+    }
+
+    /**
+     * เคสนอกเขตที่ "มีการตอบกลับ" คือมีบันทึกผลติดตาม (FollowUpRecord) อย่างน้อย 1 ครั้งในระบบ ไม่ว่าจะเยี่ยม
+     * จริงหรือโทรติดตาม — ที่เหลือถือว่า "ไม่พบการตอบกลับในระบบ" ตามที่ visit-summary.html กำหนด
+     *
+     * @param  Collection<int, Referral>  $outArea
+     */
+    protected function countOutAreaResponded(Collection $outArea): int
+    {
+        $referralIds = $outArea->pluck('id');
+
+        if ($referralIds->isEmpty()) {
+            return 0;
+        }
+
+        return FollowUpRecord::query()
+            ->join('follow_up_plans', 'follow_up_plans.id', '=', 'follow_up_records.follow_up_plan_id')
+            ->whereIn('follow_up_plans.referral_id', $referralIds)
+            ->distinct()
+            ->pluck('follow_up_plans.referral_id')
+            ->count();
     }
 
     /**

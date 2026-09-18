@@ -146,59 +146,73 @@
         </div>
     </div>
 
+    {{-- ============ Distribution charts (case type / patient status) ============ --}}
+    <div class="card">
+        <div class="card-head">
+            <div>
+                <div class="h2">สรุปตามประเภทผู้ป่วยและสถานะ</div>
+                <div class="sub">สัดส่วนจำนวนการส่งเยี่ยมในช่วงเวลาที่เลือก</div>
+            </div>
+        </div>
+        <div class="card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-6);">
+            <div>
+                <span class="dist-group-title">ตามประเภทผู้ป่วย</span>
+                <div class="dist-list">
+                    @forelse ($summary['case_type_breakdown'] as $row)
+                        <div class="dist-row">
+                            <span class="dist-label">{{ $row['name'] }}</span>
+                            <div class="dist-track"><div class="dist-fill" style="width:{{ $summary['total_referrals'] > 0 ? round($row['count'] / $summary['total_referrals'] * 100) : 0 }}%;"></div></div>
+                            <span class="dist-count">{{ $row['count'] }}</span>
+                        </div>
+                    @empty
+                        <div class="caption">ไม่มีข้อมูลในช่วงเวลานี้</div>
+                    @endforelse
+                </div>
+            </div>
+            <div>
+                <span class="dist-group-title">ตามสถานะ</span>
+                <div class="dist-list">
+                    @forelse ($summary['patient_status_breakdown'] as $row)
+                        <div class="dist-row">
+                            <span class="dist-label">{{ $row['label'] }}</span>
+                            <div class="dist-track"><div class="dist-fill" style="width:{{ $summary['total_referrals'] > 0 ? round($row['count'] / $summary['total_referrals'] * 100) : 0 }}%;"></div></div>
+                            <span class="dist-count">{{ $row['count'] }}</span>
+                        </div>
+                    @empty
+                        <div class="caption">ไม่มีข้อมูลในช่วงเวลานี้</div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ============ Visit outcome / out-of-area response rate ============ --}}
+    <div class="card">
+        <div class="card-head">
+            <div class="h2">สรุปผลการเยี่ยมบ้าน</div>
+        </div>
+        <div class="card-body">
+            <div class="kpi-grid mini">
+                <div class="kpi-tile">
+                    <span class="caption">ในเขต</span>
+                    <span class="kpi-value">{{ $summary['in_area_count'] }}</span>
+                    <span class="hint">ราย</span>
+                </div>
+                <div class="kpi-tile">
+                    <span class="caption">นอกเขต — มีการตอบกลับ</span>
+                    <span class="kpi-value">{{ $summary['out_area_responded_count'] }}</span>
+                    <span class="hint">ราย</span>
+                </div>
+                <div class="kpi-tile alert">
+                    <span class="caption">นอกเขต — ไม่พบการตอบกลับในระบบ</span>
+                    <span class="kpi-value risk">{{ $summary['out_area_no_response_count'] }}</span>
+                    <span class="hint">ราย</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-6);">
-        {{-- ============ Case type breakdown ============ --}}
-        <div class="card">
-            <div class="card-head">
-                <div class="h2">แบ่งตามประเภทเคส</div>
-            </div>
-            <div class="card-body">
-                <div class="table-wrap">
-                    <table>
-                        <thead>
-                            <tr><th>ประเภทเคส</th><th style="text-align:right;">จำนวน</th></tr>
-                        </thead>
-                        <tbody>
-                            @forelse ($summary['case_type_breakdown'] as $row)
-                                <tr>
-                                    <td><span class="chip chip-casetype">{{ $row['name'] }}</span></td>
-                                    <td style="text-align:right;">{{ $row['count'] }}</td>
-                                </tr>
-                            @empty
-                                <tr><td colspan="2" style="text-align:center;">ไม่มีข้อมูลในช่วงเวลานี้</td></tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        {{-- ============ Patient status breakdown ============ --}}
-        <div class="card">
-            <div class="card-head">
-                <div class="h2">แบ่งตามสถานะผู้ป่วย</div>
-            </div>
-            <div class="card-body">
-                <div class="table-wrap">
-                    <table>
-                        <thead>
-                            <tr><th>สถานะ</th><th style="text-align:right;">จำนวน</th></tr>
-                        </thead>
-                        <tbody>
-                            @forelse ($summary['patient_status_breakdown'] as $row)
-                                <tr>
-                                    <td>{{ $row['label'] }}</td>
-                                    <td style="text-align:right;">{{ $row['count'] }}</td>
-                                </tr>
-                            @empty
-                                <tr><td colspan="2" style="text-align:center;">ไม่มีข้อมูลในช่วงเวลานี้</td></tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
         {{-- ============ Ward breakdown ============ --}}
         <div class="card">
             <div class="card-head">
