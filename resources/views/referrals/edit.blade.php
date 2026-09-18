@@ -1,9 +1,9 @@
 <x-app-layout>
-    <x-slot name="header">ส่งข้อมูลเยี่ยมบ้าน — สร้างใบส่งต่อผู้ป่วย</x-slot>
+    <x-slot name="header">แก้ไขข้อมูล — {{ $referral->patient->name }} (HN {{ $referral->patient->hn }})</x-slot>
 
     <div class="page-head">
-        <h1 class="h1">ส่งข้อมูลเยี่ยมบ้าน</h1>
-        <p class="sub">กรอกข้อมูลผู้ป่วยและสถานการณ์เบื้องต้น ระบบจะสร้างใบส่งต่อรอให้ทีมเยี่ยมบ้านตรวจสอบ/ยืนยันแผนต่อไป</p>
+        <h1 class="h1">แก้ไขข้อมูลใบส่งต่อ</h1>
+        <p class="sub">{{ $referral->patient->name }} (HN {{ $referral->patient->hn }}) — แก้ไขได้จนกว่าทีมเยี่ยมบ้านจะยืนยันแผนการดูแล</p>
     </div>
 
     @if ($errors->any())
@@ -21,14 +21,14 @@
 
     <div class="card">
         <div class="card-body" style="padding-top:var(--space-5);">
-            <form method="POST" action="{{ route('referrals.store') }}" enctype="multipart/form-data">
+            <form method="POST" action="{{ route('referrals.update', $referral) }}" enctype="multipart/form-data">
                 @csrf
-                @php $referral = null; @endphp
+                @method('PUT')
                 @include('referrals._form-fields')
 
                 <div class="btn-row">
-                    <button type="submit" class="btn btn-primary">บันทึกและส่งข้อมูล</button>
-                    <a href="{{ route('referrals.index') }}" class="btn btn-secondary">ยกเลิก</a>
+                    <button type="submit" class="btn btn-primary">บันทึกการแก้ไข</button>
+                    <a href="{{ route('referrals.show', $referral) }}" class="btn btn-secondary">ยกเลิก</a>
                 </div>
             </form>
         </div>

@@ -1,9 +1,22 @@
 <x-app-layout>
     <x-slot name="header">ใบส่งต่อ — {{ $referral->patient->name }} (HN {{ $referral->patient->hn }})</x-slot>
 
-    <div class="page-head">
-        <h1 class="h1">{{ $referral->patient->name }}</h1>
-        <p class="sub">HN {{ $referral->patient->hn }}</p>
+    <div class="page-head" style="flex-direction:row;align-items:flex-start;justify-content:space-between;">
+        <div>
+            <h1 class="h1">{{ $referral->patient->name }} <span class="caption">(HN {{ $referral->patient->hn }})</span></h1>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:var(--space-2);">
+                <span class="chip {{ $referral->zone === 'in_area' ? 'chip-inzone' : 'chip-outzone' }}">
+                    {{ $referral->zone === 'in_area' ? 'ในเขต' : 'นอกเขต' }}
+                </span>
+                @if ($referral->caseType)
+                    <span class="chip chip-casetype">{{ $referral->caseType->name }}</span>
+                @endif
+                <span class="chip {{ $referral->statusChipClass() }}">{{ $referral->statusLabel() }}</span>
+            </div>
+        </div>
+        @if ($referral->status === \App\Models\Referral::STATUS_PENDING_REVIEW)
+            <a href="{{ route('referrals.edit', $referral) }}" class="btn btn-secondary">แก้ไขข้อมูล</a>
+        @endif
     </div>
 
     @php
@@ -16,18 +29,6 @@
     <div class="card">
         <div class="card-head"><span class="h2">ข้อมูลผู้ป่วย</span></div>
         <div class="card-body">
-            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:var(--space-4);">
-                <span class="chip {{ $referral->zone === 'in_area' ? 'chip-inzone' : 'chip-outzone' }}">
-                    {{ $referral->zone === 'in_area' ? 'ในเขต' : 'นอกเขต' }}
-                </span>
-                @if ($referral->caseType)
-                    <span class="chip chip-casetype">{{ $referral->caseType->name }}</span>
-                @endif
-                @if ($referral->severityLabel())
-                    <span class="chip {{ $referral->severityChipClass() }}">{{ $referral->severityLabel() }}</span>
-                @endif
-            </div>
-
             <div class="info-list">
                 <div class="info-row">
                     <div class="info-label">HN</div>
@@ -44,6 +45,12 @@
                         @if ($age !== null) ({{ $age }} ปี) @endif
                     </div>
                 </div>
+                @if ($referral->severityLabel())
+                    <div class="info-row">
+                        <div class="info-label">การจำแนกกลุ่มความรุนแรง</div>
+                        <div class="info-value"><span class="chip {{ $referral->severityChipClass() }}">{{ $referral->severityLabel() }}</span></div>
+                    </div>
+                @endif
                 @if ($referral->coverage_type)
                     <div class="info-row">
                         <div class="info-label">สิทธิการรักษา</div>
@@ -200,20 +207,91 @@
         <div class="card">
             <div class="card-head"><span class="h2">เอกสารแนบ</span></div>
             <div class="card-body">
-                <ul style="margin:0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:6px;">
+                <ul class="attachment-list">
                     @foreach ($referral->attachments as $attachment)
+                        @php
+                            $ext = strtoupper(pathinfo($attachment->original_name, PATHINFO_EXTENSION));
+                            $sizeLabel = $attachment->size >= 1048576
+                                ? number_format($attachment->size / 1048576, 1).' MB'
+                                : number_format($attachment->size / 1024).' KB';
+                        @endphp
                         <li>
-                            <a href="{{ route('referrals.attachments.download', [$referral, $attachment]) }}"
-                               style="color:var(--color-primary-700);font-weight:600;">
-                                📄 {{ $attachment->original_name }}
-                            </a>
-                            <span class="caption">อัปโหลดโดย {{ $attachment->uploader->name }}</span>
+                            <div class="attachment-icon">{{ in_array($ext, ['JPG', 'JPEG', 'PNG']) ? '🖼️' : '📄' }}</div>
+                            <div>
+                                <div class="attachment-name">{{ $attachment->original_name }}</div>
+                                <div class="attachment-meta">{{ $ext }} · {{ $sizeLabel }} · อัปโหลดโดย {{ $attachment->uploader->name }}</div>
+                            </div>
+                            <a class="download" href="{{ route('referrals.attachments.download', [$referral, $attachment]) }}">ดาวน์โหลด</a>
                         </li>
                     @endforeach
                 </ul>
             </div>
         </div>
     @endif
+
+    @php
+        $firstPlan = $referral->followUpPlans->sortBy('plan_number')->first();
+    @endphp
+    <div class="card">
+        <div class="card-head"><span class="h2">ประวัติเคส (Timeline)</span></div>
+        <div class="card-body">
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-date">{{ $referral->created_at->format('d/m/Y') }} · {{ $referral->created_at->format('H:i') }} น.</div>
+                    <div class="timeline-title">ส่งข้อมูลเยี่ยมบ้านจาก{{ $referral->source_detail ?: 'แหล่งข้อมูล' }}</div>
+                    <div class="timeline-desc">
+                        สร้างใบส่งต่อโดย{{ $referral->creator->name }}
+                        @if ($referral->attachments->isNotEmpty()) พร้อมเอกสารแนบ {{ $referral->attachments->count() }} รายการ @endif
+                    </div>
+                </div>
+                @if ($referral->ai_summary_generated_at)
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-date">{{ $referral->ai_summary_generated_at->format('d/m/Y') }} · {{ $referral->ai_summary_generated_at->format('H:i') }} น.</div>
+                        <div class="timeline-title">AI ประมวลผลสรุปข้อมูลและประเภทเคสเบื้องต้น</div>
+                        <div class="timeline-desc">
+                            @if ($referral->ai_summary['parse_error'] ?? false)
+                                AI ไม่สามารถแปลผลลัพธ์เป็นข้อมูลที่ใช้ได้ — รอพยาบาลกรอกข้อมูลด้วยตนเองหรือขอสรุปใหม่
+                            @else
+                                ระบบจัดทำร่างแผนติดตามแล้ว — รอพยาบาลตรวจสอบ
+                            @endif
+                        </div>
+                    </div>
+                @endif
+                @if ($referral->isConfirmed())
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-date">{{ $referral->confirmed_at->format('d/m/Y') }} · {{ $referral->confirmed_at->format('H:i') }} น.</div>
+                        <div class="timeline-title">ยืนยันแผนดูแลโดย {{ $referral->confirmer->name }}</div>
+                        <div class="timeline-desc">สร้างกำหนดการติดตามครั้งแรกให้อัตโนมัติ</div>
+                    </div>
+                @else
+                    <div class="timeline-item">
+                        <div class="timeline-dot future"></div>
+                        <div class="timeline-date">ยังไม่เกิดขึ้น</div>
+                        <div class="timeline-title future">ยืนยันแผนดูแล <span class="timeline-tag-future">รอดำเนินการ</span></div>
+                        <div class="timeline-desc">จะบันทึกเมื่อพยาบาลวิเคราะห์แผนการพยาบาลจากร่าง AI ด้านล่าง</div>
+                    </div>
+                @endif
+                @if ($firstPlan?->record)
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-date">{{ $firstPlan->record->visited_at->format('d/m/Y') }} · {{ $firstPlan->record->visited_at->format('H:i') }} น.</div>
+                        <div class="timeline-title">{{ $firstPlan->method === 'home_visit' ? 'เยี่ยมบ้าน' : 'โทรติดตาม' }}ครั้งที่ 1</div>
+                        <div class="timeline-desc">บันทึกผลติดตามแล้ว</div>
+                    </div>
+                @else
+                    <div class="timeline-item">
+                        <div class="timeline-dot future"></div>
+                        <div class="timeline-date">ยังไม่เกิดขึ้น</div>
+                        <div class="timeline-title future">เยี่ยมบ้านครั้งที่ 1 <span class="timeline-tag-future">รอดำเนินการ</span></div>
+                        <div class="timeline-desc">จะเกิดขึ้นตามกำหนดการติดตามหลังยืนยันแผนดูแล</div>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
 
     @if ($referral->isConfirmed())
         <div class="confirmed-box">
@@ -241,10 +319,10 @@
         </div>
     @endif
 
-    @if ($referral->followUpPlans->isNotEmpty())
-        <div class="card">
-            <div class="card-head"><span class="h2">กำหนดการติดตาม</span></div>
-            <div class="card-body">
+    <div class="card">
+        <div class="card-head"><span class="h2">กำหนดการติดตาม</span></div>
+        <div class="card-body">
+            @if ($referral->followUpPlans->isNotEmpty())
                 <table>
                     <tbody>
                         @foreach ($referral->followUpPlans->sortBy('plan_number') as $plan)
@@ -278,7 +356,9 @@
                         @endforeach
                     </tbody>
                 </table>
-            </div>
+            @else
+                <div class="empty-note">ยังไม่มีกำหนดการติดตาม — จะสร้างขึ้นหลังยืนยันแผนดูแล</div>
+            @endif
         </div>
-    @endif
+    </div>
 </x-app-layout>

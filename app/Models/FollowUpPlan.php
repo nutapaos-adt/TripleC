@@ -46,6 +46,8 @@ class FollowUpPlan extends Model
 
     public function isOverdue(): bool
     {
-        return $this->status === self::STATUS_SCHEDULED && $this->due_date->isPast();
+        // เทียบเป็นวัน ไม่ใช่เวลานาที/วินาที — ใช้ isPast() ตรงๆ จะทำให้แผนที่ครบกำหนด "วันนี้" ถูกตีว่า
+        // เกินกำหนดไปแล้วตั้งแต่เลยเที่ยงคืน (due_date คือ DATE ที่ค่าเวลาเป็น 00:00:00 เสมอ)
+        return $this->status === self::STATUS_SCHEDULED && $this->due_date->lt(today());
     }
 }

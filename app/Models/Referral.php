@@ -21,6 +21,20 @@ class Referral extends Model
     public const STATUS_IN_PROGRESS = 'in_progress';
     public const STATUS_CLOSED = 'closed';
 
+    public const STATUS_LABELS = [
+        self::STATUS_PENDING_REVIEW => 'รอตรวจสอบ',
+        self::STATUS_PLAN_CONFIRMED => 'ยืนยันแผนแล้ว',
+        self::STATUS_IN_PROGRESS => 'กำลังติดตาม',
+        self::STATUS_CLOSED => 'ปิดเคสแล้ว',
+    ];
+
+    public const STATUS_CHIP_CLASSES = [
+        self::STATUS_PENDING_REVIEW => 'chip-warning',
+        self::STATUS_PLAN_CONFIRMED => 'chip-success',
+        self::STATUS_IN_PROGRESS => 'chip-inprogress',
+        self::STATUS_CLOSED => 'chip-closed',
+    ];
+
     public const PATIENT_STATUS_CIVILIAN = 'civilian';
     public const PATIENT_STATUS_MILITARY = 'military';
     public const PATIENT_STATUS_MILITARY_FAMILY = 'military_family';
@@ -166,5 +180,15 @@ class Referral extends Model
     public function patientStatusLabel(): string
     {
         return self::PATIENT_STATUS_LABELS[$this->patient_status] ?? $this->patient_status;
+    }
+
+    public function statusLabel(): string
+    {
+        return self::STATUS_LABELS[$this->status] ?? $this->status;
+    }
+
+    public function statusChipClass(): string
+    {
+        return self::STATUS_CHIP_CLASSES[$this->status] ?? 'chip-neutral';
     }
 }

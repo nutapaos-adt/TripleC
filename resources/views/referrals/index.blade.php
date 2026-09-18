@@ -1,10 +1,10 @@
 <x-app-layout>
-    <x-slot name="header">รายการใบส่งต่อ</x-slot>
+    <x-slot name="header">รายการเคส</x-slot>
 
     <div class="page-head" style="flex-direction:row;align-items:center;justify-content:space-between;">
         <div>
-            <h1 class="h1">รายการใบส่งต่อ</h1>
-            <p class="sub">เคสทั้งหมดที่ส่งข้อมูลเข้าระบบ</p>
+            <h1 class="h1">รายการเคส</h1>
+            <p class="sub">ใบส่งต่อและเคสทั้งหมดที่อยู่ในความดูแลของทีมเยี่ยมบ้าน — คลิกแต่ละรายการเพื่อดูรายละเอียด</p>
         </div>
         <a href="{{ route('referrals.create') }}" class="btn btn-primary">+ ส่งข้อมูลเยี่ยมบ้าน</a>
     </div>
@@ -12,19 +12,7 @@
     @php
         // ใช้ 'all' แทน null เป็น key เพราะ PHP array literal จะแปลง key null เป็น "" ให้เอง
         // (ทำให้ $value === null ใน foreach ด้านล่างไม่ตรงกับค่าที่ได้จริง)
-        $statusLabels = [
-            'all' => 'ทั้งหมด',
-            \App\Models\Referral::STATUS_PENDING_REVIEW => 'รอตรวจสอบ',
-            \App\Models\Referral::STATUS_PLAN_CONFIRMED => 'ยืนยันแผนแล้ว',
-            \App\Models\Referral::STATUS_IN_PROGRESS => 'กำลังติดตาม',
-            \App\Models\Referral::STATUS_CLOSED => 'ปิดเคสแล้ว',
-        ];
-        $statusChipClasses = [
-            \App\Models\Referral::STATUS_PENDING_REVIEW => 'chip-warning',
-            \App\Models\Referral::STATUS_PLAN_CONFIRMED => 'chip-success',
-            \App\Models\Referral::STATUS_IN_PROGRESS => 'chip-inprogress',
-            \App\Models\Referral::STATUS_CLOSED => 'chip-closed',
-        ];
+        $statusLabels = ['all' => 'ทั้งหมด', ...\App\Models\Referral::STATUS_LABELS];
     @endphp
     <div style="display:flex;gap:var(--space-2);flex-wrap:wrap;">
         @foreach ($statusLabels as $value => $label)
@@ -76,9 +64,7 @@
                                 </span>
                             </td>
                             <td>
-                                <span class="chip {{ $statusChipClasses[$referral->status] ?? 'chip-neutral' }}">
-                                    {{ $statusLabels[$referral->status] ?? $referral->status }}
-                                </span>
+                                <span class="chip {{ $referral->statusChipClass() }}">{{ $referral->statusLabel() }}</span>
                             </td>
                             <td class="due-date">{{ $referral->created_at->format('d/m/Y') }}</td>
                         </tr>
@@ -91,6 +77,8 @@
             </table>
         </div>
     </div>
+
+    <p class="caption">ทั้งหมด {{ $statusCounts['all'] }} เคส</p>
 
     <div>{{ $referrals->links() }}</div>
 </x-app-layout>

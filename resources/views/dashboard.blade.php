@@ -7,37 +7,60 @@
 
     <div class="kpi-grid">
         <div class="kpi-tile">
-            <div class="caption">ผู้ป่วยทั้งหมดในความดูแล</div>
-            <div class="kpi-value">{{ $totalPatients }}</div>
+            <span class="caption">ผู้ป่วยในการดูแลทั้งหมด</span>
+            <span class="kpi-value">{{ $totalPatients }}</span>
+            <span class="hint">อยู่ระหว่างติดตามต่อเนื่อง</span>
         </div>
         <div class="kpi-tile">
-            <div class="caption">วันนี้ต้องติดตาม</div>
-            <div class="kpi-value">{{ $dueTodayCount }}</div>
+            <span class="caption">นัดวันนี้ &middot; {{ $dueTodayCount }} ราย</span>
+            <div class="kpi-split-row">
+                <div class="kpi-split-item">
+                    <div class="kpi-split-top">
+                        <span class="kpi-split-label">เยี่ยมบ้าน</span>
+                        <span class="kpi-split-value">{{ $dueTodayHomeVisitCount }}</span>
+                    </div>
+                    <span class="kpi-split-sub">ในเขต {{ $dueTodayInAreaCount }} &middot; นอกเขต {{ $dueTodayOutAreaCount }}</span>
+                </div>
+                <div class="kpi-split-item">
+                    <div class="kpi-split-top">
+                        <span class="kpi-split-label">โทรติดตาม</span>
+                        <span class="kpi-split-value">{{ $dueTodayPhoneCallCount }}</span>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="kpi-tile">
-            <div class="caption">เกินกำหนดติดตาม</div>
-            <div class="kpi-value {{ $overdueCount > 0 ? 'risk' : '' }}">{{ $overdueCount }}</div>
+        <div class="kpi-tile warn">
+            <span class="caption">เกินกำหนด</span>
+            <span class="kpi-value warning">{{ $overdueCount }}</span>
+            <span class="hint">ต้องติดตามโดยเร็ว</span>
         </div>
-        <div class="kpi-tile">
-            <div class="caption">กลุ่มเสี่ยง (ยืนยันแล้ว)</div>
-            <div class="kpi-value {{ $riskCount > 0 ? 'risk' : '' }}">{{ $riskCount }}</div>
+        <div class="kpi-tile alert">
+            <span class="caption">พบความเสี่ยงยืนยันแล้ว</span>
+            <span class="kpi-value risk">{{ $riskCount }}</span>
+            <span class="hint">พยาบาลยืนยันความเสี่ยงแล้ว</span>
         </div>
     </div>
 
     @if ($pendingReviewCount > 0)
-        <div class="banner" style="background:var(--color-warning-tint);border-color:var(--color-warning);">
-            <div class="banner-text">
-                <p style="color:var(--color-warning);">
-                    มีใบส่งต่อ {{ $pendingReviewCount }} รายการที่ยังไม่ได้ให้ AI สรุป/ยืนยันแผน —
-                    <a href="{{ route('referrals.index') }}" style="text-decoration:underline;font-weight:600;">ไปดูรายการใบส่งต่อ</a>
-                </p>
+        <div class="banner">
+            <div class="banner-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/><circle cx="12" cy="12" r="3"/></svg>
             </div>
+            <div class="banner-text">
+                <div class="h3">มี {{ $pendingReviewCount }} เคสรอการยืนยันแผนจาก AI</div>
+                <p>ระบบสร้างร่างคู่มือติดตาม/สรุปความเสี่ยงไว้แล้ว — พยาบาลต้องตรวจสอบและกดยืนยันก่อนใช้งานจริงทุกครั้ง</p>
+            </div>
+            <a class="btn btn-primary" href="{{ route('referrals.index', ['status' => \App\Models\Referral::STATUS_PENDING_REVIEW]) }}">ตรวจสอบเคสรอยืนยัน</a>
         </div>
     @endif
 
     <div class="card">
         <div class="card-head">
-            <div class="h2">รายการที่ต้องติดตามวันนี้/เกินกำหนด</div>
+            <div>
+                <div class="h2">รายการติดตามวันนี้ &amp; เกินกำหนด</div>
+                <div class="sub">เรียงลำดับเคสเกินกำหนดไว้บนสุดตามความสำคัญ</div>
+            </div>
+            <a class="btn btn-secondary btn-sm" href="{{ route('referrals.index') }}">ดูรายการเคสทั้งหมด</a>
         </div>
         <div class="card-body">
             <div class="table-wrap">
@@ -45,10 +68,9 @@
                     <thead>
                         <tr>
                             <th>ผู้ป่วย</th>
-                            <th>ประเภทเคส</th>
-                            <th>เขต</th>
                             <th>วิธีติดตาม</th>
-                            <th>กำหนด</th>
+                            <th>วันครบกำหนด</th>
+                            <th>สถานะ</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -59,29 +81,22 @@
                                     <div class="patient-name">{{ $plan->referral->patient->name }}</div>
                                     <div class="patient-hn">HN {{ $plan->referral->patient->hn }}</div>
                                 </td>
-                                <td>{{ $plan->referral->caseType?->name ?? '—' }}</td>
-                                <td>
-                                    <span class="chip {{ $plan->referral->zone === 'in_area' ? 'chip-inzone' : 'chip-outzone' }}">
-                                        {{ $plan->referral->zone === 'in_area' ? 'ในเขต' : 'นอกเขต' }}
-                                    </span>
-                                </td>
                                 <td>
                                     <span class="chip chip-method">{{ $plan->method === 'home_visit' ? 'เยี่ยมบ้าน' : 'โทรติดตาม' }}</span>
                                 </td>
-                                <td class="due-date">
+                                <td class="due-date">{{ $plan->due_date->format('d/m/Y') }}</td>
+                                <td>
                                     @if ($plan->isOverdue())
-                                        <span class="chip chip-overdue">เกินกำหนด ({{ $plan->due_date->format('d/m/Y') }})</span>
+                                        <span class="chip chip-overdue">เกินกำหนด {{ $plan->due_date->diffInDays(today()) }} วัน</span>
                                     @else
                                         <span class="chip chip-today">วันนี้</span>
                                     @endif
                                 </td>
-                                <td style="text-align:right;">
-                                    <a href="{{ route('follow-up-plans.record.create', $plan) }}" class="btn btn-secondary btn-sm">เริ่มติดตาม →</a>
-                                </td>
+                                <td><a href="{{ route('follow-up-plans.record.create', $plan) }}" class="btn btn-primary btn-sm">เริ่มติดตาม</a></td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" style="text-align:center;color:var(--color-neutral-500);padding:var(--space-8) 0;">ไม่มีเคสที่ต้องติดตามวันนี้</td>
+                                <td colspan="5" style="text-align:center;color:var(--color-neutral-500);padding:var(--space-8) 0;">ไม่มีเคสที่ต้องติดตามวันนี้</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -92,18 +107,25 @@
 
     <div class="card">
         <div class="card-head">
-            <div class="h2">สัญญาณเสี่ยงล่าสุดที่ยืนยันแล้ว</div>
+            <div>
+                <div class="h2">สัญญาณความเสี่ยงที่ยืนยันแล้วล่าสุด</div>
+                <div class="sub">พยาบาลยืนยันความเสี่ยงจากการวิเคราะห์ของ AI แล้ว — ต้องพิจารณาดำเนินการต่อ</div>
+            </div>
         </div>
         <div class="risk-list">
             @forelse ($recentRiskRecords as $record)
                 <div class="risk-item">
-                    <span class="chip chip-risk">เสี่ยง</span>
                     <div class="info">
                         <div class="row1">
                             <span class="name">{{ $record->plan->referral->patient->name }}</span>
+                            <span class="patient-hn">HN {{ $record->plan->referral->patient->hn }}</span>
+                            <span class="chip chip-risk">พบความเสี่ยง</span>
                         </div>
                         <div class="snippet">{{ Str::limit($record->decision_notes ?: $record->raw_notes, 120) }}</div>
-                        <div class="meta">ยืนยันเมื่อ {{ $record->confirmed_at?->format('d/m/Y H:i') }}</div>
+                        <div class="meta">ยืนยันความเสี่ยงโดย {{ $record->confirmer?->name }} เมื่อ {{ $record->confirmed_at?->format('d/m/Y H:i') }}</div>
+                    </div>
+                    <div class="actions">
+                        <a class="btn btn-secondary btn-sm" href="{{ route('follow-up-plans.review', $record->plan) }}">ดูรายละเอียด</a>
                     </div>
                 </div>
             @empty

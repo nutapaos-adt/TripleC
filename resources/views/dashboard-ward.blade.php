@@ -1,9 +1,12 @@
 <x-app-layout>
     <x-slot name="header">ภาพรวมหอผู้ป่วย — {{ auth()->user()->ward?->name ?? 'ยังไม่ได้กำหนดหอผู้ป่วย' }}</x-slot>
 
-    <div class="page-head">
-        <h1 class="h1">ภาพรวมหอผู้ป่วยประจำเดือนนี้</h1>
-        <div class="sub">ข้อมูลใบส่งต่อของหอ {{ auth()->user()->ward?->name ?? '—' }} เดือน {{ now()->translatedFormat('F Y') }}</div>
+    <div class="page-head" style="flex-direction:row;align-items:center;justify-content:space-between;">
+        <div>
+            <h1 class="h1">ภาพรวมหอผู้ป่วยประจำเดือนนี้</h1>
+            <div class="sub">ข้อมูลใบส่งต่อของหอ {{ auth()->user()->ward?->name ?? '—' }} เดือน {{ now()->translatedFormat('F Y') }}</div>
+        </div>
+        <a href="{{ route('referrals.create') }}" class="btn btn-primary">+ ส่งข้อมูลเยี่ยมบ้าน</a>
     </div>
 
     @if (! auth()->user()->ward_id)
@@ -14,16 +17,19 @@
 
     <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);">
         <div class="kpi-tile">
-            <div class="caption">ส่งข้อมูลแล้ว (เดือนนี้)</div>
-            <div class="kpi-value">{{ $totalReferralsCount }}</div>
+            <span class="caption">ส่งข้อมูลแล้ว</span>
+            <span class="kpi-value">{{ $totalReferralsCount }}</span>
+            <span class="hint">ราย — เดือน{{ now()->translatedFormat('F Y') }} ทั้งหมด</span>
         </div>
         <div class="kpi-tile">
-            <div class="caption">รอยืนยัน</div>
-            <div class="kpi-value">{{ $pendingReviewCount }}</div>
+            <span class="caption">รอยืนยัน</span>
+            <span class="kpi-value">{{ $pendingReviewCount }}</span>
+            <span class="hint">ราย — <a href="#pending-list">ดูรายชื่อด้านล่าง ↓</a></span>
         </div>
         <div class="kpi-tile">
-            <div class="caption">ได้รับการเยี่ยมแล้ว</div>
-            <div class="kpi-value">{{ $visitedCount }}</div>
+            <span class="caption">ได้รับการเยี่ยมแล้ว</span>
+            <span class="kpi-value">{{ $visitedCount }}</span>
+            <span class="hint">ราย — <a href="{{ route('ward.visit-results') }}">ดูผลการเยี่ยมทุกเคส →</a></span>
         </div>
     </div>
 
@@ -46,10 +52,12 @@
         </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="pending-list">
         <div class="card-head">
-            <div class="h2">รายการรอยืนยัน</div>
-            <div class="sub">{{ $pendingReferrals->count() }} รายการ</div>
+            <div>
+                <div class="h2">ผู้ป่วยรอยืนยันแผน (แก้ไขข้อมูลได้)</div>
+                <div class="sub">ทีมเยี่ยมบ้านยังไม่ยืนยันแผนดูแล — หอผู้ป่วยยังแก้ไขข้อมูลที่ส่งไปได้จนกว่าจะยืนยัน</div>
+            </div>
         </div>
         <div class="card-body">
             <div class="table-wrap">
@@ -74,7 +82,7 @@
                                 </td>
                                 <td class="due-date">{{ $referral->created_at->format('d/m/Y') }}</td>
                                 <td style="text-align:right;">
-                                    <a href="{{ route('referrals.show', $referral) }}" class="btn btn-secondary btn-sm">แก้ไขข้อมูล</a>
+                                    <a href="{{ route('referrals.edit', $referral) }}" class="btn btn-secondary btn-sm">แก้ไขข้อมูล</a>
                                     <a href="{{ route('referrals.show', $referral) }}" class="btn btn-secondary btn-sm">ดูรายละเอียด</a>
                                 </td>
                             </tr>

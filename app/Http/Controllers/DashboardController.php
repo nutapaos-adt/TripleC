@@ -22,9 +22,17 @@ class DashboardController extends Controller
 
         $totalPatients = Patient::count();
 
-        $dueTodayCount = FollowUpPlan::where('status', FollowUpPlan::STATUS_SCHEDULED)
+        $dueTodayPlans = FollowUpPlan::with('referral')
+            ->where('status', FollowUpPlan::STATUS_SCHEDULED)
             ->whereDate('due_date', $today)
-            ->count();
+            ->get();
+
+        $dueTodayCount = $dueTodayPlans->count();
+        $dueTodayHomeVisitCount = $dueTodayPlans->where('method', FollowUpPlan::METHOD_HOME_VISIT)->count();
+        $dueTodayPhoneCallCount = $dueTodayPlans->where('method', FollowUpPlan::METHOD_PHONE_CALL)->count();
+        $dueTodayInAreaCount = $dueTodayPlans->where('method', FollowUpPlan::METHOD_HOME_VISIT)
+            ->filter(fn ($plan) => $plan->referral->zone === 'in_area')->count();
+        $dueTodayOutAreaCount = $dueTodayHomeVisitCount - $dueTodayInAreaCount;
 
         $overdueCount = FollowUpPlan::where('status', FollowUpPlan::STATUS_SCHEDULED)
             ->whereDate('due_date', '<', $today)
@@ -52,6 +60,10 @@ class DashboardController extends Controller
         return view('dashboard', compact(
             'totalPatients',
             'dueTodayCount',
+            'dueTodayHomeVisitCount',
+            'dueTodayPhoneCallCount',
+            'dueTodayInAreaCount',
+            'dueTodayOutAreaCount',
             'overdueCount',
             'riskCount',
             'upcomingPlans',

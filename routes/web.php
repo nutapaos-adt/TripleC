@@ -26,7 +26,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::get('/referrals/zone-lookup', [ReferralController::class, 'zoneLookup'])->name('referrals.zone-lookup');
-    Route::resource('referrals', ReferralController::class)->only(['index', 'create', 'store', 'show']);
+    Route::resource('referrals', ReferralController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update']);
     Route::get('/referrals/{referral}/attachments/{attachment}', [ReferralController::class, 'downloadAttachment'])
         ->name('referrals.attachments.download');
 
