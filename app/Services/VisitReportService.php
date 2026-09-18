@@ -555,7 +555,7 @@ class VisitReportService
 
             $onTime = null;
             if ($dueDate && $visitedAt) {
-                $onTime = ! $visitedAt->startOfDay()->gt($dueDate->copy()->startOfDay());
+                $onTime = ! $visitedAt->copy()->startOfDay()->gt($dueDate->copy()->startOfDay());
             }
 
             $rows[] = [

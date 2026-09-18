@@ -51,6 +51,7 @@
                     <div class="h2">1. สรุปจำนวนการส่งเยี่ยมและความทันเวลา</div>
                 </div>
                 <div class="card-body">
+                    @php $t = $report['visit_timeliness_table']; @endphp
                     <section class="kpi-grid" aria-label="สรุปตัวเลขการส่งเยี่ยมบ้านประจำเดือน">
                         <div class="kpi-tile">
                             <span class="caption">จำนวนการส่งเยี่ยมทั้งหมด</span>
@@ -69,17 +70,17 @@
                         </div>
                         <div class="kpi-tile">
                             <span class="caption">ทันใน 5 วัน (ด่วน)</span>
-                            <span class="kpi-value">{{ $report['timeliness']['within_5'] }}</span>
+                            <span class="kpi-value">{{ $t['combined']['urgent']['on_time'] }}</span>
                             <span class="hint">ราย</span>
                         </div>
                         <div class="kpi-tile">
                             <span class="caption">ทันใน 14 วัน</span>
-                            <span class="kpi-value">{{ $report['timeliness']['within_14'] }}</span>
+                            <span class="kpi-value">{{ $t['combined']['general']['within_14'] }}</span>
                             <span class="hint">ราย</span>
                         </div>
                         <div class="kpi-tile">
                             <span class="caption">ทันใน 30 วัน</span>
-                            <span class="kpi-value">{{ $report['timeliness']['within_30'] }}</span>
+                            <span class="kpi-value">{{ $t['combined']['general']['within_30'] }}</span>
                             <span class="hint">ราย</span>
                         </div>
                         <div class="kpi-tile alert">
@@ -89,7 +90,6 @@
                         </div>
                     </section>
 
-                    @php $t = $report['visit_timeliness_table']; @endphp
                     <div class="table-wrap" style="margin-top:var(--space-5);">
                         <table>
                             <thead>
