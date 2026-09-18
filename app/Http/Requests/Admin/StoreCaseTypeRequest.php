@@ -26,7 +26,12 @@ class StoreCaseTypeRequest extends FormRequest
             'rule_type' => ['required', 'in:'.implode(',', [VisitRule::TYPE_FIXED_COUNT, VisitRule::TYPE_SCORE_BASED])],
             'fixed_visit_count' => ['required_if:rule_type,'.VisitRule::TYPE_FIXED_COUNT, 'nullable', 'integer', 'min:1'],
             'fixed_interval_days' => ['required_if:rule_type,'.VisitRule::TYPE_FIXED_COUNT, 'nullable', 'integer', 'min:1'],
-            'score_rules_text' => ['required_if:rule_type,'.VisitRule::TYPE_SCORE_BASED, 'nullable', 'string'],
+
+            'score_rules' => ['required_if:rule_type,'.VisitRule::TYPE_SCORE_BASED, 'nullable', 'array'],
+            'score_rules.*.min' => ['required', 'integer', 'min:0', 'max:100'],
+            'score_rules.*.max' => ['required', 'integer', 'min:0', 'max:100'],
+            'score_rules.*.interval_days' => ['required', 'integer', 'min:1'],
+            'score_rules.*.label' => ['required', 'string', 'max:255'],
         ];
     }
 
@@ -38,39 +43,23 @@ class StoreCaseTypeRequest extends FormRequest
             'rule_type' => 'แบบเกณฑ์การเยี่ยม',
             'fixed_visit_count' => 'จำนวนครั้งเยี่ยม',
             'fixed_interval_days' => 'ระยะห่างระหว่างครั้ง (วัน)',
-            'score_rules_text' => 'ตารางเกณฑ์ตามคะแนน',
+            'score_rules' => 'ตารางเกณฑ์ตามคะแนน',
         ];
     }
 
     /**
-     * แปลงข้อความ "min,max,interval_days,label" บรรทัดละ 1 รายการ ให้เป็น array สำหรับ score_rules (json)
-     *
      * @return array<int, array{min: int, max: int, interval_days: int, label: string}>
      */
     public function parsedScoreRules(): array
     {
-        $lines = preg_split('/\r\n|\r|\n/', (string) $this->input('score_rules_text', ''));
-        $rules = [];
-
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if ($line === '') {
-                continue;
-            }
-
-            $parts = array_map('trim', explode(',', $line, 4));
-            if (count($parts) < 3) {
-                continue;
-            }
-
-            $rules[] = [
-                'min' => (int) $parts[0],
-                'max' => (int) $parts[1],
-                'interval_days' => (int) $parts[2],
-                'label' => $parts[3] ?? '',
-            ];
-        }
-
-        return $rules;
+        return collect($this->input('score_rules', []))
+            ->map(fn ($row) => [
+                'min' => (int) $row['min'],
+                'max' => (int) $row['max'],
+                'interval_days' => (int) $row['interval_days'],
+                'label' => $row['label'],
+            ])
+            ->values()
+            ->all();
     }
 }
