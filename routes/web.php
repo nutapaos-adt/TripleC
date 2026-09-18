@@ -60,6 +60,9 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/reports/visit-summary', [VisitSummaryController::class, 'show'])->name('reports.visit-summary');
     Route::get('/reports/monthly', [MonthlyReportController::class, 'show'])->name('reports.monthly');
+    Route::post('/reports/monthly/photos', [MonthlyReportController::class, 'storePhoto'])->name('reports.monthly.photos.store');
+    Route::get('/reports/monthly/photos/{photo}', [MonthlyReportController::class, 'showPhoto'])->name('reports.monthly.photos.show');
+    Route::delete('/reports/monthly/photos/{photo}', [MonthlyReportController::class, 'destroyPhoto'])->name('reports.monthly.photos.destroy');
 
     Route::middleware('role:home_visit_team,admin')->group(function () {
         Route::get('/satisfaction-surveys', [SatisfactionSurveyController::class, 'index'])

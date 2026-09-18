@@ -3,10 +3,14 @@
 namespace App\Http\Controllers\Reports;
 
 use App\Http\Controllers\Controller;
+use App\Models\MonthlyReportPhoto;
 use App\Services\VisitReportService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class MonthlyReportController extends Controller
 {
@@ -40,6 +44,12 @@ class MonthlyReportController extends Controller
             ? $reportService->dmCopdComplications($month)
             : [];
 
+        $photos = MonthlyReportPhoto::whereYear('report_month', $month->year)
+            ->whereMonth('report_month', $month->month)
+            ->with('uploader')
+            ->latest()
+            ->get();
+
         return view('reports.monthly', [
             'monthValue' => $monthValue,
             'monthLabel' => $this->monthLabel($month),
@@ -47,7 +57,46 @@ class MonthlyReportController extends Controller
             'month' => $month,
             'report' => $report,
             'dmCopdComplications' => $dmCopdComplications,
+            'photos' => $photos,
         ]);
+    }
+
+    public function storePhoto(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'month' => ['required', 'date_format:Y-m'],
+            'caption' => ['nullable', 'string', 'max:255'],
+            'photo' => ['required', 'image', 'max:10240'],
+        ]);
+
+        $path = $request->file('photo')->store('monthly-report-photos', 'local');
+
+        MonthlyReportPhoto::create([
+            'report_month' => Carbon::createFromFormat('Y-m', $data['month'])->startOfMonth(),
+            'caption' => $data['caption'] ?? null,
+            'file_path' => $path,
+            'uploaded_by' => Auth::id(),
+        ]);
+
+        return redirect()
+            ->route('reports.monthly', ['month' => $data['month']])
+            ->with('status', 'อัปโหลดภาพเรียบร้อยแล้ว');
+    }
+
+    public function showPhoto(MonthlyReportPhoto $photo)
+    {
+        return Storage::disk('local')->response($photo->file_path);
+    }
+
+    public function destroyPhoto(MonthlyReportPhoto $photo): RedirectResponse
+    {
+        Storage::disk('local')->delete($photo->file_path);
+        $monthValue = $photo->report_month->format('Y-m');
+        $photo->delete();
+
+        return redirect()
+            ->route('reports.monthly', ['month' => $monthValue])
+            ->with('status', 'ลบภาพแล้ว');
     }
 
     /**

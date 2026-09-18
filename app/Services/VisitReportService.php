@@ -461,6 +461,7 @@ class VisitReportService
                 'visited_at' => $visitedAt,
                 'diagnosis' => $referral->diagnosis,
                 'underlying_disease' => $referral->underlying_disease,
+                'ward_concern' => $referral->raw_notes,
                 'visit_result' => $record?->raw_notes,
             ];
         }

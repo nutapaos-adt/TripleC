@@ -53,7 +53,7 @@
                 <div class="card-body">
                     <section class="kpi-grid" aria-label="สรุปตัวเลขการส่งเยี่ยมบ้านประจำเดือน">
                         <div class="kpi-tile">
-                            <span class="caption">จำนวนการส่งต่อทั้งหมด</span>
+                            <span class="caption">จำนวนการส่งเยี่ยมทั้งหมด</span>
                             <span class="kpi-value">{{ $report['total_referrals'] }}</span>
                             <span class="caption">ราย</span>
                         </div>
@@ -296,60 +296,108 @@
                 </div>
             </div>
 
-            {{-- ============ Section 5: case log ============ --}}
+            {{-- ============ Section 5: photo gallery ============ --}}
             <div class="card">
                 <div class="card-head">
-                    <div class="h2">5. ทะเบียนตอบกลับเยี่ยมบ้าน ประจำเดือน {{ $monthLabel }}</div>
+                    <div class="h2">5. ภาพการปฏิบัติงาน</div>
                 </div>
                 <div class="card-body">
-                    <div class="table-wrap">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>ผู้ป่วย</th>
-                                    <th>หอผู้ป่วย</th>
-                                    <th>สถานะ</th>
-                                    <th>กำหนดเยี่ยม</th>
-                                    <th>เยี่ยมจริง</th>
-                                    <th>วินิจฉัย/โรคประจำตัว</th>
-                                    <th>ผลการเยี่ยม</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($report['case_log'] as $row)
-                                    <tr>
-                                        <td>
-                                            <span class="patient-name">{{ $row['patient_name'] }}</span>
-                                            @if ($row['patient_age'] !== null)
-                                                <span class="caption">อายุ {{ $row['patient_age'] }} ปี</span>
-                                            @endif
-                                        </td>
-                                        <td>{{ $row['ward_name'] }}</td>
-                                        <td>
-                                            @if ($row['on_time'] === null)
-                                                <span class="chip chip-warning">ยังไม่ได้เยี่ยม</span>
-                                            @elseif ($row['on_time'])
-                                                <span class="chip chip-success">ทันเวลา</span>
-                                            @else
-                                                <span class="chip chip-risk">ล่าช้า</span>
-                                            @endif
-                                        </td>
-                                        <td class="due-date">{{ $row['due_date']?->format('d/m/Y') ?? '—' }}</td>
-                                        <td class="due-date">{{ $row['visited_at']?->format('d/m/Y') ?? '—' }}</td>
-                                        <td>
-                                            {{ $row['diagnosis'] ?? '—' }}
-                                            @if ($row['underlying_disease'])
-                                                <br><span class="caption">โรคประจำตัว: {{ $row['underlying_disease'] }}</span>
-                                            @endif
-                                        </td>
-                                        <td style="white-space:pre-line;max-width:320px;">{{ $row['visit_result'] ?? '—' }}</td>
-                                    </tr>
-                                @empty
-                                    <tr><td colspan="7" style="text-align:center;">ยังไม่มีทะเบียนตอบกลับเยี่ยมบ้านในเดือนนี้</td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                    <form method="POST" action="{{ route('reports.monthly.photos.store') }}" enctype="multipart/form-data" class="field-grid no-print" style="margin-bottom:var(--space-4);">
+                        @csrf
+                        <input type="hidden" name="month" value="{{ $monthValue }}">
+                        <div class="field">
+                            <label>เพิ่มภาพ</label>
+                            <input type="file" name="photo" accept="image/*" required>
+                        </div>
+                        <div class="field">
+                            <label>คำอธิบายภาพ</label>
+                            <input type="text" name="caption" placeholder="เช่น เยี่ยมบ้านผู้ป่วย Palliative Care">
+                        </div>
+                        <div class="field" style="align-self:end;">
+                            <button type="submit" class="btn btn-secondary">อัปโหลด</button>
+                        </div>
+                    </form>
+
+                    @if ($photos->isEmpty())
+                        <div class="empty-note">ยังไม่มีภาพการปฏิบัติงานสำหรับเดือนนี้</div>
+                    @else
+                        <div class="photo-grid">
+                            @foreach ($photos as $photo)
+                                <div class="photo-tile">
+                                    <img src="{{ route('reports.monthly.photos.show', $photo) }}" alt="{{ $photo->caption ?? 'ภาพการปฏิบัติงาน' }}">
+                                    <span class="photo-cap">{{ $photo->caption ?: 'ภาพที่ '.$loop->iteration }}</span>
+                                    <form method="POST" action="{{ route('reports.monthly.photos.destroy', $photo) }}" class="no-print" onsubmit="return confirm('ลบภาพนี้?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-secondary btn-sm">ลบ</button>
+                                    </form>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- ============ Section 6: case log ============ --}}
+            <div class="card">
+                <div class="card-head">
+                    <div class="h2">6. ทะเบียนตอบกลับเยี่ยมบ้าน ประจำเดือน {{ $monthLabel }}</div>
+                </div>
+                <div class="card-body">
+                    @forelse ($report['case_log'] as $row)
+                        <div class="case-card">
+                            <div class="case-head">
+                                <div class="case-head-left">
+                                    <span class="case-no">{{ $loop->iteration }}</span>
+                                    <span class="case-name">{{ $row['patient_name'] }}</span>
+                                    @if ($row['patient_age'] !== null)
+                                        <span class="case-age">อายุ {{ $row['patient_age'] }} ปี</span>
+                                    @endif
+                                </div>
+                                <div class="case-badges">
+                                    <span class="badge badge-ward">{{ $row['ward_name'] }}</span>
+                                    @if ($row['on_time'] === null)
+                                        <span class="badge badge-ward">ยังไม่ได้เยี่ยม</span>
+                                    @elseif ($row['on_time'])
+                                        <span class="badge badge-ontime">ทันเวลา</span>
+                                    @else
+                                        <span class="badge badge-late">ล่าช้า</span>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="case-dates">
+                                กำหนดเยี่ยม {{ $row['due_date']?->format('d/m/Y') ?? '—' }}
+                                &middot; เยี่ยมจริง {{ $row['visited_at']?->format('d/m/Y') ?? '—' }}
+                            </div>
+                            <div class="case-dx">
+                                <span class="l">วินิจฉัย/โรคประจำตัว:</span> {{ $row['diagnosis'] ?? '—' }}
+                                @if ($row['underlying_disease']) &middot; {{ $row['underlying_disease'] }} @endif
+                            </div>
+                            @if ($row['ward_concern'])
+                                <div class="case-block">
+                                    <span class="l">ประเด็นที่หอผู้ป่วยต้องการติดตาม</span>
+                                    <ul><li style="white-space:pre-line;">{{ $row['ward_concern'] }}</li></ul>
+                                </div>
+                            @endif
+                            <div class="case-block">
+                                <span class="l">ผลการเยี่ยม</span>
+                                <ul><li style="white-space:pre-line;">{{ $row['visit_result'] ?? 'ยังไม่มีผลการเยี่ยม' }}</li></ul>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="empty-note">ยังไม่มีทะเบียนตอบกลับเยี่ยมบ้านในเดือนนี้</div>
+                    @endforelse
+                </div>
+            </div>
+
+            <div class="sign-block">
+                <div class="memo">
+                    <div>ที่ .......................................</div>
+                    <div class="line" style="margin-top:20px;"></div>
+                </div>
+                <div class="approve">
+                    <div class="line"></div>
+                    <div>ตรวจถูกต้อง</div>
                 </div>
             </div>
 

@@ -44,7 +44,7 @@
     {{-- ============ KPI tiles ============ --}}
     <section class="kpi-grid" aria-label="สรุปตัวเลขการส่งเยี่ยมบ้าน">
         <div class="kpi-tile">
-            <span class="caption">จำนวนการส่งต่อทั้งหมด</span>
+            <span class="caption">จำนวนการส่งเยี่ยมทั้งหมด</span>
             <span class="kpi-value">{{ $summary['total_referrals'] }}</span>
             <span class="caption">ราย</span>
         </div>
