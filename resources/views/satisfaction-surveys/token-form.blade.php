@@ -17,7 +17,7 @@
             <div style="width:100%;max-width:720px;display:flex;flex-direction:column;gap:var(--space-5);">
 
                 <div class="page-head" style="align-items:center;text-align:center;">
-                    <h1 class="h1">แบบประเมินความพึงพอใจ</h1>
+                    <h1 class="h1">แบบประเมินความพึงพอใจผู้รับบริการในชุมชน</h1>
                     <div class="sub">{{ $survey->referral->patient->name }} · HN {{ $survey->referral->patient->hn }}</div>
                 </div>
 

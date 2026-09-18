@@ -2,8 +2,8 @@
     <x-slot name="header">วิเคราะห์แผนการพยาบาล — รอตรวจสอบ</x-slot>
 
     <div class="page-head">
-        <h1 class="h1">รอตรวจสอบแผนการพยาบาล</h1>
-        <p class="sub">ใบส่งต่อที่ยังไม่ได้ยืนยันแผนการดูแล</p>
+        <h1 class="h1">วิเคราะห์แผนการพยาบาล</h1>
+        <p class="sub">รายการใบส่งต่อที่ AI สรุปข้อมูลและร่างแผนดูแลไว้แล้ว รอพยาบาลตรวจสอบและยืนยันแผนก่อนเริ่มติดตามเคส</p>
     </div>
 
     <div class="card">
@@ -16,6 +16,7 @@
                         <th>ประเภทเคส</th>
                         <th>เขต</th>
                         <th>วันที่ส่งต่อข้อมูล</th>
+                        <th>สถานะ</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -46,13 +47,14 @@
                                 </span>
                             </td>
                             <td class="due-date">{{ $referral->created_at->format('d/m/Y') }}</td>
+                            <td><span class="chip chip-warning">รอตรวจสอบ</span></td>
                             <td>
                                 <a href="{{ route('referrals.care-plan', $referral) }}" class="btn btn-primary btn-sm">ตรวจสอบแผน</a>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" style="text-align:center;padding:var(--space-8);color:var(--color-neutral-500);">ไม่มีเคสรอตรวจสอบแผนแล้วในขณะนี้</td>
+                            <td colspan="7" style="text-align:center;padding:var(--space-8);color:var(--color-neutral-500);">ไม่มีเคสรอตรวจสอบแผนในขณะนี้</td>
                         </tr>
                     @endforelse
                 </tbody>

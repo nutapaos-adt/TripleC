@@ -15,14 +15,14 @@
         $chips = [
             $chip('all', 'ทั้งหมด'),
             $chip('risk', 'พบความเสี่ยง'),
-            $chip('normal', 'ปกติ'),
+            $chip('normal', 'ปกติ ไม่พบความเสี่ยง'),
             $chip('closed', 'ปิดเคสแล้ว'),
         ];
     @endphp
 
     <div class="page-head">
         <h1 class="h1">ติดตามผลการเยี่ยม{{ auth()->user()->isWardStaff() ? ' — หอ '.(auth()->user()->ward?->name ?? '—') : '' }}</h1>
-        <div class="sub">รายการเคสที่มีการบันทึกผลเยี่ยม/ติดตามแล้วอย่างน้อยหนึ่งครั้ง</div>
+        <div class="sub">เคสที่หอผู้ป่วยส่งเยี่ยมบ้าน และทีมเยี่ยมบ้านลงพื้นที่/ติดตามแล้วอย่างน้อย 1 ครั้ง — แสดงทุกเคสรวมทั้งเคสที่ปกติดีไม่พบความเสี่ยง ไม่ใช่แค่เคสที่มีสัญญาณผิดปกติ</div>
     </div>
 
     <div class="btn-row">
@@ -78,7 +78,7 @@
                             <th>ผู้ป่วย</th>
                             <th>ประเภทเคส</th>
                             <th>วันที่เยี่ยมล่าสุด</th>
-                            <th>สถานะ</th>
+                            <th>สถานะ/ผล</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -103,7 +103,7 @@
                                     @elseif ($row['is_closed'])
                                         <span class="chip chip-closed">ปิดเคสแล้ว</span>
                                     @else
-                                        <span class="chip chip-success">ปกติ</span>
+                                        <span class="chip chip-success">ปกติ ไม่พบความเสี่ยง</span>
                                     @endif
                                 </td>
                                 <td style="text-align:right;">

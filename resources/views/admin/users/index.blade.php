@@ -2,13 +2,11 @@
     <x-slot name="header">จัดการผู้ใช้งาน</x-slot>
 
     <div class="page-head">
-        <h1 class="h1">จัดการผู้ใช้งาน</h1>
+        <h1 class="h1">ผู้ใช้งาน</h1>
+        <p class="sub">จัดการบทบาทและแผนกของผู้ใช้งานในระบบ</p>
     </div>
 
     <div class="card">
-        <div class="card-head">
-            <div class="h2">รายชื่อผู้ใช้งาน</div>
-        </div>
         <div class="card-body">
             <div class="table-wrap">
                 <table>
@@ -16,7 +14,7 @@
                         <tr>
                             <th>ชื่อ</th>
                             <th>อีเมล</th>
-                            <th>สิทธิ์การใช้งาน</th>
+                            <th>บทบาท</th>
                             <th>แผนก</th>
                             <th></th>
                         </tr>
@@ -29,7 +27,7 @@
                                 <td><span class="chip {{ $user->roleChipClass() }}">{{ $user->roleLabel() }}</span></td>
                                 <td>{{ $user->department ?: '—' }}</td>
                                 <td style="text-align:right;">
-                                    <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-secondary btn-sm">แก้ไขสิทธิ์</a>
+                                    <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-secondary btn-sm">แก้ไข</a>
                                 </td>
                             </tr>
                         @endforeach

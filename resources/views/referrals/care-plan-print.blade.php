@@ -15,12 +15,12 @@
 <body>
     <div class="sheet">
         <div class="no-print btn-row" style="margin-bottom:var(--space-4);">
-            <button type="button" class="btn btn-primary" onclick="window.print()">พิมพ์เอกสาร</button>
+            <button type="button" class="btn btn-primary" onclick="window.print()">🖨 พิมพ์รายงานนี้</button>
             <a href="{{ route('referrals.show', $referral) }}" class="btn btn-secondary">กลับไปหน้าใบส่งต่อ</a>
         </div>
 
         <div class="page-head">
-            <h1 class="h1">แผนการดูแลผู้ป่วย (สำหรับพกติดตัวออกเยี่ยมบ้าน)</h1>
+            <h1 class="h1">รายงานสรุปแผนการดูแลผู้ป่วย</h1>
             <p class="sub">พิมพ์เมื่อ {{ now()->format('d/m/Y H:i') }}</p>
         </div>
 
@@ -84,13 +84,28 @@
                 </div>
                 <div class="field full">
                     <label>กำหนดการติดตาม</label>
+                    @php
+                        $plans = $referral->followUpPlans->sortBy('plan_number')->values();
+                        $firstPlan = $plans->first();
+                        $secondPlan = $plans->get(1);
+                        $intervalDays = $firstPlan && $secondPlan ? $firstPlan->due_date->diffInDays($secondPlan->due_date) : null;
+                        $firstVisitOffsetDays = $firstPlan && $referral->confirmed_at ? $referral->confirmed_at->diffInDays($firstPlan->due_date) : null;
+                    @endphp
                     <div class="field-value">
-                        @forelse ($referral->followUpPlans->sortBy('plan_number') as $plan)
+                        @forelse ($plans as $plan)
                             ครั้งที่ {{ $plan->plan_number }} — {{ $plan->method === 'home_visit' ? 'เยี่ยมบ้าน' : 'โทรติดตาม' }} — กำหนด {{ $plan->due_date->format('d/m/Y') }}<br>
                         @empty
                             ยังไม่มีกำหนดการ
                         @endforelse
                     </div>
+                    @if ($firstPlan)
+                        <div class="caption" style="margin-top:var(--space-1);">
+                            กำหนดการติดตาม: {{ $firstPlan->method === 'home_visit' ? 'เยี่ยมบ้าน' : 'โทรติดตาม' }}
+                            @if ($intervalDays) ทุก {{ $intervalDays }} วัน @endif
+                            @if ($referral->initial_pps_score) (ตาม PPS Score {{ $referral->initial_pps_score }}) @endif
+                            @if ($firstVisitOffsetDays !== null) — เริ่มครั้งแรกภายใน {{ $firstVisitOffsetDays }} วันหลังยืนยันแผน @endif
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

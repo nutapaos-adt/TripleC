@@ -42,7 +42,7 @@
     </div>
 
     <div class="field">
-        <label>ผู้ตอบแบบประเมิน</label>
+        <label>ท่านเป็นผู้รับบริการประเภทใด</label>
         <div class="choice-row">
             @foreach ($respondentOptions as $value => $label)
                 <label class="choice-opt">
@@ -71,7 +71,7 @@
     </div>
 
     <div class="field">
-        <label>ระดับการศึกษา</label>
+        <label>ท่านจบการศึกษาสูงสุด</label>
         <div class="choice-row">
             @foreach ($educationOptions as $value => $label)
                 <label class="choice-opt">
@@ -83,7 +83,7 @@
     </div>
 
     <div class="field full">
-        <label>อาชีพ</label>
+        <label>ปัจจุบันท่านประกอบอาชีพ</label>
         <div class="choice-row">
             @foreach ($occupationOptions as $value => $label)
                 <label class="choice-opt">

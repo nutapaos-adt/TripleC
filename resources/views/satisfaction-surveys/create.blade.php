@@ -2,7 +2,7 @@
     <x-slot name="header">ประเมินความพึงพอใจ — {{ $referral->patient->name }}</x-slot>
 
     <div class="page-head">
-        <h1 class="h1">ประเมินความพึงพอใจ</h1>
+        <h1 class="h1">แบบประเมินความพึงพอใจผู้รับบริการในชุมชน</h1>
         <div class="sub">{{ $referral->patient->name }} · HN {{ $referral->patient->hn }} (เจ้าหน้าที่กรอกแทนผู้ป่วย/ญาติ)</div>
     </div>
 
