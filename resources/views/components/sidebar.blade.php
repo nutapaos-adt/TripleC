@@ -64,9 +64,7 @@
 <aside class="sidebar" aria-label="เมนูหลัก">
     <div class="brand">
         <div class="brand-mark">
-            <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-primary-700)" stroke-width="2">
-                <circle cx="9" cy="9" r="5"/><circle cx="15" cy="9" r="5"/><circle cx="12" cy="15" r="5"/>
-            </svg>
+            <img src="{{ asset('branding/logo-mark.png') }}" alt="Triple C" style="width:100%;height:100%;object-fit:contain;">
         </div>
         <div class="brand-text">
             <span class="full">Chira Continuity Care</span>
