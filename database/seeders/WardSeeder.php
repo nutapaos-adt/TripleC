@@ -11,7 +11,8 @@ class WardSeeder extends Seeder
      * รายชื่อหอผู้ป่วย/หน่วยต้นทางที่ส่งเยี่ยมบ้าน ตรงกับชื่อจริงที่ใช้ใน monthly-visit-report.html
      * (ตัวแบ่งกลุ่มรายงาน แบดจ์ "badge-ward") และ visit-summary.html — "หอผู้ป่วยอายุรกรรม" เพิ่มเข้ามา
      * เพราะเป็นวอร์ดของ persona ward_staff ตัวอย่างที่ referral-create.html/dashboard-ward.html/
-     * ward-visit-results.html ใช้ซ้ำกันทุกไฟล์ (ไม่ใช่แค่ตัวอย่างในรายงาน)
+     * ward-visit-results.html ใช้ซ้ำกันทุกไฟล์ (ไม่ใช่แค่ตัวอย่างในรายงาน) — "แผนกส่งเสริมสุขภาพและเวชกรรม
+     * ป้องกัน" คือหน่วยงานต้นสังกัดของทีมเยี่ยมบ้าน (home_visit_team)
      */
     public function run(): void
     {
@@ -22,6 +23,7 @@ class WardSeeder extends Seeder
             'หอผู้ป่วยหญิง',
             'ห้องตรวจโรคผู้ป่วยนอก',
             'ห้องฉุกเฉิน',
+            'แผนกส่งเสริมสุขภาพและเวชกรรมป้องกัน',
         ] as $name) {
             Ward::firstOrCreate(['name' => $name]);
         }
