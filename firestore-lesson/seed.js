@@ -25,12 +25,15 @@ const db = admin.firestore();
 
 // ---------- Supporting reference data ----------
 
+// ฟิลด์ของ users ตาม spec.md §2: name, role, email เท่านั้น (ไม่มีฟิลด์อื่น)
+// เอกสารชุดนี้เป็นข้อมูลตัวอย่างสำหรับแสดงผล (doc id เป็น id สมมติ ไม่ใช่ Firebase Auth uid)
+// บัญชีที่ล็อกอินได้จริงสร้างจาก setup-users.js / register.html ซึ่งใช้ uid เป็น doc id
 const users = [
-  { id: 'user_ward01', name: 'พยาบาลสมศรี ใจดี', role: 'ward_staff', department: 'หอผู้ป่วยอายุรกรรม' },
-  { id: 'user_nurse01', name: 'พยาบาลวิภา ติดตามผล', role: 'home_visit_team', department: 'ทีมเยี่ยมบ้าน' },
-  { id: 'user_admin01', name: 'แอดมิน ระบบดี', role: 'admin', department: 'IT' },
-  { id: 'user_ward02', name: 'พยาบาลนภา ส่งต่อดี', role: 'ward_staff', department: 'OPD อายุรกรรม' },
-  { id: 'user_nurse02', name: 'พยาบาลสุดา เยี่ยมบ้านไว', role: 'home_visit_team', department: 'ทีมเยี่ยมบ้าน' },
+  { id: 'user_ward01', name: 'พยาบาลสมศรี ใจดี', role: 'ward_staff', email: 'ward01@example.invalid' },
+  { id: 'user_nurse01', name: 'พยาบาลวิภา ติดตามผล', role: 'home_visit_team', email: 'nurse01@example.invalid' },
+  { id: 'user_admin01', name: 'แอดมิน ระบบดี', role: 'admin', email: 'admin01@example.invalid' },
+  { id: 'user_ward02', name: 'พยาบาลนภา ส่งต่อดี', role: 'ward_staff', email: 'ward02@example.invalid' },
+  { id: 'user_nurse02', name: 'พยาบาลสุดา เยี่ยมบ้านไว', role: 'home_visit_team', email: 'nurse02@example.invalid' },
 ];
 
 const caseTypes = [
@@ -59,11 +62,13 @@ const referrals = [
     sourceType: 'ward',
     sourceDetail: 'หอผู้ป่วยอายุรกรรมชาย 3',
     createdBy: 'user_ward01',
+    createdByName: 'พยาบาลสมศรี ใจดี',
     rawNotes: 'ผู้ป่วยระยะท้าย ต้องการติดตามอาการปวดและดูแลแบบประคับประคองที่บ้าน',
     aiSummary: {
       patientType: 'palliative',
       keyIssues: ['ปวดจากมะเร็งระยะท้าย', 'ต้องการอุปกรณ์ทางการแพทย์ที่บ้าน'],
       riskSignals: ['ผู้ดูแลหลักมีคนเดียว'],
+      reasoning: 'บันทึกดิบระบุว่าเป็นผู้ป่วยระยะท้ายที่ต้องการการดูแลแบบประคับประคองที่บ้าน จึงจัดเป็นเคส palliative',
     },
     aiSummaryGeneratedAt: '2026-08-20T09:15:00+07:00',
     confirmedSummary: null,
@@ -81,11 +86,13 @@ const referrals = [
     sourceType: 'opd',
     sourceDetail: 'OPD อายุรกรรม',
     createdBy: 'user_ward01',
+    createdByName: 'พยาบาลสมศรี ใจดี',
     rawNotes: 'ผู้ป่วยติดเตียงหลังโรคหลอดเลือดสมอง ต้องการวางแผนเยี่ยมบ้านต่อเนื่อง',
     aiSummary: {
       patientType: 'bedridden',
       keyIssues: ['เสี่ยงแผลกดทับ', 'ต้องฝึกกายภาพบำบัดต่อเนื่อง'],
       riskSignals: [],
+      reasoning: 'ผู้ป่วยเคลื่อนไหวเองไม่ได้หลังโรคหลอดเลือดสมอง จึงจัดเป็นผู้ป่วยติดเตียงที่ต้องเยี่ยมบ้านต่อเนื่อง',
     },
     aiSummaryGeneratedAt: '2026-08-18T10:30:00+07:00',
     confirmedSummary: {
@@ -108,11 +115,13 @@ const referrals = [
     sourceType: 'internal_dept',
     sourceDetail: 'แผนกเวชศาสตร์ฟื้นฟู',
     createdBy: 'user_ward01',
+    createdByName: 'พยาบาลสมศรี ใจดี',
     rawNotes: 'ผู้ป่วย COPD จำหน่ายจากโรงพยาบาล ต้องติดตามอาการหอบเหนื่อยที่บ้าน',
     aiSummary: {
       patientType: 'copd',
       keyIssues: ['หอบเหนื่อยง่าย', 'ใช้ออกซิเจนที่บ้าน'],
       riskSignals: ['เคยกลับเข้า ER ใน 30 วันที่ผ่านมา'],
+      reasoning: 'เพิ่งจำหน่ายด้วยโรค COPD และมีประวัติกลับเข้า ER จึงต้องติดตามอาการหอบเหนื่อยอย่างใกล้ชิด',
     },
     aiSummaryGeneratedAt: '2026-08-10T08:45:00+07:00',
     confirmedSummary: {
@@ -135,11 +144,13 @@ const referrals = [
     sourceType: 'external_hospital',
     sourceDetail: 'โรงพยาบาลชุมชนใกล้เคียง (ส่งต่อ)',
     createdBy: 'user_ward01',
+    createdByName: 'พยาบาลสมศรี ใจดี',
     rawNotes: 'ส่งต่อเคสผู้ป่วยติดเตียงที่ดูแลจนอาการคงที่และญาติดูแลได้เองแล้ว',
     aiSummary: {
       patientType: 'bedridden',
       keyIssues: ['อาการคงที่'],
       riskSignals: [],
+      reasoning: 'อาการคงที่และญาติดูแลเองได้แล้ว จึงไม่พบสัญญาณเสี่ยงที่ต้องติดตามเพิ่ม',
     },
     aiSummaryGeneratedAt: '2026-07-01T09:00:00+07:00',
     confirmedSummary: {
@@ -162,11 +173,13 @@ const referrals = [
     sourceType: 'ward',
     sourceDetail: 'หอผู้ป่วยอายุรกรรมชาย 1',
     createdBy: 'user_ward01',
+    createdByName: 'พยาบาลสมศรี ใจดี',
     rawNotes: 'ผู้ป่วย COPD เพิ่งจำหน่ายจากโรงพยาบาลเมื่อเช้านี้ หอบเหนื่อยง่าย อยู่นอกเขตพื้นที่รับผิดชอบ',
     aiSummary: {
       patientType: 'copd',
       keyIssues: ['หอบเหนื่อยง่าย', 'อยู่นอกเขตพื้นที่ (out_area) ต้องประสาน รพ.สต. ในพื้นที่'],
       riskSignals: ['ผู้ป่วยอาศัยคนเดียว'],
+      reasoning: 'ผู้ป่วยอยู่นอกเขตและอาศัยคนเดียว จึงเสี่ยงขาดผู้ดูแลเมื่อมีอาการกำเริบ ต้องประสานหน่วยบริการในพื้นที่',
     },
     aiSummaryGeneratedAt: '2026-08-30T08:20:00+07:00',
     confirmedSummary: null,
@@ -179,15 +192,27 @@ const referrals = [
   },
 ];
 
+// ฟิลด์วันเวลาทุกตัวตาม spec.md §2 ต้องเก็บเป็น Firestore Timestamp (ไม่ใช่สตริง ISO)
+// ค่า null ต้องคงเป็น null และคอลเล็กชันที่ไม่มีฟิลด์เหล่านี้ (users/caseTypes/patients)
+// ต้องไม่ถูกเติมฟิลด์เกินจาก schema
+const TIMESTAMP_FIELDS = ['createdAt', 'aiSummaryGeneratedAt', 'confirmedAt', 'closedAt'];
+
+function withTimestamps(data) {
+  const out = { ...data };
+  TIMESTAMP_FIELDS.forEach((field) => {
+    if (typeof out[field] === 'string') {
+      out[field] = admin.firestore.Timestamp.fromDate(new Date(out[field]));
+    }
+  });
+  return out;
+}
+
 async function seedCollection(collectionName, items) {
   const batch = db.batch();
   items.forEach((item) => {
     const { id, ...data } = item;
     const ref = db.collection(collectionName).doc(id);
-    batch.set(ref, {
-      ...data,
-      createdAt: admin.firestore.Timestamp.fromDate(new Date(item.createdAt || Date.now())),
-    });
+    batch.set(ref, withTimestamps(data));
   });
   await batch.commit();
   console.log(`  ✔ seeded ${items.length} docs into "${collectionName}"`);

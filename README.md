@@ -1,4 +1,6 @@
-**เว็บออนไลน์ (การบ้านที่ 3 / สัปดาห์ที่ 8): https://triplec-a5e75.web.app**
+**เว็บออนไลน์ (การบ้านที่ 4 / สัปดาห์ที่ 9): https://triplec-a5e75.web.app**
+**รายงานผลการทดสอบ: [`firestore-lesson/test-results.md`](firestore-lesson/test-results.md)** ·
+**สิ่งที่ยังไม่เสร็จ: [`BACKLOG.md`](BACKLOG.md)** · **สเปกระบบ: [`firestore-lesson/spec.md`](firestore-lesson/spec.md)**
 
 ผู้จัดทำ : กัลยาณี หนูตะเภา
 
