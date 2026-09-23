@@ -1,0 +1,5 @@
+# Playwright test run artifacts (regenerated on every `npx playwright test` run)
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

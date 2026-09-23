@@ -38,7 +38,9 @@ claim (custom claim ตั้งจากฝั่ง client เองไม่�
 | ward_staff เห็นเฉพาะเคสตัวเอง | `referrals-list.js` เติม `where('createdBy','==',uid)` ในคิว | กฎ `read` ของ `/referrals/{id}` เช็ค `myRole() == 'ward_staff' && isOwner(resource.data)` |
 | ห้ามอนุมัติของตัวเอง | `referral-detail.js` → `canConfirm()` ซ่อนปุ่มยืนยัน | กฎ `update` ของ `/referrals/{id}` เช็ค `!isOwner(resource.data)` — ไม่มีข้อยกเว้นแม้ role admin |
 | แก้ได้เฉพาะช่องสถานะ | ฟอร์มไม่มีช่องแก้ไขข้อมูลเคสอื่นเลย มีแต่ปุ่มเปลี่ยนสถานะ | `request.resource.data.diff(resource.data).affectedKeys().hasOnly([...])` จำกัดคีย์ที่แก้ได้ |
+| ฟิลด์บังคับต้องไม่ว่าง ตอนสร้างเคสใหม่ | `referral-create.html` ใส่ `required` ที่ `patient-name`, `patient-hn`, `zone`, `case-type`, `source-type`, `raw-notes` (ยกเว้น `source-detail` ที่ไม่บังคับ) | กฎ `create` ของ `/patients/{id}` เช็ค `fullName`/`hn` เป็น string และ `size() > 0`; กฎ `create` ของ `/referrals/{id}` เช็ค `rawNotes` ไม่ว่าง + `sourceType`/`zone` ต้องเป็นค่าใน enum ที่ spec กำหนด (เขียนตรงผ่าน SDK ข้าม `required` ของเบราว์เซอร์ไม่ได้อีกต่อไป) |
 | ลบต้องยืนยันก่อน | `confirm()` dialog ใน `onDelete()` | กฎ `delete` จำกัดว่าใครลบได้ (ดูตารางด้านบน) — ไม่เกี่ยวกับ dialog ฝั่ง UI |
+| บันทึกการเรียก AI แก้/ลบไม่ได้ (immutable audit log) | `referral-detail.js` เขียน `aiLogs` เพิ่มอย่างเดียวหลังเขียน `aiSummary` ไม่มีปุ่มแก้/ลบ | กฎของ `/referrals/{id}/aiLogs/{logId}`: `create` ใช้เงื่อนไขเดียวกับการเขียน `aiSummary` (role `admin`/`home_visit_team` + `!isOwner()` + `triggeredBy == uid`), `read` เฉพาะ `admin`/`home_visit_team`, ส่วน `update, delete: if false` เสมอ |
 
 ## ทดสอบแล้ว (ดู `EVIDENCE.md`)
 
@@ -47,3 +49,5 @@ claim (custom claim ตั้งจากฝั่ง client เองไม่�
 - ผู้ใช้ที่ไม่ได้ล็อกอิน (`auth.currentUser === null`) พยายามอ่านเคสใด ๆ → `permission-denied`
 - สมัครสมาชิกผ่าน `register.html` แล้วพยายามเขียน `role: 'admin'` ลงในเอกสารโปรไฟล์ตัวเองตรง ๆ ผ่าน
   `setDoc()` → `permission-denied` (ปิดช่องยกระดับสิทธิ์ตัวเองตอนสมัคร)
+- เขียนตรงผ่าน SDK ข้ามฟอร์ม โดยส่ง `rawNotes: ''` (หรือ `fullName`/`hn` ว่าง) → เดิม **สร้างสำเร็จ**
+  (ช่องโหว่คุณภาพข้อมูล พบจากเทสอัตโนมัติ) ปัจจุบันกฎ `create` ปฏิเสธด้วย `permission-denied` แล้ว
