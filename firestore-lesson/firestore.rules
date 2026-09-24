@@ -29,12 +29,27 @@ service cloud.firestore {
       return data.createdBy == request.auth.uid;
     }
 
+    // Server-side mirror of the `required` attributes on `referral-create.html`.
+    // A direct SDK write skips the browser form entirely, so "required" is only
+    // real if the rules enforce it too. Missing key => this expression errors =>
+    // the whole `allow` evaluates false, which is the deny we want.
+    function isFilled(value) {
+      return value is string && value.size() > 0;
+    }
+
     // Reference collections (patients, caseTypes): readable by any signed-in user
     // (needed to resolve names/labels shown on referrals), writable only by admin —
     // except `patients`, which ward_staff/admin can also create (new referral's patient).
     match /patients/{patientId} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn() && myRole() in ['ward_staff', 'admin'];
+      // `fullName`/`hn` are `required` on the create form (spec.md §2) — enforce
+      // that server-side too, otherwise a direct SDK write creates a nameless
+      // patient with a blank HN that no screen can meaningfully display.
+      allow create: if isSignedIn()
+        && myRole() in ['ward_staff', 'admin']
+        && isFilled(request.resource.data.fullName)
+        && isFilled(request.resource.data.hn)
+        && request.resource.data.zone in ['in_area', 'out_area'];
       allow update, delete: if isSignedIn() && myRole() == 'admin';
     }
 
@@ -70,11 +85,20 @@ service cloud.firestore {
         (myRole() == 'ward_staff' && isOwner(resource.data))
       );
 
+      // Content validation mirrors `referral-create.html`'s `required` attributes
+      // (spec.md §1/§2): `rawNotes` is the free-text the whole AI/confirm flow
+      // reads from, so a blank one makes the case unreviewable. `sourceType`/`zone`
+      // come from <select>s, so the enum checks never bite a real form submit —
+      // they only close the direct-SDK path. `sourceDetail` is deliberately NOT
+      // checked: it is the one field on the form with no `required` attribute.
       allow create: if isSignedIn()
         && myRole() in ['ward_staff', 'admin']
         && isOwner(request.resource.data)
         && request.resource.data.status == 'pending_review'
-        && request.resource.data.confirmedBy == null;
+        && request.resource.data.confirmedBy == null
+        && isFilled(request.resource.data.rawNotes)
+        && request.resource.data.sourceType in ['ward', 'opd', 'internal_dept', 'external_hospital']
+        && request.resource.data.zone in ['in_area', 'out_area'];
 
       // Status-change only: confirming a plan / advancing a follow-up round may
       // touch status-related fields, nothing else — and never by the case's own
