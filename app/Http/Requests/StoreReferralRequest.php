@@ -35,8 +35,44 @@ class StoreReferralRequest extends FormRequest
 
             'zone' => ['required', 'in:in_area,out_area'],
             'zone_override' => ['nullable', 'boolean'],
-            'case_type_id' => ['nullable', 'exists:case_types,id'],
+            'case_type_id' => ['required', 'exists:case_types,id'],
             'raw_notes' => ['required', 'string'],
+
+            'caregiver_name' => ['nullable', 'string', 'max:255'],
+            'caregiver_phone' => ['nullable', 'string', 'max:30'],
+            'caregiver_relationship' => ['nullable', 'string', 'max:255'],
+
+            'patient_status' => ['required', 'in:'.implode(',', [
+                Referral::PATIENT_STATUS_CIVILIAN,
+                Referral::PATIENT_STATUS_MILITARY,
+                Referral::PATIENT_STATUS_MILITARY_FAMILY,
+            ])],
+            'military_unit' => ['nullable', 'required_if:patient_status,military,military_family', 'string', 'max:255'],
+            'military_unit_other' => ['nullable', 'required_if:military_unit,other', 'string', 'max:255'],
+            'coverage_type' => ['nullable', 'string', 'max:255'],
+
+            'diagnosis' => ['required', 'string', 'max:255'],
+            'underlying_disease' => ['nullable', 'string'],
+            'surgery_history' => ['nullable', 'string'],
+            'equipment' => ['nullable', 'array'],
+            'equipment.*' => ['string', 'max:255'],
+            'equipment_other' => ['nullable', 'string', 'max:255'],
+            'clinical_tracers' => ['nullable', 'array'],
+            'clinical_tracers.*' => ['string', 'max:255'],
+
+            'admit_date' => ['nullable', 'date'],
+            'discharge_date' => ['nullable', 'date'],
+            'opd_followup_date' => ['nullable', 'date'],
+            'attending_physician' => ['nullable', 'string', 'max:255'],
+
+            // ไม่บังคับ (ตาม referral-create.html — เว้นว่างได้) แต่ VisitPlanService รองรับกรณีไม่ระบุอยู่แล้ว
+            'severity_group' => ['nullable', 'in:'.implode(',', [
+                Referral::SEVERITY_GREEN,
+                Referral::SEVERITY_YELLOW,
+                Referral::SEVERITY_RED,
+                Referral::SEVERITY_PALLIATIVE,
+            ])],
+            'initial_pps_score' => ['nullable', 'integer', 'min:0', 'max:100'],
 
             'attachments' => ['nullable', 'array'],
             'attachments.*' => ['file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],

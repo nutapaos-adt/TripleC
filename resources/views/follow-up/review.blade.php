@@ -1,145 +1,188 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-[#22201A] leading-tight">
-            บันทึกผลติดตาม — {{ $plan->referral->patient->name }}
-            <span class="text-[#7C7863] text-base font-normal">ครั้งที่ {{ $plan->plan_number }}</span>
-        </h2>
+        บันทึกผลติดตาม — {{ $plan->referral->patient->name }}
     </x-slot>
 
     @php
         $record = $plan->record;
         $analysis = $record->ai_analysis;
         $isConfirmed = $record->isConfirmed();
+        $decisionLabels = [
+            'repeat' => 'ติดตามซ้ำ',
+            'refer' => 'ส่งต่อ',
+            'close' => 'ปิดเคส',
+        ];
+        $decisionDescriptions = [
+            'repeat' => 'สร้างกำหนดการติดตามครั้งถัดไปโดยอัตโนมัติ ใช้เมื่อยังต้องเฝ้าดูอาการต่อเนื่องแต่ยังไม่ถึงระดับที่ต้องส่งต่อ',
+            'refer' => 'ส่งต่อให้ทีม/แผนกที่เกี่ยวข้อง (เช่น ทีมจิตสังคม, แพทย์เจ้าของไข้) ประเมินเพิ่มเติมนอกเหนือจากทีมเยี่ยมบ้าน',
+            'close' => 'ยุติการติดตามต่อเนื่อง ใช้เมื่อผู้ป่วยพ้นภาวะที่ต้องติดตาม เสียชีวิต หรือย้ายออกจากพื้นที่รับผิดชอบ',
+        ];
+        $suggested = $analysis['suggested_decision'] ?? null;
+        $selectedDecision = old('nurse_decision', $suggested);
     @endphp
 
-    <div class="py-8">
-        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8 space-y-6">
+    <div class="page-head">
+        <h1 class="h1">บันทึกผลติดตาม — {{ $plan->referral->patient->name }}</h1>
+        <p class="sub">ครั้งที่ {{ $plan->plan_number }}</p>
+    </div>
 
-            @if ($errors->any())
-                <div class="p-4 rounded bg-[#F7E7E2] text-[#B23B2C] text-sm">
-                    <ul class="list-disc list-inside">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
-            @if (session('error'))
-                <div class="p-4 rounded bg-[#F7E7E2] text-[#B23B2C] text-sm">{{ session('error') }}</div>
-            @endif
-
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                <h3 class="text-sm font-semibold text-[#4A4739] uppercase tracking-wide mb-3">ผลติดตามที่บันทึกไว้</h3>
-                <dl class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-4">
-                    <div>
-                        <dt class="text-[#7C7863]">วัน-เวลาที่ติดตาม</dt>
-                        <dd class="font-medium text-[#22201A]">{{ $record->visited_at->format('d/m/Y H:i') }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-[#7C7863]">PPS Score</dt>
-                        <dd class="font-medium text-[#22201A]">{{ $record->pps_score ?? '—' }}</dd>
-                    </div>
-                </dl>
-                <dt class="text-[#7C7863] text-sm mb-1">อาการ/ปัญหาที่พบ</dt>
-                <dd class="text-[#22201A] whitespace-pre-line bg-[#F1EEE0] rounded-md p-4 text-sm">{{ $record->raw_notes }}</dd>
+    @if ($errors->any())
+        <div class="card" style="border-color:var(--color-risk);">
+            <div class="card-body" style="padding-top:var(--space-5);">
+                <ul style="margin:0;padding-left:18px;color:var(--color-risk);font-size:13px;">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
             </div>
+        </div>
+    @endif
 
-            @if ($analysis && ! ($analysis['parse_error'] ?? false))
-                <div class="border-2 border-dashed border-[#A8C4D2] bg-[#F4F8FA] rounded-lg p-5">
-                    <span class="inline-block text-xs font-bold uppercase tracking-wide text-[#2C5166] bg-[#E1EBEF] rounded-full px-3 py-1 mb-4">
-                        ร่างจาก AI — ยังไม่ยืนยัน · ผลวิเคราะห์ความเสี่ยง
-                    </span>
-                    <div class="space-y-2 text-sm">
-                        <div>
-                            <span class="font-medium text-[#4A4739]">พบสัญญาณเสี่ยง:</span>
-                            @if ($analysis['risk_detected'] ?? false)
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-[#F7E7E2] text-[#B23B2C] ml-1">พบ</span>
-                                <span class="text-[#4A4739]"> — {{ $analysis['risk_summary'] }}</span>
-                            @else
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-[#E5F2E4] text-[#3E8E49] ml-1">ไม่พบ</span>
-                            @endif
-                        </div>
-                        <div>
-                            <span class="font-medium text-[#4A4739]">คำแนะนำเบื้องต้น:</span>
-                            <span class="text-[#4A4739]">{{ $analysis['recommendation'] }}</span>
-                        </div>
-                    </div>
+    <div class="card">
+        <div class="card-head">
+            <div>
+                <h2 class="h2">ผลติดตามที่บันทึกไว้</h2>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="field-grid">
+                <div class="field">
+                    <label>วัน-เวลาที่ติดตาม</label>
+                    <div class="field-value">{{ $record->visited_at->format('d/m/Y H:i') }}</div>
                 </div>
-            @elseif ($analysis['parse_error'] ?? false)
-                <div class="p-4 rounded bg-[#FBF0DC] text-[#C2891F] text-sm">
-                    AI ไม่สามารถแปลผลลัพธ์เป็นข้อมูลที่ใช้ได้ในครั้งนี้ กรุณาตัดสินใจด้วยตนเองด้านล่าง หรือลองขอวิเคราะห์ใหม่
+                <div class="field">
+                    <label>PPS Score</label>
+                    <div class="field-value">{{ $record->pps_score ?? '—' }}</div>
                 </div>
-            @endif
-
-            @if (! $isConfirmed)
-                <form method="POST" action="{{ route('follow-up-plans.analyze', $plan) }}">
-                    @csrf
-                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-white border border-[#C9C4AD] text-[#22201A] rounded-md text-sm font-semibold hover:bg-[#F1EEE0]">
-                        {{ $analysis ? '↻ ให้ AI วิเคราะห์ใหม่' : 'ให้ AI วิเคราะห์ผล' }}
-                    </button>
-                </form>
-            @endif
-
-            @if ($isConfirmed)
-                <div class="bg-white border-[3px] border-[#2C5166] rounded-lg p-5">
-                    <span class="inline-block text-xs font-bold uppercase tracking-wide text-[#2C5166] bg-[#E1EBEF] rounded-full px-3 py-1 mb-3">
-                        การตัดสินใจของพยาบาล — ยืนยันแล้วโดย {{ $record->confirmer->name }} เมื่อ {{ $record->confirmed_at->format('d/m/Y H:i') }}
-                    </span>
-                    <p class="text-sm text-[#4A4739]">
-                        การตัดสินใจ:
-                        <strong>
-                            {{ match($record->nurse_decision) {
-                                'repeat' => 'ติดตามซ้ำ',
-                                'refer' => 'ส่งต่อแพทย์',
-                                'close' => 'ปิดเคส',
-                                default => $record->nurse_decision,
-                            } }}
-                        </strong>
-                    </p>
-                    @if ($record->decision_notes)
-                        <p class="text-sm text-[#4A4739] mt-1">{{ $record->decision_notes }}</p>
-                    @endif
+                <div class="field full">
+                    <label>อาการ/ปัญหาที่พบ</label>
+                    <div class="field-value multiline">{{ $record->raw_notes }}</div>
                 </div>
-            @else
-                <div class="border-[3px] border-[#2C5166] rounded-lg p-5 bg-white">
-                    <span class="inline-block text-xs font-bold uppercase tracking-wide text-[#2C5166] bg-[#E1EBEF] rounded-full px-3 py-1 mb-4">
-                        การตัดสินใจของพยาบาล — ต้องยืนยันเสมอ
-                    </span>
-
-                    <form method="POST" action="{{ route('follow-up-plans.decision', $plan) }}" class="space-y-4">
-                        @csrf
-                        @php $suggested = $analysis['suggested_decision'] ?? null; @endphp
-
-                        <div class="flex flex-wrap gap-3">
-                            @foreach (['repeat' => 'ติดตามซ้ำ', 'refer' => 'ส่งต่อแพทย์', 'close' => 'ปิดเคส'] as $value => $label)
-                                <label class="border rounded-lg px-4 py-2 text-sm font-semibold cursor-pointer
-                                    {{ old('nurse_decision', $suggested) === $value ? 'border-[#2C5166] bg-[#E1EBEF] text-[#2C5166]' : 'border-[#C9C4AD] text-[#4A4739]' }}">
-                                    <input type="radio" name="nurse_decision" value="{{ $value }}" class="mr-1"
-                                           @checked(old('nurse_decision', $suggested) === $value)>
-                                    {{ $label }}
-                                </label>
-                            @endforeach
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-[#4A4739]">
-                                หมายเหตุ <span class="text-[#7C7863] font-normal">(เช่น ส่งต่อถึงใคร/แผนกไหน)</span>
-                            </label>
-                            <textarea name="decision_notes" rows="2" class="mt-1 block w-full rounded-md bg-[#F1EEE0] border-[#C9C4AD] focus:border-[#2C5166] focus:ring-[#2C5166]">{{ old('decision_notes', $analysis['recommendation'] ?? '') }}</textarea>
-                        </div>
-
-                        <label class="inline-flex items-center gap-2 text-sm text-[#4A4739]">
-                            <input type="checkbox" name="risk_flag" value="1"
-                                   @checked(old('risk_flag', $analysis['risk_detected'] ?? false))>
-                            ยืนยันว่าพบสัญญาณเสี่ยงจริง
-                        </label>
-
-                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-[#2C5166] text-white rounded-md text-sm font-semibold hover:bg-[#3D6B84]">
-                            ยืนยันการตัดสินใจ
-                        </button>
-                    </form>
-                </div>
-            @endif
+            </div>
         </div>
     </div>
+
+    @if ($analysis && ! ($analysis['parse_error'] ?? false))
+        <div class="ai-box">
+            <span class="box-label"><span class="dot"></span>ร่างจาก AI — ยังไม่ยืนยัน · ผลวิเคราะห์ความเสี่ยง</span>
+
+            <div class="field-grid">
+                <div class="field full">
+                    <label>พบสัญญาณเสี่ยง</label>
+                    <div class="field-value">
+                        @if ($analysis['risk_detected'] ?? false)
+                            <span class="chip chip-risk">พบ</span> {{ $analysis['risk_summary'] ?? '' }}
+                        @else
+                            <span class="chip chip-success">ไม่พบ</span>
+                        @endif
+                    </div>
+                </div>
+                <div class="field full">
+                    <label>คำแนะนำเบื้องต้น</label>
+                    <div class="field-value multiline">{{ $analysis['recommendation'] ?? '—' }}</div>
+                </div>
+            </div>
+        </div>
+    @elseif ($analysis['parse_error'] ?? false)
+        <div class="banner" style="background:var(--color-warning-tint);border-color:var(--color-warning);">
+            <div class="banner-text">
+                <p style="color:var(--color-warning);">AI ไม่สามารถแปลผลลัพธ์เป็นข้อมูลที่ใช้ได้ในครั้งนี้ กรุณาตัดสินใจด้วยตนเองด้านล่าง หรือลองขอวิเคราะห์ใหม่</p>
+            </div>
+        </div>
+    @endif
+
+    @if (! $isConfirmed)
+        <form method="POST" action="{{ route('follow-up-plans.analyze', $plan) }}" class="btn-row">
+            @csrf
+            <button type="submit" class="btn btn-secondary">
+                {{ $analysis ? '↻ ให้ AI วิเคราะห์ใหม่' : 'ให้ AI วิเคราะห์ผล' }}
+            </button>
+        </form>
+    @endif
+
+    @if ($isConfirmed)
+        <div class="confirmed-box">
+            <span class="box-label"><span class="dot"></span>การตัดสินใจของพยาบาล — ยืนยันแล้วโดย {{ $record->confirmer->name }} เมื่อ {{ $record->confirmed_at->format('d/m/Y H:i') }}</span>
+            <p style="margin:0;font-size:14px;color:var(--color-neutral-900);">
+                การตัดสินใจ:
+                <strong>{{ $decisionLabels[$record->nurse_decision] ?? $record->nurse_decision }}</strong>
+            </p>
+            @if ($record->decision_notes)
+                <p style="margin:6px 0 0;font-size:14px;color:var(--color-neutral-700);">{{ $record->decision_notes }}</p>
+            @endif
+        </div>
+    @else
+        <div class="nurse-decision">
+            <span class="nurse-decision-label">การตัดสินใจของพยาบาล — ต้องยืนยันเสมอ</span>
+
+            <form method="POST" action="{{ route('follow-up-plans.decision', $plan) }}" id="decisionForm">
+                @csrf
+
+                <div class="field-group">
+                    <span class="label">เลือกการตัดสินใจ</span>
+                    <div class="radio-cards">
+                        @foreach ($decisionLabels as $value => $label)
+                            <label class="radio-card @if($selectedDecision === $value) selected @endif" data-value="{{ $value }}">
+                                <input type="radio" name="nurse_decision" value="{{ $value }}" @checked($selectedDecision === $value)>
+                                <div class="rc-title">{{ $label }}</div>
+                                <div class="rc-desc">{{ $decisionDescriptions[$value] }}</div>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <div class="checkbox-row">
+                        <input type="checkbox" id="ai_review_confirmed" name="ai_review_confirmed" value="1" required
+                               @checked(old('ai_review_confirmed'))>
+                        <label for="ai_review_confirmed">
+                            <span class="cb-title">ยืนยันความเสี่ยง</span>
+                            <span class="cb-sub">ข้าพเจ้าได้ตรวจสอบผลวิเคราะห์ความเสี่ยงจาก AI ข้างต้นแล้ว และยืนยันว่าตรงกับการประเมินทางคลินิกของข้าพเจ้า</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <div class="checkbox-row" style="background:var(--color-neutral-100);border-color:var(--color-neutral-300);">
+                        <input type="checkbox" id="risk_flag" name="risk_flag" value="1"
+                               @checked(old('risk_flag', $analysis['risk_detected'] ?? false))>
+                        <label for="risk_flag">ยืนยันว่าพบสัญญาณเสี่ยงจริง</label>
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label for="decision_notes">
+                        หมายเหตุการตัดสินใจ
+                    </label>
+                    <textarea id="decision_notes" name="decision_notes" rows="3">{{ old('decision_notes', $analysis['recommendation'] ?? '') }}</textarea>
+                    <span class="hint">ข้อความเริ่มต้นดึงมาจากคำแนะนำของ AI — สามารถแก้ไขได้ก่อนยืนยัน</span>
+                </div>
+
+                <div class="btn-row">
+                    <button type="submit" class="btn btn-primary" id="submitBtn">ยืนยันการตัดสินใจ</button>
+                    <a href="{{ route('referrals.show', $plan->referral) }}" class="btn btn-secondary">ยกเลิก</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="banner" style="margin-top:var(--space-4);">
+            <div class="banner-text">
+                <p class="h3">จะเกิดอะไรขึ้นต่อ</p>
+                <p>หากเลือก "ติดตามซ้ำ" หรือ "ส่งต่อ" ระบบจะสร้างกำหนดการติดตามครั้งถัดไปให้อัตโนมัติ (คำนวณช่วงเวลาใหม่จาก PPS Score หากเป็นเคส Palliative, เดือนละครั้งหากเป็นกลุ่ม 3 บ้านสีแดง) — หากเลือก "ปิดเคส" ระบบจะยกเลิกกำหนดการที่เหลือทั้งหมดและปิดเคส</p>
+            </div>
+        </div>
+    @endif
+
+    <script>
+        (function () {
+            var cards = document.querySelectorAll('#decisionForm .radio-card');
+            cards.forEach(function (card) {
+                card.addEventListener('click', function () {
+                    cards.forEach(function (c) { c.classList.remove('selected'); });
+                    card.classList.add('selected');
+                    card.querySelector('input[type="radio"]').checked = true;
+                });
+            });
+        })();
+    </script>
 </x-app-layout>

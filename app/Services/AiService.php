@@ -62,6 +62,54 @@ class AiService
         ]);
     }
 
+    /**
+     * ให้ AI อ่านโรคประจำตัวและผลการเยี่ยม/โทรติดตามของเคสที่มีโรคประจำตัวเป็น DM หรือ COPD ในเดือนหนึ่งๆ
+     * แล้วสรุปว่าพบภาวะแทรกซ้อนหรือไม่ พร้อมสรุปสั้นๆ — ใช้ประกอบรายงานประจำเดือนเท่านั้น (informational-only)
+     * ไม่ใช่การตัดสินใจที่กระทบสถานะเคส/กำหนดการ จึงไม่ต้องผ่านขั้นตอนพยาบาลยืนยันตาม DESIGN.md §4.1
+     *
+     * @param  \Illuminate\Support\Collection<int, FollowUpRecord>  $records
+     * @return array{
+     *     has_complication: bool,
+     *     summary: ?string,
+     *     parse_error: bool,
+     *     raw_response?: string,
+     * }
+     */
+    public function summarizeDmCopdComplication(Referral $referral, \Illuminate\Support\Collection $records): array
+    {
+        $prompt = $this->buildDmCopdPrompt($referral, $records);
+
+        return $this->parseJsonResponse($this->callOllama($prompt), [
+            'has_complication' => false,
+            'summary' => null,
+        ]);
+    }
+
+    protected function buildDmCopdPrompt(Referral $referral, \Illuminate\Support\Collection $records): string
+    {
+        $underlyingDisease = $referral->underlying_disease ?: '-';
+
+        $notesText = $records
+            ->map(fn (FollowUpRecord $r) => '- '.($r->raw_notes ?: '-'))
+            ->implode("\n");
+
+        return <<<PROMPT
+            คุณเป็นผู้ช่วยพยาบาลในหน่วยเยี่ยมบ้าน ทำหน้าที่ช่วยอ่านโรคประจำตัวและผลการเยี่ยม/โทรติดตามของผู้ป่วย
+            ที่มีโรคประจำตัวเป็นเบาหวาน (DM) หรือถุงลมโป่งพอง (COPD) แล้วสรุปว่าพบสัญญาณภาวะแทรกซ้อนที่เกี่ยวข้องหรือไม่
+            (ใช้ประกอบรายงานประจำเดือนเท่านั้น ไม่ใช่การตัดสินใจทางคลินิก)
+
+            โรคประจำตัว: {$underlyingDisease}
+
+            ผลการเยี่ยม/โทรติดตามในเดือนนี้:
+            """
+            {$notesText}
+            """
+
+            ตอบกลับเป็น JSON เท่านั้น ห้ามมีข้อความอื่นใดนอกเหนือจาก JSON ตามโครงสร้างนี้เป๊ะๆ:
+            {"has_complication": true/false, "summary": "สรุปสั้นๆ ว่าพบภาวะแทรกซ้อนอะไรหรือไม่ (null ถ้าไม่พบ)"}
+            PROMPT;
+    }
+
     protected function buildAnalysisPrompt(FollowUpRecord $record): string
     {
         $plan = $record->plan;
@@ -132,14 +180,28 @@ class AiService
             ประเภทเคสที่เลือกได้ (เลือกที่ตรงที่สุดจาก slug ด้านล่าง):
             {$optionsText}
 
-            ตอบกลับเป็น JSON เท่านั้น ห้ามมีข้อความอื่นใดนอกเหนือจาก JSON ตามโครงสร้างนี้เป๊ะๆ:
-            {"patient_type": "สรุปประเภท/สภาพผู้ป่วยสั้นๆ", "main_problem": "ปัญหาสำคัญของผู้ป่วย", "follow_up_need": "ความต้องการติดตามที่ควรเน้น", "risk_signals": ["สัญญาณเสี่ยงที่พบ (array ว่างถ้าไม่มี)"], "suggested_case_type_slug": "slug ที่ตรงที่สุดจากรายการด้านบน"}
+            กฎที่ต้องทำตามอย่างเคร่งครัด:
+            1. เขียนเนื้อหาแต่ละช่องด้วยคำพูดของคุณเองจากการอ่านข้อความข้างต้นเท่านั้น ห้ามคัดลอกข้อความมาวางตรงๆ โดยไม่สรุป
+            2. ห้ามระบุตำแหน่งอวัยวะ อาการ หรือรายละเอียดใดๆ ที่ไม่ได้เขียนไว้ชัดเจนในข้อความ ห้ามเดา/ตีความคำย่อทางการแพทย์ที่ไม่แน่ใจความหมาย
+               — ถ้าคำย่อหรือข้อความส่วนใดไม่ชัดเจน ให้คงคำเดิมไว้หรือบอกว่า "ไม่ระบุชัดเจน" แทนการเดาเติมรายละเอียดขึ้นมาเอง
+               (ตัวอย่างสิ่งที่ห้ามทำ: ข้อความเขียนว่า "OD" แล้วไปตีความว่าหมายถึงดวงตา ทั้งที่ไม่ได้เขียนไว้)
+            3. ความถูกต้องสำคัญกว่าความสละสลวย — ถ้าไม่มั่นใจ ให้เขียนสั้นและตรงตามข้อความเดิมไว้ก่อน ดีกว่าเขียนให้ดูดีแต่ผิดข้อเท็จจริง
+            4. ช่อง patient_type ต้องเป็นคำอธิบายเกี่ยวกับตัวผู้ป่วยเอง (เช่น เพศ วัย โรคประจำตัวเด่น) เท่านั้น
+               ห้ามใส่ slug หรือชื่อประเภทเคสในช่องนี้เด็ดขาด — slug ประเภทเคสให้ใส่เฉพาะในช่อง suggested_case_type_slug เท่านั้น
+               ทั้งสองช่องนี้เป็นคนละเรื่องกัน ห้ามสลับหรือใส่ค่าเดียวกัน
+
+            ตอบกลับเป็น JSON เท่านั้น ห้ามมีข้อความอื่นใดนอกเหนือจาก JSON ตามโครงสร้างนี้:
+            {"patient_type": string, "main_problem": string, "follow_up_need": string, "risk_signals": string[], "suggested_case_type_slug": string}
             PROMPT;
     }
 
     protected function callOllama(string $prompt): string
     {
         $config = config('ai.ollama');
+
+        // PHP's own max_execution_time (default 30s) is separate from OLLAMA_TIMEOUT and would
+        // otherwise kill the request while a cold-loading model is still generating a response.
+        set_time_limit($config['timeout'] + 15);
 
         try {
             $response = Http::timeout($config['timeout'])

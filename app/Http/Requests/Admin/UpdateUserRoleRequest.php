@@ -17,6 +17,7 @@ class UpdateUserRoleRequest extends FormRequest
         return [
             'role' => ['required', 'in:'.implode(',', array_keys(User::ROLES))],
             'department' => ['nullable', 'string', 'max:255'],
+            'ward_id' => ['nullable', 'exists:wards,id'],
         ];
     }
 

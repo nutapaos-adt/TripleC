@@ -22,6 +22,10 @@ class ConfirmFollowUpDecisionRequest extends FormRequest
             ])],
             'decision_notes' => ['nullable', 'string'],
             'risk_flag' => ['nullable', 'boolean'],
+            // เกตบังคับ human-in-the-loop (DESIGN.md §4.1 / review-decide.html) — พยาบาลต้องติ๊กยืนยันว่า
+            // ตรวจสอบผลวิเคราะห์ AI แล้วก่อนส่งการตัดสินใจเสมอ ไม่ได้บันทึกลง DB (แค่เกตการ submit — เวลา/
+            // ผู้ยืนยันจริงบันทึกที่ confirmed_at/confirmed_by อยู่แล้ว)
+            'ai_review_confirmed' => ['accepted'],
         ];
     }
 
@@ -29,6 +33,14 @@ class ConfirmFollowUpDecisionRequest extends FormRequest
     {
         return [
             'nurse_decision' => 'การตัดสินใจ',
+            'ai_review_confirmed' => 'ยืนยันความเสี่ยง',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'ai_review_confirmed.accepted' => 'กรุณาติ๊ก "ยืนยันความเสี่ยง" ก่อนยืนยันการตัดสินใจ',
         ];
     }
 }

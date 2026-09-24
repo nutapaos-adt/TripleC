@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "triple-c",
+      "runtimeExecutable": "php",
+      "runtimeArgs": ["artisan", "serve"],
+      "port": 8000
+    },
+    {
+      "name": "prototype",
+      "runtimeExecutable": "php",
+      "runtimeArgs": ["-S", "localhost:8001", "-t", "prototypes/v1-full-coc-flow"],
+      "port": 8001
+    }
+  ]
+}

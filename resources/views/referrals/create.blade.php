@@ -1,159 +1,38 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-[#22201A] leading-tight">ส่งข้อมูลเยี่ยมบ้าน — สร้างใบส่งต่อผู้ป่วย</h2>
-    </x-slot>
+    <x-slot name="header">ส่งข้อมูลเยี่ยมบ้าน — สร้างใบส่งต่อผู้ป่วย</x-slot>
 
-    <div class="py-8">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+    <div class="page-head">
+        <h1 class="h1">ส่งข้อมูลเยี่ยมบ้าน</h1>
+        <p class="sub">กรอกข้อมูลผู้ป่วยและสถานการณ์เบื้องต้น ระบบจะสร้างใบส่งต่อรอให้ทีมเยี่ยมบ้านตรวจสอบ/ยืนยันแผนต่อไป</p>
+    </div>
 
-                @if ($errors->any())
-                    <div class="mb-4 p-4 rounded bg-[#F7E7E2] text-[#B23B2C] text-sm">
-                        <p class="font-semibold mb-1">กรุณาตรวจสอบข้อมูลต่อไปนี้:</p>
-                        <ul class="list-disc list-inside">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
-
-                <form method="POST" action="{{ route('referrals.store') }}" enctype="multipart/form-data" class="space-y-6">
-                    @csrf
-
-                    <div>
-                        <h3 class="text-sm font-semibold text-[#4A4739] uppercase tracking-wide mb-3">ข้อมูลผู้ป่วยและแหล่งที่มา</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-[#4A4739]">แหล่งข้อมูล</label>
-                                <select name="source_type" class="mt-1 block w-full rounded-md bg-[#F1EEE0] border-[#C9C4AD] focus:border-[#2C5166] focus:ring-[#2C5166]">
-                                    <option value="ward" @selected(old('source_type') === 'ward')>หอผู้ป่วย</option>
-                                    <option value="opd" @selected(old('source_type') === 'opd')>OPD</option>
-                                    <option value="internal_dept" @selected(old('source_type') === 'internal_dept')>หน่วยงานภายในโรงพยาบาล</option>
-                                    <option value="external_hospital" @selected(old('source_type') === 'external_hospital')>โรงพยาบาลอื่น</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-[#4A4739]">รายละเอียดแหล่งที่มา <span class="text-[#7C7863]">(เช่น ชื่อหอผู้ป่วย/แผนก)</span></label>
-                                <input type="text" name="source_detail" value="{{ old('source_detail') }}" class="mt-1 block w-full rounded-md bg-[#F1EEE0] border-[#C9C4AD] focus:border-[#2C5166] focus:ring-[#2C5166]">
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-[#4A4739]">ประเภทเคสเบื้องต้น</label>
-                                <select name="case_type_id" class="mt-1 block w-full rounded-md bg-[#F1EEE0] border-[#C9C4AD] focus:border-[#2C5166] focus:ring-[#2C5166]">
-                                    <option value="">ให้ AI ประเมินจากข้อมูลด้านล่าง</option>
-                                    @foreach ($caseTypes as $caseType)
-                                        <option value="{{ $caseType->id }}" @selected((string) old('case_type_id') === (string) $caseType->id)>{{ $caseType->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-[#4A4739]">เขตพื้นที่</label>
-                                <select name="zone" id="zone_select" class="mt-1 block w-full rounded-md bg-[#F1EEE0] border-[#C9C4AD] focus:border-[#2C5166] focus:ring-[#2C5166]" @disabled(! old('zone_override'))>
-                                    <option value="in_area" @selected(old('zone', 'in_area') === 'in_area')>ในเขต</option>
-                                    <option value="out_area" @selected(old('zone') === 'out_area')>นอกเขต</option>
-                                </select>
-                                <p id="zone_hint" class="text-xs text-[#7C7863] mt-1">กรอกตำบล/แขวงด้านล่างเพื่อให้ระบบช่วยตรวจจับเขต</p>
-                                <label class="inline-flex items-center gap-2 mt-2 text-xs text-[#7C7863]">
-                                    <input type="checkbox" name="zone_override" value="1" id="zone_override" @checked(old('zone_override'))>
-                                    ปรับเขตเอง (ไม่ใช้ผลตรวจจับอัตโนมัติ)
-                                </label>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-[#4A4739]">HN</label>
-                                <input type="text" name="patient_hn" value="{{ old('patient_hn') }}" required class="mt-1 block w-full rounded-md bg-[#F1EEE0] border-[#C9C4AD] focus:border-[#2C5166] focus:ring-[#2C5166]">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-[#4A4739]">ชื่อ-สกุลผู้ป่วย</label>
-                                <input type="text" name="patient_name" value="{{ old('patient_name') }}" required class="mt-1 block w-full rounded-md bg-[#F1EEE0] border-[#C9C4AD] focus:border-[#2C5166] focus:ring-[#2C5166]">
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-[#4A4739]">เลขบัตรประชาชน</label>
-                                <input type="text" name="patient_national_id" value="{{ old('patient_national_id') }}" class="mt-1 block w-full rounded-md bg-[#F1EEE0] border-[#C9C4AD] focus:border-[#2C5166] focus:ring-[#2C5166]">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-[#4A4739]">วันเกิด</label>
-                                <input type="date" name="patient_dob" value="{{ old('patient_dob') }}" class="mt-1 block w-full rounded-md bg-[#F1EEE0] border-[#C9C4AD] focus:border-[#2C5166] focus:ring-[#2C5166]">
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-[#4A4739]">เบอร์โทร</label>
-                                <input type="text" name="patient_phone" value="{{ old('patient_phone') }}" class="mt-1 block w-full rounded-md bg-[#F1EEE0] border-[#C9C4AD] focus:border-[#2C5166] focus:ring-[#2C5166]">
-                            </div>
-                            <div></div>
-
-                            <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-[#4A4739]">ที่อยู่</label>
-                                <input type="text" name="patient_address" value="{{ old('patient_address') }}" class="mt-1 block w-full rounded-md bg-[#F1EEE0] border-[#C9C4AD] focus:border-[#2C5166] focus:ring-[#2C5166]">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-[#4A4739]">ตำบล/แขวง</label>
-                                <input type="text" name="patient_sub_district" id="patient_sub_district" value="{{ old('patient_sub_district') }}" class="mt-1 block w-full rounded-md bg-[#F1EEE0] border-[#C9C4AD] focus:border-[#2C5166] focus:ring-[#2C5166]">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-[#4A4739]">อำเภอ/เขต</label>
-                                <input type="text" name="patient_district" value="{{ old('patient_district') }}" class="mt-1 block w-full rounded-md bg-[#F1EEE0] border-[#C9C4AD] focus:border-[#2C5166] focus:ring-[#2C5166]">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-[#4A4739]">จังหวัด</label>
-                                <input type="text" name="patient_province" value="{{ old('patient_province') }}" class="mt-1 block w-full rounded-md bg-[#F1EEE0] border-[#C9C4AD] focus:border-[#2C5166] focus:ring-[#2C5166]">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-[#4A4739]">
-                            ข้อความสรุปอาการ / สถานการณ์ผู้ป่วย
-                            <span class="text-[#7C7863] font-normal">— พิมพ์เป็นข้อความอิสระ AI จะช่วยอ่านสรุปในขั้นถัดไป</span>
-                        </label>
-                        <textarea name="raw_notes" rows="5" required class="mt-1 block w-full rounded-md bg-[#F1EEE0] border-[#C9C4AD] focus:border-[#2C5166] focus:ring-[#2C5166]">{{ old('raw_notes') }}</textarea>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-[#4A4739]">เอกสารแนบ <span class="text-[#7C7863] font-normal">(ใช้เปิดดูอ้างอิงเท่านั้น — PDF/JPG/PNG ไม่เกิน 10MB ต่อไฟล์)</span></label>
-                        <input type="file" name="attachments[]" multiple class="mt-1 block w-full">
-                    </div>
-
-                    <div class="flex items-center gap-3">
-                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-[#2C5166] text-white rounded-md text-sm font-semibold hover:bg-[#3D6B84]">
-                            บันทึกและส่งข้อมูล
-                        </button>
-                        <a href="{{ route('referrals.index') }}" class="text-sm text-[#7C7863] hover:text-[#4A4739]">ยกเลิก</a>
-                    </div>
-                </form>
+    @if ($errors->any())
+        <div class="banner" style="background:var(--color-risk-tint);border-color:var(--color-risk);">
+            <div class="banner-text">
+                <p class="h3" style="color:var(--color-risk);">กรุณาตรวจสอบข้อมูลต่อไปนี้</p>
+                <ul style="margin:4px 0 0;padding-left:18px;color:var(--color-risk);">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
             </div>
+        </div>
+    @endif
+
+    <div class="card">
+        <div class="card-body" style="padding-top:var(--space-5);">
+            <form method="POST" action="{{ route('referrals.store') }}" enctype="multipart/form-data">
+                @csrf
+                @php $referral = null; @endphp
+                @include('referrals._form-fields')
+
+                <div class="btn-row">
+                    <button type="submit" class="btn btn-primary">บันทึกและส่งข้อมูล</button>
+                    <a href="{{ route('referrals.index') }}" class="btn btn-secondary">ยกเลิก</a>
+                </div>
+            </form>
         </div>
     </div>
 
-    <script>
-        (function () {
-            const subDistrictInput = document.getElementById('patient_sub_district');
-            const zoneSelect = document.getElementById('zone_select');
-            const zoneOverride = document.getElementById('zone_override');
-            const zoneHint = document.getElementById('zone_hint');
-
-            zoneOverride.addEventListener('change', function () {
-                zoneSelect.disabled = ! zoneOverride.checked;
-            });
-
-            subDistrictInput.addEventListener('blur', function () {
-                const subDistrict = subDistrictInput.value.trim();
-                if (! subDistrict) return;
-
-                fetch('{{ route("referrals.zone-lookup") }}?sub_district=' + encodeURIComponent(subDistrict))
-                    .then((res) => res.json())
-                    .then((data) => {
-                        zoneHint.textContent = data.label;
-                        if (data.zone && ! zoneOverride.checked) {
-                            zoneSelect.value = data.zone;
-                        }
-                    })
-                    .catch(() => {
-                        zoneHint.textContent = 'ตรวจสอบเขตอัตโนมัติไม่สำเร็จ กรุณาเลือกเอง';
-                    });
-            });
-        })();
-    </script>
+    @include('referrals._form-scripts')
 </x-app-layout>

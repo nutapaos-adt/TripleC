@@ -16,10 +16,18 @@ class FollowUpRecord extends Model
 
     protected $fillable = [
         'follow_up_plan_id',
+        'method',
         'performed_by',
         'visited_at',
         'pps_score',
         'raw_notes',
+        'general_appearance',
+        'vital_signs',
+        'weight_kg',
+        'height_cm',
+        'tka_assessment',
+        'adl_scores',
+        'photo_paths',
         'ai_analysis',
         'ai_analysis_generated_at',
         'risk_flag',
@@ -34,11 +42,54 @@ class FollowUpRecord extends Model
     {
         return [
             'visited_at' => 'datetime',
+            'vital_signs' => 'array',
+            'weight_kg' => 'float',
+            'height_cm' => 'float',
+            'tka_assessment' => 'array',
+            'adl_scores' => 'array',
+            'photo_paths' => 'array',
             'ai_analysis' => 'array',
             'ai_analysis_generated_at' => 'datetime',
             'risk_flag' => 'boolean',
             'confirmed_at' => 'datetime',
         ];
+    }
+
+    public function bmi(): ?float
+    {
+        if (! $this->weight_kg || ! $this->height_cm) {
+            return null;
+        }
+
+        $heightMeters = $this->height_cm / 100;
+
+        return round($this->weight_kg / ($heightMeters ** 2), 1);
+    }
+
+    public function bmiCategory(): ?string
+    {
+        $bmi = $this->bmi();
+
+        if ($bmi === null) {
+            return null;
+        }
+
+        return match (true) {
+            $bmi < 18.5 => 'ผอม',
+            $bmi < 23 => 'น้ำหนักปกติ',
+            $bmi < 25 => 'น้ำหนักเกิน',
+            $bmi < 30 => 'อ้วนระดับ 1',
+            default => 'อ้วนระดับ 2',
+        };
+    }
+
+    public function adlTotal(): ?int
+    {
+        if (empty($this->adl_scores) || ! is_array($this->adl_scores)) {
+            return null;
+        }
+
+        return array_sum($this->adl_scores);
     }
 
     public function plan(): BelongsTo
