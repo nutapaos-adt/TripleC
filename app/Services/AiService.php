@@ -93,6 +93,8 @@ class AiService
             ->map(fn (FollowUpRecord $r) => '- '.($r->raw_notes ?: '-'))
             ->implode("\n");
 
+        $glossaryText = $this->glossary()->promptSection($underlyingDisease, $notesText);
+
         return <<<PROMPT
             คุณเป็นผู้ช่วยพยาบาลในหน่วยเยี่ยมบ้าน ทำหน้าที่ช่วยอ่านโรคประจำตัวและผลการเยี่ยม/โทรติดตามของผู้ป่วย
             ที่มีโรคประจำตัวเป็นเบาหวาน (DM) หรือถุงลมโป่งพอง (COPD) แล้วสรุปว่าพบสัญญาณภาวะแทรกซ้อนที่เกี่ยวข้องหรือไม่
@@ -104,6 +106,8 @@ class AiService
             """
             {$notesText}
             """
+
+            {$glossaryText}
 
             ตอบกลับเป็น JSON เท่านั้น ห้ามมีข้อความอื่นใดนอกเหนือจาก JSON ตามโครงสร้างนี้เป๊ะๆ:
             {"has_complication": true/false, "summary": "สรุปสั้นๆ ว่าพบภาวะแทรกซ้อนอะไรหรือไม่ (null ถ้าไม่พบ)"}
@@ -130,6 +134,8 @@ class AiService
             ->map(fn ($r) => "- ครั้งที่ {$r->plan->plan_number} (PPS {$r->pps_score}): {$r->raw_notes}")
             ->implode("\n");
 
+        $glossaryText = $this->glossary()->promptSection($mainProblem, (string) $record->raw_notes, $previousRecords);
+
         return <<<PROMPT
             คุณเป็นผู้ช่วยพยาบาลในหน่วยเยี่ยมบ้าน ทำหน้าที่ช่วยอ่านผลการเยี่ยมบ้าน/โทรติดตามที่เพิ่งบันทึก
             แล้วเสนอว่าพบสัญญาณเสี่ยงหรือไม่ และควรทำอย่างไรต่อ (พยาบาลจะเป็นผู้ตัดสินใจจริงและยืนยันเสมอ)
@@ -146,6 +152,8 @@ class AiService
 
             ประวัติการติดตามครั้งก่อนหน้า:
             {$previousRecords}
+
+            {$glossaryText}
 
             ตอบกลับเป็น JSON เท่านั้น ห้ามมีข้อความอื่นใดนอกเหนือจาก JSON ตามโครงสร้างนี้เป๊ะๆ:
             {"risk_detected": true/false, "risk_summary": "สรุปสัญญาณเสี่ยงที่พบ (null ถ้าไม่พบ)", "recommendation": "คำแนะนำเบื้องต้นว่าควรทำอย่างไรต่อ", "suggested_decision": "repeat หรือ refer หรือ close"}
@@ -164,6 +172,8 @@ class AiService
 
         $zoneText = $referral->zone === 'in_area' ? 'ในเขตรับผิดชอบ' : 'นอกเขตรับผิดชอบ';
 
+        $glossaryText = $this->glossary()->promptSection((string) $referral->raw_notes);
+
         return <<<PROMPT
             คุณเป็นผู้ช่วยพยาบาลในหน่วยเยี่ยมบ้าน ทำหน้าที่ช่วยอ่านและสรุปข้อมูลผู้ป่วยจากข้อความที่เจ้าหน้าที่พิมพ์ไว้
             เพื่อเสนอร่างแผนติดตามให้พยาบาลตรวจสอบ (พยาบาลจะเป็นผู้ยืนยันหรือแก้ไขก่อนใช้จริงเสมอ)
@@ -177,6 +187,8 @@ class AiService
             {$referral->raw_notes}
             """
 
+            {$glossaryText}
+
             ประเภทเคสที่เลือกได้ (เลือกที่ตรงที่สุดจาก slug ด้านล่าง):
             {$optionsText}
 
@@ -185,6 +197,7 @@ class AiService
             2. ห้ามระบุตำแหน่งอวัยวะ อาการ หรือรายละเอียดใดๆ ที่ไม่ได้เขียนไว้ชัดเจนในข้อความ ห้ามเดา/ตีความคำย่อทางการแพทย์ที่ไม่แน่ใจความหมาย
                — ถ้าคำย่อหรือข้อความส่วนใดไม่ชัดเจน ให้คงคำเดิมไว้หรือบอกว่า "ไม่ระบุชัดเจน" แทนการเดาเติมรายละเอียดขึ้นมาเอง
                (ตัวอย่างสิ่งที่ห้ามทำ: ข้อความเขียนว่า "OD" แล้วไปตีความว่าหมายถึงดวงตา ทั้งที่ไม่ได้เขียนไว้)
+               — คำย่อที่อยู่ในอภิธานศัพท์ด้านบนใช้ความหมายนั้นได้ ยกเว้นคำที่มีหลายความหมาย ให้ตีความจากบริบท ถ้าไม่ชัดให้ระบุว่า "ไม่แน่ใจ"
             3. ความถูกต้องสำคัญกว่าความสละสลวย — ถ้าไม่มั่นใจ ให้เขียนสั้นและตรงตามข้อความเดิมไว้ก่อน ดีกว่าเขียนให้ดูดีแต่ผิดข้อเท็จจริง
             4. ช่อง patient_type ต้องเป็นคำอธิบายเกี่ยวกับตัวผู้ป่วยเอง (เช่น เพศ วัย โรคประจำตัวเด่น) เท่านั้น
                ห้ามใส่ slug หรือชื่อประเภทเคสในช่องนี้เด็ดขาด — slug ประเภทเคสให้ใส่เฉพาะในช่อง suggested_case_type_slug เท่านั้น
@@ -193,6 +206,11 @@ class AiService
             ตอบกลับเป็น JSON เท่านั้น ห้ามมีข้อความอื่นใดนอกเหนือจาก JSON ตามโครงสร้างนี้:
             {"patient_type": string, "main_problem": string, "follow_up_need": string, "risk_signals": string[], "suggested_case_type_slug": string}
             PROMPT;
+    }
+
+    protected function glossary(): MedicalGlossary
+    {
+        return MedicalGlossary::fromConfig();
     }
 
     protected function callOllama(string $prompt): string
