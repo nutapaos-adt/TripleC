@@ -695,3 +695,7 @@ scope covering the entire continuity-of-care loop plus admin.
   topbar, เนื้อหาหน้า, หรือ script ของไฟล์ไหนเลยในรอบนี้ — เฉพาะ `<aside>` sidebar, CSS ของมัน, และ
   mobile breakpoint ที่เกี่ยวกับ sidebar เท่านั้น. `monthly-visit-report.html` และ
   `satisfaction-survey-form.html` ไม่มี sidebar อยู่แล้วจึงไม่อยู่ในรอบนี้.
+- 2026-09-24 (รอบ 65): ผู้ใช้ตัดสินว่าให้ "อื่นๆ" **เปิดใช้งาน** ไว้ก่อน — เดิม `admin-case-types-list.html`
+  แสดงแถว "อื่นๆ" เป็น "ปิดใช้งาน" ขัดกับ dropdown "ประเภทผู้ป่วย" ใน `referral-create.html` ที่ยังให้เลือก
+  "อื่นๆ" ได้ แก้ chip สถานะของแถวนั้นเป็น "เปิดใช้งาน" (chip-success) ให้ตรงกับ `CaseTypeSeeder` ที่เปิดใช้งาน
+  ทั้ง 8 ประเภท ไม่ได้แตะแถวอื่นหรือส่วนอื่นของหน้า.
