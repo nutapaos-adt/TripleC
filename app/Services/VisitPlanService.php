@@ -105,6 +105,10 @@ class VisitPlanService
      *
      * ไม่สร้างซ้ำถ้ามีแผนที่ยังไม่เสร็จรออยู่แล้ว (กรณี fixed_count ที่สร้างครบทุกครั้งไว้ล่วงหน้าตั้งแต่ต้น)
      * ใช้กับกรณี score_based (เช่น Palliative) ที่ต้องคำนวณความถี่ครั้งถัดไปจาก PPS Score ที่เพิ่งประเมิน
+     *
+     * ลำดับความสำคัญของความถี่ (ตาม admin-case-types-list.html): 1) เกณฑ์ของประเภทเคส (Palliative → PPS,
+     * หลังคลอด → fixed_count) 2) ไม่มีเกณฑ์ + กลุ่ม 3 บ้านสีแดง → เดือนละครั้งต่อเนื่องจนพยาบาลปิดเคส
+     * 3) ไม่มีเกณฑ์ + กลุ่มอื่น → ตามกฎคือเยี่ยม 1 ครั้ง แต่ถ้าพยาบาลยังเลือกติดตามซ้ำ ใช้ 14 วัน
      */
     public function generateNextPlan(FollowUpRecord $record): ?FollowUpPlan
     {
@@ -126,6 +130,8 @@ class VisitPlanService
                 => $rule->intervalDaysForScore($record->pps_score) ?? 14,
             $rule && $rule->rule_type === VisitRule::TYPE_FIXED_COUNT
                 => $rule->fixed_interval_days ?? 7,
+            ! $rule && $referral->severity_group === Referral::SEVERITY_RED
+                => Referral::SEVERITY_RED_FOLLOW_UP_INTERVAL_DAYS,
             default => 14,
         };
 

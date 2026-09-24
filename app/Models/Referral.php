@@ -71,6 +71,9 @@ class Referral extends Model
         self::SEVERITY_RED => 5,
     ];
 
+    // กลุ่ม 3 บ้านสีแดง (ประเภทเคสที่ไม่มีเกณฑ์เฉพาะ) เยี่ยมต่อเนื่องเดือนละครั้งจนพยาบาลปิดเคส
+    public const SEVERITY_RED_FOLLOW_UP_INTERVAL_DAYS = 30;
+
     protected $fillable = [
         'patient_id',
         'case_type_id',
