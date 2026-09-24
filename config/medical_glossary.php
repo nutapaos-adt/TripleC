@@ -380,6 +380,7 @@ return [
         // เพิ่มเติม
         'GA' => ['ลักษณะภายนอกทั่วไป (General Appearance)', 'อายุครรภ์ (Gestational Age)'],
         'D/C' => ['จำหน่ายผู้ป่วย (Discharge)', 'หยุดยา/หยุดการรักษา (Discontinue)'],
+        'D/S' => 'ทำแผล (Dressing)',
         'PD' => ['การล้างไตทางช่องท้อง (Peritoneal Dialysis)', 'โรคพาร์กินสัน (Parkinson\'s Disease)'],
         'MS' => ['มอร์ฟีนซัลเฟต (Morphine Sulfate)', 'ลิ้นหัวใจไมทรัลตีบ (Mitral Stenosis)', 'โรคปลอกประสาทอักเสบ (Multiple Sclerosis)'],
         'BS' => ['ระดับน้ำตาลในเลือด (Blood Sugar)', 'เสียงลำไส้ (Bowel Sounds)', 'เสียงหายใจ (Breath Sounds)'],
