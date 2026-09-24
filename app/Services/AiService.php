@@ -189,6 +189,10 @@ class AiService
     {
         $config = config('ai.ollama');
 
+        // PHP's own max_execution_time (default 30s) is separate from OLLAMA_TIMEOUT and would
+        // otherwise kill the request while a cold-loading model is still generating a response.
+        set_time_limit($config['timeout'] + 15);
+
         try {
             $response = Http::timeout($config['timeout'])
                 ->post(rtrim($config['url'], '/').'/api/generate', [
