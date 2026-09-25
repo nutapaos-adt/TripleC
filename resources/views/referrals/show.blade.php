@@ -234,66 +234,6 @@
     @php
         $firstPlan = $referral->followUpPlans->sortBy('plan_number')->first();
     @endphp
-    <div class="card">
-        <div class="card-head"><span class="h2">ประวัติเคส (Timeline)</span></div>
-        <div class="card-body">
-            <div class="timeline">
-                <div class="timeline-item">
-                    <div class="timeline-dot"></div>
-                    <div class="timeline-date">{{ $referral->created_at->format('d/m/Y') }} · {{ $referral->created_at->format('H:i') }} น.</div>
-                    <div class="timeline-title">ส่งข้อมูลเยี่ยมบ้านจาก{{ $referral->source_detail ?: 'แหล่งข้อมูล' }}</div>
-                    <div class="timeline-desc">
-                        สร้างใบส่งต่อโดย{{ $referral->creator->name }}
-                        @if ($referral->attachments->isNotEmpty()) พร้อมเอกสารแนบ {{ $referral->attachments->count() }} รายการ @endif
-                    </div>
-                </div>
-                @if ($referral->ai_summary_generated_at)
-                    <div class="timeline-item">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-date">{{ $referral->ai_summary_generated_at->format('d/m/Y') }} · {{ $referral->ai_summary_generated_at->format('H:i') }} น.</div>
-                        <div class="timeline-title">AI ประมวลผลสรุปข้อมูลและประเภทเคสเบื้องต้น</div>
-                        <div class="timeline-desc">
-                            @if ($referral->ai_summary['parse_error'] ?? false)
-                                AI ไม่สามารถแปลผลลัพธ์เป็นข้อมูลที่ใช้ได้ — รอพยาบาลกรอกข้อมูลด้วยตนเองหรือขอสรุปใหม่
-                            @else
-                                ระบบจัดทำร่างแผนติดตามแล้ว — รอพยาบาลตรวจสอบ
-                            @endif
-                        </div>
-                    </div>
-                @endif
-                @if ($referral->isConfirmed())
-                    <div class="timeline-item">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-date">{{ $referral->confirmed_at->format('d/m/Y') }} · {{ $referral->confirmed_at->format('H:i') }} น.</div>
-                        <div class="timeline-title">ยืนยันแผนดูแลโดย {{ $referral->confirmer->name }}</div>
-                        <div class="timeline-desc">สร้างกำหนดการติดตามครั้งแรกให้อัตโนมัติ</div>
-                    </div>
-                @else
-                    <div class="timeline-item">
-                        <div class="timeline-dot future"></div>
-                        <div class="timeline-date">ยังไม่เกิดขึ้น</div>
-                        <div class="timeline-title future">ยืนยันแผนดูแล <span class="timeline-tag-future">รอดำเนินการ</span></div>
-                        <div class="timeline-desc">จะบันทึกเมื่อพยาบาลวิเคราะห์แผนการพยาบาลจากร่าง AI ด้านล่าง</div>
-                    </div>
-                @endif
-                @if ($firstPlan?->record)
-                    <div class="timeline-item">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-date">{{ $firstPlan->record->visited_at->format('d/m/Y') }} · {{ $firstPlan->record->visited_at->format('H:i') }} น.</div>
-                        <div class="timeline-title">{{ $firstPlan->method === 'home_visit' ? 'เยี่ยมบ้าน' : 'โทรติดตาม' }}ครั้งที่ 1</div>
-                        <div class="timeline-desc">บันทึกผลติดตามแล้ว</div>
-                    </div>
-                @else
-                    <div class="timeline-item">
-                        <div class="timeline-dot future"></div>
-                        <div class="timeline-date">ยังไม่เกิดขึ้น</div>
-                        <div class="timeline-title future">เยี่ยมบ้านครั้งที่ 1 <span class="timeline-tag-future">รอดำเนินการ</span></div>
-                        <div class="timeline-desc">จะเกิดขึ้นตามกำหนดการติดตามหลังยืนยันแผนดูแล</div>
-                    </div>
-                @endif
-            </div>
-        </div>
-    </div>
 
     @if ($referral->isConfirmed())
         <div class="confirmed-box">
@@ -404,4 +344,65 @@
             </div>
         </div>
     @endif
+
+    <div class="card">
+        <div class="card-head"><span class="h2">ประวัติเคส (Timeline)</span></div>
+        <div class="card-body">
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-date">{{ $referral->created_at->format('d/m/Y') }} · {{ $referral->created_at->format('H:i') }} น.</div>
+                    <div class="timeline-title">ส่งข้อมูลเยี่ยมบ้านจาก{{ $referral->source_detail ?: 'แหล่งข้อมูล' }}</div>
+                    <div class="timeline-desc">
+                        สร้างใบส่งต่อโดย{{ $referral->creator->name }}
+                        @if ($referral->attachments->isNotEmpty()) พร้อมเอกสารแนบ {{ $referral->attachments->count() }} รายการ @endif
+                    </div>
+                </div>
+                @if ($referral->ai_summary_generated_at)
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-date">{{ $referral->ai_summary_generated_at->format('d/m/Y') }} · {{ $referral->ai_summary_generated_at->format('H:i') }} น.</div>
+                        <div class="timeline-title">AI ประมวลผลสรุปข้อมูลและประเภทเคสเบื้องต้น</div>
+                        <div class="timeline-desc">
+                            @if ($referral->ai_summary['parse_error'] ?? false)
+                                AI ไม่สามารถแปลผลลัพธ์เป็นข้อมูลที่ใช้ได้ — รอพยาบาลกรอกข้อมูลด้วยตนเองหรือขอสรุปใหม่
+                            @else
+                                ระบบจัดทำร่างแผนติดตามแล้ว — รอพยาบาลตรวจสอบ
+                            @endif
+                        </div>
+                    </div>
+                @endif
+                @if ($referral->isConfirmed())
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-date">{{ $referral->confirmed_at->format('d/m/Y') }} · {{ $referral->confirmed_at->format('H:i') }} น.</div>
+                        <div class="timeline-title">ยืนยันแผนดูแลโดย {{ $referral->confirmer->name }}</div>
+                        <div class="timeline-desc">สร้างกำหนดการติดตามครั้งแรกให้อัตโนมัติ</div>
+                    </div>
+                @else
+                    <div class="timeline-item">
+                        <div class="timeline-dot future"></div>
+                        <div class="timeline-date">ยังไม่เกิดขึ้น</div>
+                        <div class="timeline-title future">ยืนยันแผนดูแล <span class="timeline-tag-future">รอดำเนินการ</span></div>
+                        <div class="timeline-desc">จะบันทึกเมื่อพยาบาลวิเคราะห์แผนการพยาบาลจากร่าง AI ด้านล่าง</div>
+                    </div>
+                @endif
+                @if ($firstPlan?->record)
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-date">{{ $firstPlan->record->visited_at->format('d/m/Y') }} · {{ $firstPlan->record->visited_at->format('H:i') }} น.</div>
+                        <div class="timeline-title">{{ $firstPlan->method === 'home_visit' ? 'เยี่ยมบ้าน' : 'โทรติดตาม' }}ครั้งที่ 1</div>
+                        <div class="timeline-desc">บันทึกผลติดตามแล้ว</div>
+                    </div>
+                @else
+                    <div class="timeline-item">
+                        <div class="timeline-dot future"></div>
+                        <div class="timeline-date">ยังไม่เกิดขึ้น</div>
+                        <div class="timeline-title future">เยี่ยมบ้านครั้งที่ 1 <span class="timeline-tag-future">รอดำเนินการ</span></div>
+                        <div class="timeline-desc">จะเกิดขึ้นตามกำหนดการติดตามหลังยืนยันแผนดูแล</div>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
 </x-app-layout>
