@@ -361,4 +361,45 @@
             @endif
         </div>
     </div>
+
+    @php
+        $decisionLabels = ['repeat' => 'ติดตามซ้ำ', 'refer' => 'ส่งต่อ', 'close' => 'ปิดเคส'];
+        $confirmedPlans = $referral->followUpPlans->sortBy('plan_number')->filter(fn ($plan) => $plan->record?->isConfirmed());
+    @endphp
+    @if ($confirmedPlans->isNotEmpty())
+        <div class="card">
+            <div class="card-head"><span class="h2">ผลการติดตามที่บันทึกไว้</span></div>
+            <div class="card-body">
+                @foreach ($confirmedPlans as $plan)
+                    @php $record = $plan->record; @endphp
+                    <div class="confirmed-box" @if(!$loop->last) style="margin-bottom:var(--space-4);" @endif>
+                        <div class="box-label">
+                            <span class="dot"></span>
+                            {{ $plan->method === 'home_visit' ? 'เยี่ยมบ้าน' : 'โทรติดตาม' }}ครั้งที่ {{ $plan->plan_number }}
+                            — {{ $record->visited_at->format('d/m/Y H:i') }} น.
+                        </div>
+                        <div class="field-grid">
+                            <div class="field full">
+                                <label>อาการ/ปัญหาที่พบ</label>
+                                <div class="field-value multiline">{{ $record->raw_notes }}</div>
+                            </div>
+                            @if ($record->risk_flag)
+                                <div class="field full">
+                                    <label>สัญญาณเสี่ยง</label>
+                                    <div class="field-value"><span class="chip chip-risk">พบความเสี่ยง</span></div>
+                                </div>
+                            @endif
+                        </div>
+                        <p style="margin:var(--space-3) 0 0;font-size:14px;color:var(--color-neutral-900);">
+                            การตัดสินใจของพยาบาล: <strong>{{ $decisionLabels[$record->nurse_decision] ?? $record->nurse_decision }}</strong>
+                            <span class="caption">— ยืนยันโดย {{ $record->confirmer->name }} เมื่อ {{ $record->confirmed_at->format('d/m/Y H:i') }}</span>
+                        </p>
+                        @if ($record->decision_notes)
+                            <p style="margin:6px 0 0;font-size:14px;color:var(--color-neutral-700);">{{ $record->decision_notes }}</p>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
 </x-app-layout>
