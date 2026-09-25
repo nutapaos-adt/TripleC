@@ -26,6 +26,7 @@
         }
     @endphp
 
+    <div class="grid-2" style="align-items:start;">
     <div class="card">
         <div class="card-head"><span class="h2">ข้อมูลผู้ป่วย</span></div>
         <div class="card-body">
@@ -160,6 +161,7 @@
                 </div>
             </div>
         </div>
+    </div>
     </div>
 
     <div class="card">
