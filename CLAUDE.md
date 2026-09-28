@@ -66,10 +66,20 @@ only `admin` can reach the `/admin/*` routes.
 `App\Services\VisitPlanService` owns all scheduling logic and is the one place that knows how
 `fixed_count` vs `score_based` rules translate into `FollowUpPlan` rows:
 - `generateInitialPlans()` — fixed_count creates every visit up front; score_based creates only plan #1
-  (later intervals depend on a PPS Score that doesn't exist yet).
+  (later intervals depend on a PPS Score that doesn't exist yet). If a referral's case type has no active
+  `VisitRule` at all, plan #1 is still created (capped per the deadline rule below); a `severity_group`
+  of `red` with no matching rule then falls back to automatic monthly-interval plans once
+  `generateNextPlan()` starts being called (see below) — this still only fires from an explicit nurse
+  decision, never unattended.
 - `generateNextPlan()` — called after a nurse decision of "repeat"/"refer"; no-ops if an upcoming
-  `scheduled` plan already exists (the fixed_count case, pre-generated).
+  `scheduled` plan already exists (the fixed_count case, pre-generated). For a `severity_group=red`
+  referral with no active `VisitRule`, generates a new plan every ~30 days indefinitely.
 - `cancelRemainingPlans()` — called on "close"; cancels all still-`scheduled` plans.
+- **First-visit deadline cap** — plan #1's due date is capped to `min(rule-derived interval, severity
+  deadline)`: green ≤30 days / yellow ≤14 days / red ≤5 days (palliative has no cap, since PPS Score
+  already governs its interval). This cap applies to plan #1 only — for `fixed_count` rules, plan #2
+  onward use the rule's raw `fixed_interval_days * plan_number` uncapped, not chained off the
+  (possibly-shortened) plan #1 date. This is a deliberate, confirmed choice, not a bug.
 
 `App\Services\AiService` is the only thing that talks to the LLM (self-hosted Ollama over HTTP,
 `config/ai.php` → `OLLAMA_URL`/`OLLAMA_MODEL`/`OLLAMA_TIMEOUT`). **The Ollama URL must always be an
