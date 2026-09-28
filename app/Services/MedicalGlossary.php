@@ -13,8 +13,12 @@ class MedicalGlossary
 
     protected const SECTION_SUFFIXES = 'suffixes';
 
+    // คำที่ขึ้นต้นเหมือนรากศัพท์แต่ความหมายไม่เกี่ยวกัน เช่น cholesterol ไม่ใช่ chole- (น้ำดี)
+    protected const SECTION_ROOT_EXCLUSIONS = 'root_exclusions';
+
     /**
      * @param  array<string, array<string, string|array<int, string>>>  $glossary  โครงสร้างเดียวกับ config/medical_glossary.php
+     *                                                                            (หมวด 'ambiguous' ต้องเป็น list ของความหมาย >= 2 ค่า)
      */
     public function __construct(protected array $glossary) {}
 
@@ -42,10 +46,18 @@ class MedicalGlossary
             return $found;
         }
 
-        $count = 0;
+        // คำกำกวมเสี่ยงที่สุดถ้าหายไปเงียบๆ (โมเดลจะเดาความหมายเดียวเอง เช่น MS, OD) จึงสแกนก่อนทุกหมวด
+        // และไม่ถูกตัดด้วย MAX_TERMS — เพดานใช้ตัดเฉพาะคำความหมายเดียวและรากศัพท์ที่ตามมาทีหลัง
+        foreach ($this->glossary[self::SECTION_AMBIGUOUS] ?? [] as $term => $meanings) {
+            if ($this->containsTerm($text, (string) $term)) {
+                $found['ambiguous'][$term] = (array) $meanings;
+            }
+        }
+
+        $count = count($found['ambiguous']);
 
         foreach ($this->glossary as $section => $entries) {
-            if (in_array($section, [self::SECTION_PREFIXES, self::SECTION_SUFFIXES], true)) {
+            if (in_array($section, [self::SECTION_AMBIGUOUS, self::SECTION_PREFIXES, self::SECTION_SUFFIXES, self::SECTION_ROOT_EXCLUSIONS], true)) {
                 continue;
             }
 
@@ -54,24 +66,19 @@ class MedicalGlossary
                     break 2;
                 }
 
+                // คำที่กำกวมต้องไม่ถูกแนบความหมายเดียวซ้ำ (เช่น HT ต้องให้โมเดลตีความจากบริบทเท่านั้น)
+                if (isset($found['ambiguous'][$term]) || isset($found['terms'][$term])) {
+                    continue;
+                }
+
                 if (! $this->containsTerm($text, (string) $term)) {
                     continue;
                 }
 
-                if ($section === self::SECTION_AMBIGUOUS) {
-                    $found['ambiguous'][$term] = (array) $meaning;
-                } elseif (! isset($found['terms'][$term])) {
-                    $found['terms'][$term] = (string) $meaning;
-                } else {
-                    continue;
-                }
-
+                $found['terms'][$term] = (string) $meaning;
                 $count++;
             }
         }
-
-        // คำที่กำกวมต้องไม่ถูกแนบความหมายเดียวซ้ำ (เช่น HT ต้องให้โมเดลตีความจากบริบทเท่านั้น)
-        $found['terms'] = array_diff_key($found['terms'], $found['ambiguous']);
 
         $found['roots'] = $this->lookupRoots($text, self::MAX_TERMS - $count);
 
@@ -125,7 +132,10 @@ class MedicalGlossary
         $pattern = str_replace('_', '\d+', preg_quote($term, '/'));
         $flags = $this->isCaseSensitive($term) ? 'u' : 'iu';
 
-        return preg_match('/(?<![\p{L}\p{N}])'.$pattern.'(?![\p{L}\p{N}])/'.$flags, $text) === 1;
+        // คำตัวอักษรเดียวต้องไม่จับเมื่อเป็นส่วนหน้าของคำประสมด้วยขีด เช่น T-tube / T-spine ไม่ใช่ T (อุณหภูมิ)
+        $compoundGuard = mb_strlen($term) === 1 ? '(?!-)' : '';
+
+        return preg_match('/(?<![\p{L}\p{N}])'.$pattern.'(?![\p{L}\p{N}])'.$compoundGuard.'/'.$flags, $text) === 1;
     }
 
     /**
@@ -151,6 +161,7 @@ class MedicalGlossary
         preg_match_all('/[A-Za-z]{5,}/', $text, $matches);
         $words = array_unique(array_map('strtolower', $matches[0]));
         $roots = [];
+        $exclusions = $this->glossary[self::SECTION_ROOT_EXCLUSIONS] ?? [];
 
         foreach ($this->glossary[self::SECTION_PREFIXES] ?? [] as $prefix => $meaning) {
             $stem = rtrim($prefix, '-');
@@ -160,6 +171,10 @@ class MedicalGlossary
                 : '/^'.preg_quote($stem, '/').'/';
 
             foreach ($words as $word) {
+                if ($this->isExcludedFromRoot($word, $exclusions[$prefix] ?? [])) {
+                    continue;
+                }
+
                 if (strlen($word) > strlen($stem) + 2 && preg_match($pattern, $word) === 1) {
                     $roots[$prefix] = $meaning;
                     break;
@@ -188,5 +203,19 @@ class MedicalGlossary
         }
 
         return array_slice($roots, 0, $limit, true);
+    }
+
+    /**
+     * @param  array<int, string>  $excludedStarts  คำขึ้นต้น (ตัวพิมพ์เล็ก) ที่ไม่ใช่รากศัพท์นั้นจริง
+     */
+    protected function isExcludedFromRoot(string $word, array $excludedStarts): bool
+    {
+        foreach ($excludedStarts as $start) {
+            if (str_starts_with($word, strtolower($start))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

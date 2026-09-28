@@ -106,4 +106,47 @@ class MedicalGlossaryTest extends TestCase
 
         $this->assertLessThanOrEqual(MedicalGlossary::MAX_TERMS, count($found['terms']) + count($found['ambiguous']) + count($found['roots']));
     }
+
+    public function test_ambiguous_terms_are_not_dropped_by_the_max_terms_cap(): void
+    {
+        // ข้อความยาวพอจะเกิน MAX_TERMS จากคำความหมายเดียวล้วนๆ (เหมือน test_limits_number_of_terms) บวกคำ
+        // กำกวม MS (มอร์ฟีน/mitral stenosis/multiple sclerosis) ที่ต้องไม่ถูกคำธรรมดาเบียดตกไปเงียบๆ
+        $config = require __DIR__.'/../../config/medical_glossary.php';
+        $everyAbbreviation = implode(' ', array_keys($config['diagnosis_abbreviations'] + $config['history_abbreviations'] + $config['symptoms']));
+
+        $found = $this->glossary()->lookup($everyAbbreviation.' MS 5 mg p.r.n.');
+
+        $this->assertArrayHasKey('MS', $found['ambiguous']);
+        $this->assertCount(3, $found['ambiguous']['MS']);
+    }
+
+    public function test_extension_is_ambiguous_between_iv_line_and_knee_extension(): void
+    {
+        $found = $this->glossary()->lookup('ประเมิน knee extension หลังผ่าตัด TKA');
+
+        $this->assertArrayHasKey('Extension', $found['ambiguous']);
+        $this->assertCount(2, $found['ambiguous']['Extension']);
+        $this->assertArrayNotHasKey('Extension', $found['terms']);
+    }
+
+    public function test_tka_is_recognized_same_as_tkr(): void
+    {
+        $found = $this->glossary()->lookup('s/p TKA 2 สัปดาห์ก่อน');
+
+        $this->assertArrayHasKey('TKA', $found['terms']);
+    }
+
+    public function test_t_does_not_match_inside_t_tube(): void
+    {
+        $found = $this->glossary()->lookup('มี T-tube คาไว้');
+
+        $this->assertArrayNotHasKey('T', $found['terms']);
+    }
+
+    public function test_chole_prefix_does_not_match_cholesterol(): void
+    {
+        $found = $this->glossary()->lookup('ผล cholesterol สูง');
+
+        $this->assertArrayNotHasKey('chole-', $found['roots']);
+    }
 }

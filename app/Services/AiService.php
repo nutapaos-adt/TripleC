@@ -54,12 +54,12 @@ class AiService
     {
         $prompt = $this->buildAnalysisPrompt($record);
 
-        return $this->parseJsonResponse($this->callOllama($prompt), [
+        return $this->normalizeAnalysis($this->parseJsonResponse($this->callOllama($prompt), [
             'risk_detected' => false,
             'risk_summary' => null,
             'recommendation' => null,
             'suggested_decision' => null,
-        ]);
+        ]));
     }
 
     /**
@@ -135,6 +135,7 @@ class AiService
             ->implode("\n");
 
         $glossaryText = $this->glossary()->promptSection($mainProblem, (string) $record->raw_notes, $previousRecords);
+        $previousRecordsText = $previousRecords !== '' ? $previousRecords : '- ไม่มี (เป็นการติดตามครั้งแรก)';
 
         return <<<PROMPT
             คุณเป็นผู้ช่วยพยาบาลในหน่วยเยี่ยมบ้าน ทำหน้าที่ช่วยอ่านผลการเยี่ยมบ้าน/โทรติดตามที่เพิ่งบันทึก
@@ -151,13 +152,83 @@ class AiService
             """
 
             ประวัติการติดตามครั้งก่อนหน้า:
-            {$previousRecords}
+            {$previousRecordsText}
 
             {$glossaryText}
 
-            ตอบกลับเป็น JSON เท่านั้น ห้ามมีข้อความอื่นใดนอกเหนือจาก JSON ตามโครงสร้างนี้เป๊ะๆ:
-            {"risk_detected": true/false, "risk_summary": "สรุปสัญญาณเสี่ยงที่พบ (null ถ้าไม่พบ)", "recommendation": "คำแนะนำเบื้องต้นว่าควรทำอย่างไรต่อ", "suggested_decision": "repeat หรือ refer หรือ close"}
+            กฎที่ต้องทำตามอย่างเคร่งครัด:
+            1. ห้ามระบุอาการ ตำแหน่งอวัยวะ ค่าที่วัดได้ หรือรายละเอียดใดๆ ที่ไม่ได้เขียนไว้ชัดเจนในบันทึก ห้ามเดา/ตีความคำย่อทางการแพทย์ที่ไม่แน่ใจความหมาย
+               — คำย่อที่อยู่ในอภิธานศัพท์ด้านบนใช้ความหมายนั้นได้ ยกเว้นคำที่มีหลายความหมาย ให้ตีความจากบริบท ถ้าบริบทไม่ชัดให้คงคำย่อเดิมไว้และระบุว่า "ไม่แน่ใจ" แทนการเดา
+               (ตัวอย่างสิ่งที่ห้ามทำ: บันทึกเขียนว่า "OD" แล้วไปตีความว่าหมายถึงดวงตา ทั้งที่ไม่ได้เขียนไว้)
+            2. ความถูกต้องสำคัญกว่าความสละสลวย — ถ้าไม่มั่นใจ ให้เขียนสั้นและตรงตามบันทึกเดิมไว้ก่อน ดีกว่าเขียนให้ดูดีแต่ผิดข้อเท็จจริง
+            3. ช่อง findings ให้ทำก่อนช่องอื่น: ไล่อ่านผลการติดตามครั้งนี้ทีละบรรทัดจนครบ แล้วจดทุกอาการ อาการแสดง ค่าที่วัดได้ และปัญหาที่บันทึกไว้
+               เป็นรายการสั้นๆ หนึ่งรายการต่อหนึ่งเรื่อง ห้ามข้ามบรรทัดใด (ช่องนี้ใช้ช่วยอ่านให้ครบเท่านั้น)
+            4. ช่อง risk_summary ต้องครอบคลุม "ทุก" สัญญาณเสี่ยงใน findings ไม่ใช่แค่เรื่องเดียวที่เด่นที่สุด
+               — พิจารณา findings ทีละรายการ เช่น อาการหรือค่าสัญญาณชีพที่ผิดปกติ ปัญหาการใช้ยา/อุปกรณ์/การให้อาหาร การขาดนัด ความปลอดภัย และภาวะของผู้ดูแล
+               — อาการหรือค่าสัญญาณชีพที่ผิดปกติแม้เพียงเล็กน้อยต้องใส่ไว้ด้วย ถ้าไม่แน่ใจว่าเรื่องใดเป็นสัญญาณเสี่ยงหรือไม่ ให้ใส่ไว้ก่อน
+                 เพราะการตกหล่นสัญญาณเสี่ยงอันตรายกว่าการใส่เกิน (พยาบาลจะเป็นผู้คัดออกเอง) — แต่ห้ามใส่เรื่องที่บันทึกไว้ว่าปกติ
+               — risk_summary เป็นรายการ (array) หนึ่งรายการต่อหนึ่งสัญญาณเสี่ยง ห้ามรวมหลายเรื่องที่ไม่เกี่ยวกันไว้ในรายการเดียว และห้ามตัดสัญญาณใดทิ้ง
+               — ถ้าอาการหลายอย่างเกิดร่วมกันในเรื่องเดียวกัน จะรวมไว้ในรายการเดียวได้ แต่ต้องระบุอาการและค่าที่วัดได้เหล่านั้นให้ครบตามที่บันทึก
+            5. ช่อง risk_detected เป็น true เมื่อพบสัญญาณเสี่ยงอย่างน้อยหนึ่งรายการ ถ้าไม่พบเลยให้ risk_detected เป็น false และ risk_summary เป็นรายการว่าง []
+            6. ช่อง recommendation ต้องเป็นคำแนะนำเบื้องต้นที่ตอบสนองต่อสัญญาณเสี่ยงทุกรายการใน risk_summary ไม่ใช่แค่รายการเดียว
+            7. ช่อง suggested_decision ต้องเป็นคำภาษาอังกฤษตัวพิมพ์เล็กเพียงคำเดียวจากสามคำนี้เท่านั้น ห้ามตอบคำอื่นหรือหลายคำรวมกัน:
+               repeat = ติดตามซ้ำ (ยังต้องเฝ้าดูอาการต่อเนื่องแต่ยังไม่ถึงระดับที่ต้องส่งต่อ)
+               refer = ส่งต่อให้แพทย์หรือทีมที่เกี่ยวข้องประเมินเพิ่มเติม
+               close = ยุติการติดตาม (พ้นภาวะที่ต้องติดตาม เสียชีวิต หรือย้ายออกนอกพื้นที่)
+               — นี่เป็นเพียงข้อเสนอ พยาบาลจะเป็นผู้ตัดสินใจจริงเสมอ
+
+            ตอบกลับเป็น JSON เท่านั้น ห้ามมีข้อความอื่นใดนอกเหนือจาก JSON ตามโครงสร้างนี้:
+            {"findings": string[], "risk_detected": boolean, "risk_summary": string[], "recommendation": string, "suggested_decision": string}
             PROMPT;
+    }
+
+    /**
+     * กันผลลัพธ์รูปแบบผิดที่โมเดลขนาดเล็กตอบมาบ่อย ไม่ให้หลุดไปถึงหน้าจอ — ไม่แตะผลกรณี parse_error
+     *
+     * @param  array<string, mixed>  $result
+     * @return array<string, mixed>
+     */
+    protected function normalizeAnalysis(array $result): array
+    {
+        if ($result['parse_error'] ?? false) {
+            return $result;
+        }
+
+        // findings เป็นแค่ขั้นช่วยให้โมเดลอ่านบันทึกครบทุกบรรทัดก่อนตัดสิน ไม่ใช่ส่วนหนึ่งของผลลัพธ์ที่สัญญาไว้
+        unset($result['findings']);
+
+        // prompt ขอ risk_summary เป็น array (ทำให้โมเดลแจกแจงครบทุกสัญญาณ) แต่หน้า review และผู้เรียกใช้
+        // คาดหวังข้อความ — จึงรวมเป็นข้อความเดียวแบบ "1) ... 2) ..." ที่นี่ ผลที่คืนไปยังคงเป็น ?string เหมือนเดิม
+        if (is_array($result['risk_summary'])) {
+            $items = array_values(array_filter(array_map(
+                fn ($item) => is_scalar($item) ? trim((string) $item) : '',
+                $result['risk_summary'],
+            ), fn ($item) => $item !== ''));
+
+            $result['risk_summary'] = $items === [] ? null : implode(' ', array_map(
+                fn ($item, $i) => preg_match('/^\d+\)/', $item) === 1 ? $item : ($i + 1).') '.$item,
+                $items,
+                array_keys($items),
+            ));
+        } elseif (is_string($result['risk_summary']) && in_array(mb_strtolower(trim($result['risk_summary'])), ['', 'null', 'none', 'ไม่พบ'], true)) {
+            $result['risk_summary'] = null;
+        }
+
+        if (is_array($result['recommendation'])) {
+            $result['recommendation'] = implode(' ', array_filter($result['recommendation'], 'is_scalar'));
+        }
+
+        // ข้อความ "false" เป็น truthy ใน PHP — ต้องแปลงให้เป็น boolean จริงก่อนไปติ๊ก checkbox ไว้ล่วงหน้า
+        if (! is_bool($result['risk_detected'])) {
+            $result['risk_detected'] = filter_var($result['risk_detected'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)
+                ?? ($result['risk_summary'] !== null);
+        }
+
+        // suggested_decision ใช้เลือก radio ไว้ล่วงหน้า — ค่าที่ไม่ใช่ตัวเลือกจริงให้เป็น null (ไม่เลือกอะไรไว้)
+        $decision = is_string($result['suggested_decision']) ? mb_strtolower(trim($result['suggested_decision'])) : null;
+        $result['suggested_decision'] = in_array($decision, ['repeat', 'refer', 'close'], true) ? $decision : null;
+
+        return $result;
     }
 
     protected function buildSummaryPrompt(Referral $referral): string
