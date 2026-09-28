@@ -79,6 +79,7 @@ class CaseTypeController extends Controller
                 'fixed_visit_count' => $ruleType === VisitRule::TYPE_FIXED_COUNT ? $request->validated('fixed_visit_count') : null,
                 'fixed_interval_days' => $ruleType === VisitRule::TYPE_FIXED_COUNT ? $request->validated('fixed_interval_days') : null,
                 'score_rules' => $ruleType === VisitRule::TYPE_SCORE_BASED ? $request->parsedScoreRules() : null,
+                'milestones' => $ruleType === VisitRule::TYPE_MILESTONE_BASED ? $request->parsedMilestones() : null,
                 'created_by' => Auth::id(),
             ]
         );

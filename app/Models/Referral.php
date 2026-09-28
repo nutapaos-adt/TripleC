@@ -194,4 +194,14 @@ class Referral extends Model
     {
         return self::STATUS_CHIP_CLASSES[$this->status] ?? 'chip-neutral';
     }
+
+    /**
+     * ผ่าตัดเปลี่ยนข้อเข่า (TKA/UKA) หรือไม่ — ไม่ใช่ประเภทเคสแยก แต่ตรวจจับจาก surgery_history อิสระ
+     * (เดียวกับ resources/views/follow-up/record.blade.php ที่ใช้ซ่อน/แสดงหัวข้อประเมิน TKR/UKA)
+     */
+    public function isTkaUkaCase(): bool
+    {
+        return str_contains($this->surgery_history ?? '', 'TKA')
+            || str_contains($this->surgery_history ?? '', 'UKA');
+    }
 }

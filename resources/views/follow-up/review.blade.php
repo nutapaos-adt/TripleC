@@ -50,10 +50,12 @@
                     <label>วัน-เวลาที่ติดตาม</label>
                     <div class="field-value">{{ $record->visited_at->format('d/m/Y H:i') }}</div>
                 </div>
-                <div class="field">
-                    <label>PPS Score</label>
-                    <div class="field-value">{{ $record->pps_score ?? '—' }}</div>
-                </div>
+                @if ($plan->referral->severity_group === \App\Models\Referral::SEVERITY_PALLIATIVE)
+                    <div class="field">
+                        <label>PPS Score</label>
+                        <div class="field-value">{{ $record->pps_score ?? '—' }}</div>
+                    </div>
+                @endif
                 <div class="field full">
                     <label>อาการ/ปัญหาที่พบ</label>
                     <div class="field-value multiline">{{ $record->raw_notes }}</div>
@@ -101,8 +103,8 @@
     @endif
 
     @if ($isConfirmed)
-        <div class="confirmed-box">
-            <span class="box-label"><span class="dot"></span>การตัดสินใจของพยาบาล — ยืนยันแล้วโดย {{ $record->confirmer->name }} เมื่อ {{ $record->confirmed_at->format('d/m/Y H:i') }}</span>
+        <div class="nurse-decision confirmed">
+            <span class="nurse-decision-label">การตัดสินใจของพยาบาล — ยืนยันแล้วโดย {{ $record->confirmer->name }} เมื่อ {{ $record->confirmed_at->format('d/m/Y H:i') }}</span>
             <p style="margin:0;font-size:14px;color:var(--color-neutral-900);">
                 การตัดสินใจ:
                 <strong>{{ $decisionLabels[$record->nurse_decision] ?? $record->nurse_decision }}</strong>

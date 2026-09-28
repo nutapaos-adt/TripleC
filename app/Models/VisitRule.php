@@ -12,6 +12,7 @@ class VisitRule extends Model
 
     public const TYPE_FIXED_COUNT = 'fixed_count';
     public const TYPE_SCORE_BASED = 'score_based';
+    public const TYPE_MILESTONE_BASED = 'milestone_based';
 
     protected $fillable = [
         'case_type_id',
@@ -19,6 +20,7 @@ class VisitRule extends Model
         'fixed_visit_count',
         'fixed_interval_days',
         'score_rules',
+        'milestones',
         'is_active',
         'created_by',
     ];
@@ -27,6 +29,7 @@ class VisitRule extends Model
     {
         return [
             'score_rules' => 'array',
+            'milestones' => 'array',
             'is_active' => 'boolean',
         ];
     }
@@ -49,6 +52,22 @@ class VisitRule extends Model
         foreach ($this->score_rules ?? [] as $range) {
             if ($score >= $range['min'] && $score <= $range['max']) {
                 return $range['interval_days'];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * หาจำนวนวัน (นับจาก visited_at ของแผนครั้งที่ 1) ที่ครั้งเยี่ยมที่ระบุควรครบกำหนด — ใช้เมื่อ
+     * rule_type = milestone_based เช่น TKA/UKA ที่มี milestone คงที่ (3 เดือน/4 เดือน/1 ปี) ไม่ขึ้นกับ
+     * คะแนนใดๆ คืนค่า null ถ้าไม่มี milestone สำหรับครั้งนั้น (เช่น เลยครั้งสุดท้ายไปแล้ว)
+     */
+    public function dueDateOffsetForVisit(int $visitNumber): ?int
+    {
+        foreach ($this->milestones ?? [] as $milestone) {
+            if ((int) ($milestone['visit_number'] ?? null) === $visitNumber) {
+                return (int) $milestone['offset_days'];
             }
         }
 

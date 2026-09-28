@@ -249,7 +249,12 @@
                                         <td>
                                             <span class="chip {{ $row['disease_tag'] === 'DM/COPD' ? 'chip-risk' : 'chip-warning' }}">{{ $row['disease_tag'] }}</span>
                                         </td>
-                                        <td>{{ $row['summary'] }}</td>
+                                        <td>
+                                            @if (($row['processed'] ?? true) === false)
+                                                <span class="chip chip-warning">AI ประมวลผลไม่สำเร็จ</span>
+                                            @endif
+                                            {{ $row['summary'] }}
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr><td colspan="3" style="text-align:center;">ไม่พบเคสที่เข้าเงื่อนไขในกลุ่มผู้ป่วย DM/COPD ในเดือนนี้</td></tr>

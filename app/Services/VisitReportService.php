@@ -59,9 +59,13 @@ class VisitReportService
 
     /**
      * เคสที่มีโรคประจำตัว DM หรือ COPD ในเดือนนั้น พร้อมสรุปภาวะแทรกซ้อนจาก AI (ถ้าเรียกใช้ AI ไม่สำเร็จ
-     * จะคืนข้อความ fallback แทนแต่ละเคส ไม่ทำให้ทั้งรายงานพัง)
+     * หรือ AI ตอบกลับมาแบบที่แปลผลเป็น JSON ไม่ได้ (parse_error) จะคืนข้อความ fallback ที่ระบุชัดเจนว่า
+     * "ประมวลผลไม่ได้" แทนแต่ละเคส — ต้องไม่ปนกับ "ไม่พบภาวะแทรกซ้อน" (ผลลบจริง) เพราะ parse_error ไม่ใช่
+     * ผลลัพธ์ทางคลินิก แค่ AI ตอบมาไม่ตรงรูปแบบเท่านั้น (ดู CLAUDE.md เรื่อง parse_error fallback contract)
+     * `processed: false` คือสัญญาณให้ view render ต่างจากกรณี "ไม่พบภาวะแทรกซ้อน" (processed: true, พบผลลบจริง)
+     * ไม่ทำให้ทั้งรายงานพัง
      *
-     * @return array<int, array{patient_name: string, disease_tag: string, summary: string}>
+     * @return array<int, array{patient_name: string, disease_tag: string, summary: string, processed: bool}>
      */
     public function dmCopdComplications(Carbon $month): array
     {
@@ -103,24 +107,35 @@ class VisitReportService
 
             $initial = $referral->patient ? mb_substr($referral->patient->name, 0, 1) : '';
 
+            $processed = true;
+
             try {
                 $analysis = $this->aiService->summarizeDmCopdComplication($referral, $records);
-                $summary = $analysis['summary'] ?? null;
 
-                if (empty($summary)) {
-                    $summary = ($analysis['has_complication'] ?? false)
-                        ? 'พบสัญญาณภาวะแทรกซ้อน (AI ไม่ได้ระบุรายละเอียดเพิ่มเติม)'
-                        : 'ไม่พบสัญญาณภาวะแทรกซ้อนที่ชัดเจนจากบันทึกการเยี่ยม';
+                if ($analysis['parse_error'] ?? false) {
+                    // AI ตอบกลับมาแปลเป็น JSON ไม่ได้ — ต้องไม่แสดงเป็น "ไม่พบภาวะแทรกซ้อน" (ผลลบปลอม)
+                    $summary = 'AI ไม่สามารถแปลผลลัพธ์เป็นข้อมูลที่ใช้ได้ในครั้งนี้ กรุณาตรวจสอบบันทึกการเยี่ยมด้วยตนเอง';
+                    $processed = false;
+                } else {
+                    $summary = $analysis['summary'] ?? null;
+
+                    if (empty($summary)) {
+                        $summary = ($analysis['has_complication'] ?? false)
+                            ? 'พบสัญญาณภาวะแทรกซ้อน (AI ไม่ได้ระบุรายละเอียดเพิ่มเติม)'
+                            : 'ไม่พบสัญญาณภาวะแทรกซ้อนที่ชัดเจนจากบันทึกการเยี่ยม';
+                    }
                 }
             } catch (\Throwable $e) {
                 report($e);
                 $summary = 'ไม่สามารถประมวลผลได้ (เรียกใช้ AI ไม่สำเร็จ)';
+                $processed = false;
             }
 
             $results[] = [
                 'patient_name' => 'ผู้ป่วย #'.$referral->id.' ('.$initial.'.)',
                 'disease_tag' => $diseaseTag,
                 'summary' => $summary,
+                'processed' => $processed,
             ];
         }
 

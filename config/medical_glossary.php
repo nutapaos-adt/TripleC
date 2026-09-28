@@ -33,7 +33,7 @@ return [
     // คำย่อในการซักประวัติ / บันทึกทางการแพทย์
     'history_abbreviations' => [
         'CC' => 'อาการสำคัญที่มาโรงพยาบาล (Chief Complaint)',
-        'PI' => 'ประวัติการเจ็บป่วยปัจจุบัน (Present Illness)',
+        // PI ย้ายไปหมวด ambiguous (Present Illness / Pressure Injury)
         'HPI' => 'ประวัติการเจ็บป่วยปัจจุบัน (History of Present Illness)',
         'PH' => 'ประวัติการเจ็บป่วยในอดีต (Past History)',
         'PMH' => 'ประวัติการรักษา/ผ่าตัด/เจ็บป่วยในอดีต (Past Medical History)',
@@ -50,16 +50,19 @@ return [
         'Rx' => 'ใบสั่งยา / การสั่งการรักษา (Prescription)',
         'Tx' => 'การรักษา (Treatment)',
         'V/S' => 'สัญญาณชีพ (Vital Signs)',
-        'BP' => 'ความดันโลหิต (Blood Pressure)',
-        'PR' => 'อัตราชีพจร (Pulse Rate)',
-        'T' => 'อุณหภูมิร่างกาย (Temperature)',
+        // ค่าอ้างอิงสัญญาณชีพ (ผู้ใหญ่) ใส่ไว้เพราะทดสอบจริงแล้วโมเดล 8B ประเมิน T 37.9 / RR 26 ว่า "ปกติ"
+        // เป็นค่ามาตรฐานตามตำรา — รอพยาบาล/แพทย์ตรวจทาน
+        'BP' => 'ความดันโลหิต (Blood Pressure) — ผู้ใหญ่ ตั้งแต่ 140/90 mmHg ถือว่าสูง ต่ำกว่า 90/60 mmHg ถือว่าต่ำ',
+        // PR ย้ายไปหมวด ambiguous (Pulse Rate / Per Rectum)
+        // T ไม่จับเมื่อตามด้วยขีด (T-tube, T-spine) — ดู MedicalGlossary::containsTerm
+        'T' => 'อุณหภูมิร่างกาย (Temperature) — ผู้ใหญ่ปกติประมาณ 36.5–37.4 °C ตั้งแต่ 37.5 °C ขึ้นไปถือว่ามีไข้',
         'BW' => 'น้ำหนักตัว (Body Weight)',
         'IVF' => 'สารน้ำทางหลอดเลือดดำ (Intravenous Fluid)',
         'I/O' => 'ปริมาณน้ำเข้า-ออกต่อวัน (Intake/Output)',
         'GCS' => 'คะแนนประเมินระดับความรู้สึกตัว (Glasgow Coma Scale)',
         'AWS' => 'คะแนนประเมินอาการถอนแอลกอฮอล์ (Alcohol Withdrawal Score)',
         'CPR' => 'การช่วยฟื้นคืนชีพ (Cardiopulmonary Resuscitation)',
-        'ALS' => 'การช่วยชีวิตขั้นสูง (Advanced Life Support)',
+        // ALS ย้ายไปหมวด ambiguous (Advanced Life Support / Amyotrophic Lateral Sclerosis)
         'EB' => 'ผ้ายืดพันแผล (Elastic Bandage)',
     ],
 
@@ -161,7 +164,7 @@ return [
         'CBG' => 'ระดับน้ำตาลในเลือดจากเส้นเลือดฝอย (Capillary Blood Glucose)',
         'FBS' => 'ระดับน้ำตาลในเลือดขณะอดอาหาร (Fasting Blood Sugar)',
         'HbA1c' => 'ค่าน้ำตาลสะสมเฉลี่ย 2–3 เดือน (Hemoglobin A1c)',
-        'SpO2' => 'ค่าความอิ่มตัวของออกซิเจนในเลือดจากเครื่องวัดปลายนิ้ว',
+        'SpO2' => 'ค่าความอิ่มตัวของออกซิเจนในเลือดจากเครื่องวัดปลายนิ้ว — ผู้ใหญ่ทั่วไปปกติ 95–100% (ผู้ป่วย COPD แพทย์อาจกำหนดเป้าหมายต่ำกว่านี้)',
         'Cr' => 'ครีเอตินีน ค่าการทำงานของไต (Creatinine)',
         'eGFR' => 'อัตราการกรองของไตโดยประมาณ (Estimated Glomerular Filtration Rate)',
         'BUN' => 'ค่าของเสียยูเรียในเลือด (Blood Urea Nitrogen)',
@@ -227,8 +230,11 @@ return [
         'Discharge (wound)' => 'สิ่งคัดหลั่งจากแผล: serous (ใส), serosanguineous (ปนเลือด), purulent (หนอง)',
         'Ambulation' => 'การลุกเดินหลังผ่าตัด (early ambulation = ลุกเดินเร็ว)',
         'TKR' => 'ผ่าตัดเปลี่ยนข้อเข่าเทียมทั้งข้อ (Total Knee Replacement)',
+        'TKA' => 'ผ่าตัดเปลี่ยนข้อเข่าเทียมทั้งข้อ (Total Knee Arthroplasty) — ความหมายเดียวกับ TKR',
         'UKA' => 'ผ่าตัดเปลี่ยนข้อเข่าเทียมบางส่วน (Unicompartmental Knee Arthroplasty)',
         'THR' => 'ผ่าตัดเปลี่ยนข้อสะโพกเทียม (Total Hip Replacement)',
+        'THA' => 'ผ่าตัดเปลี่ยนข้อสะโพกเทียม (Total Hip Arthroplasty) — ความหมายเดียวกับ THR',
+        'T-tube' => 'สายระบายรูปตัว T (มักคาไว้ในท่อน้ำดีหลังผ่าตัด)',
         'ORIF' => 'ผ่าตัดจัดกระดูกและยึดตรึงด้วยโลหะ (Open Reduction Internal Fixation)',
         'NPO' => 'งดน้ำและอาหารทางปาก (nil per os)',
     ],
@@ -301,7 +307,7 @@ return [
     'equipment' => [
         'Medicut' => 'เข็มพลาสติกสำหรับแทงให้สารน้ำทางหลอดเลือดดำ (IV catheter)',
         'I.V. set' => 'ชุดสายให้สารน้ำ',
-        'Extension' => 'สายต่อชุดให้สารน้ำ',
+        // Extension ย้ายไปหมวด ambiguous (สายต่อชุดให้สารน้ำ / การเหยียดข้อ เช่น knee extension ในเคส TKA/UKA)
         '3-way' => 'ข้อต่อสามทาง (three-way stopcock)',
         'Top gauze' => 'ผ้าก๊อซหุ้มสำลี สำหรับแผลขนาดใหญ่',
         'Micropore' => 'พลาสเตอร์ปิดแผลชนิดกระดาษ',
@@ -332,7 +338,7 @@ return [
         'SAH' => 'เลือดออกใต้เยื่อหุ้มสมองชั้นอะแรคนอยด์ (Subarachnoid Hemorrhage)',
         'ICH' => 'เลือดออกในเนื้อสมอง (Intracerebral Hemorrhage)',
         'UTI' => 'การติดเชื้อทางเดินปัสสาวะ (Urinary Tract Infection)',
-        'ARF' => 'ไตวายเฉียบพลัน (Acute Renal Failure)',
+        // ARF ย้ายไปหมวด ambiguous (Acute Renal Failure / Acute Respiratory Failure)
         'CRF' => 'ไตวายเรื้อรัง (Chronic Renal Failure)',
         'ESRD' => 'ไตวายระยะสุดท้าย (End Stage Renal Disease)',
         'CAPD' => 'การล้างไตทางช่องท้องด้วยตนเองแบบต่อเนื่อง (Continuous Ambulatory Peritoneal Dialysis)',
@@ -367,10 +373,10 @@ return [
     // คำย่อที่มีได้หลายความหมาย — ต้องตีความจากบริบท ถ้าไม่ชัดให้ระบุว่า "ไม่แน่ใจ"
     'ambiguous' => [
         'HT' => ['โรคความดันโลหิตสูง (Hypertension)', 'ส่วนสูง (Height)'],
-        'OD' => ['วันละครั้ง (Omni die)', 'ตาขวา (Oculus dexter)'],
+        'OD' => ['วันละครั้ง (Omni die)', 'ตาขวา (Oculus dexter)', 'ได้รับยา/สารเกินขนาด (Overdose)'],
         'N/S' => ['สัญญาณทางระบบประสาท (Neuro signs)', 'น้ำเกลือ Normal Saline'],
         'PE' => ['การตรวจร่างกาย (Physical Examination)', 'ลิ่มเลือดอุดกั้นในปอด (Pulmonary Embolism)'],
-        'RR' => ['อัตราการหายใจ (Respiratory Rate)', 'ห้องพักฟื้น (Recovery Room)'],
+        'RR' => ['อัตราการหายใจ (Respiratory Rate) — ผู้ใหญ่ปกติ 12–20 ครั้ง/นาที (เด็กเล็กสูงกว่านี้)', 'ห้องพักฟื้น (Recovery Room)'],
         'AE' => ['การกำเริบเฉียบพลัน (Acute Exacerbation)', 'เหตุการณ์ไม่พึงประสงค์ (Adverse Event)'],
         'CA' => ['โรคมะเร็ง (Cancer)', 'แคลเซียม (Calcium)'],
         'PT' => ['กายภาพบำบัด (Physical Therapy)', 'ค่าการแข็งตัวของเลือด (Prothrombin Time)'],
@@ -380,11 +386,19 @@ return [
         // เพิ่มเติม
         'GA' => ['ลักษณะภายนอกทั่วไป (General Appearance)', 'อายุครรภ์ (Gestational Age)'],
         'D/C' => ['จำหน่ายผู้ป่วย (Discharge)', 'หยุดยา/หยุดการรักษา (Discontinue)'],
+        'D/S' => ['ทำแผล (Dressing)', 'สารน้ำเดกซ์โทรสผสมน้ำเกลือ (Dextrose in Saline) เช่น 5%D/S'],
         'PD' => ['การล้างไตทางช่องท้อง (Peritoneal Dialysis)', 'โรคพาร์กินสัน (Parkinson\'s Disease)'],
         'MS' => ['มอร์ฟีนซัลเฟต (Morphine Sulfate)', 'ลิ้นหัวใจไมทรัลตีบ (Mitral Stenosis)', 'โรคปลอกประสาทอักเสบ (Multiple Sclerosis)'],
         'BS' => ['ระดับน้ำตาลในเลือด (Blood Sugar)', 'เสียงลำไส้ (Bowel Sounds)', 'เสียงหายใจ (Breath Sounds)'],
         'CP' => ['เจ็บหน้าอก (Chest Pain)', 'สมองพิการ (Cerebral Palsy)'],
         'MO' => ['มอร์ฟีน (Morphine)', 'แพทย์ (Medical Officer)'],
+        // ย้ายมาจากหมวดอื่นหลัง audit 2026-09 (ข้อเสนอของ AI — รอพยาบาล/แพทย์ตรวจทาน)
+        'PI' => ['ประวัติการเจ็บป่วยปัจจุบัน (Present Illness)', 'แผลกดทับ (Pressure Injury)'],
+        'PR' => ['อัตราชีพจร (Pulse Rate) — ผู้ใหญ่ปกติ 60–100 ครั้ง/นาที (เด็กเล็กสูงกว่านี้)', 'ทางทวารหนัก (Per Rectum) เช่น ตรวจ PR, ให้ยาทาง PR'],
+        'LR' => ['ห้องคลอด (Labor Room)', 'สารน้ำแลคเตทริงเกอร์ (Lactated Ringer\'s solution)'],
+        'ALS' => ['การช่วยชีวิตขั้นสูง (Advanced Life Support)', 'โรคเซลล์ประสาทสั่งการเสื่อม (Amyotrophic Lateral Sclerosis)'],
+        'ARF' => ['ไตวายเฉียบพลัน (Acute Renal Failure)', 'ภาวะหายใจล้มเหลวเฉียบพลัน (Acute Respiratory Failure)'],
+        'Extension' => ['สายต่อชุดให้สารน้ำ (IV extension line)', 'การเหยียดข้อ เช่น เหยียดเข่า (knee extension) ในการประเมินพิสัยข้อ'],
     ],
 
     // คำย่อการสั่งยา: เวลาให้ยา
@@ -433,7 +447,7 @@ return [
         'ER' => 'ห้องอุบัติเหตุและฉุกเฉิน (Emergency Room)',
         'ICU' => 'หอผู้ป่วยหนัก (Intensive Care Unit)',
         'OR' => 'ห้องผ่าตัด (Operating Room)',
-        'LR' => 'ห้องคลอด (Labor Room)',
+        // LR ย้ายไปหมวด ambiguous (Labor Room / Lactated Ringer's)
         'ANC' => 'การฝากครรภ์ / ดูแลก่อนคลอด (Antenatal Care)',
         'MED' => 'อายุรกรรม (Medicine)',
         'SUR' => 'ศัลยกรรม (Surgery)',
@@ -473,6 +487,13 @@ return [
         'tracheo-' => 'หลอดลมคอ (trachea)',
         'uretero-' => 'ท่อไต (ureter)',
         'urethro-' => 'ท่อปัสสาวะ (urethra)',
+    ],
+
+    // คำที่ขึ้นต้นเหมือนรากศัพท์แต่ไม่ได้มีความหมายนั้น — prefix => คำขึ้นต้นที่ต้องไม่จับ (ตัวพิมพ์เล็ก)
+    // เช่น cholesterol ไม่เกี่ยวกับน้ำดี, colostrum (น้ำนมเหลือง) ไม่เกี่ยวกับลำไส้ใหญ่
+    'root_exclusions' => [
+        'chole-' => ['cholesterol', 'cholesteatoma', 'cholera', 'cholin'],
+        'colo-' => ['colostrum', 'color', 'colour', 'column'],
     ],
 
     // คำลงท้าย (หัตถการ)

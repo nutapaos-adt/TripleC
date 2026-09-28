@@ -11,8 +11,10 @@ class CaseTypeSeeder extends Seeder
     /**
      * ประเภทเคส 8 แบบตามที่ตกลงไว้ใน prototype (prototypes/v1-full-coc-flow/admin-case-types-list.html —
      * แหล่งอ้างอิงหลักของรายการนี้ ตรงกับ dropdown ใน referral-create.html/care-plan-confirm.html)
-     * อายุรกรรม/ศัลยกรรม/กระดูกและข้อ/กุมารเวชกรรม/หลังผ่าตัด ไม่มีเกณฑ์เฉพาะ — ใช้กติกาสำรองตามกลุ่ม
+     * อายุรกรรม/ศัลยกรรม/กุมารเวชกรรม/หลังผ่าตัด ไม่มีเกณฑ์เฉพาะ — ใช้กติกาสำรองตามกลุ่ม
      * ความรุนแรงใน VisitPlanService (กลุ่ม 3/แดง = เยี่ยมต่อเนื่องรายเดือน, อื่นๆ = 1 ครั้งแล้วจบ)
+     * กระดูกและข้อ มีเกณฑ์ milestone_based เฉพาะเคสผ่าตัดเปลี่ยนข้อเข่า (TKA/UKA, ตรวจจับจาก
+     * surgery_history — ดู Referral::isTkaUkaCase()) ส่วนเคสกระดูกและข้ออื่นๆ ยังใช้กติกาสำรองข้างต้น
      * แอดมินแก้ไข/เพิ่มเติมเองได้ภายหลังผ่านหน้าจัดการในระบบ
      */
     public function run(): void
@@ -29,10 +31,23 @@ class CaseTypeSeeder extends Seeder
             'description' => 'ผู้ป่วยจากหอผู้ป่วย/OPD ศัลยกรรมที่ต้องติดตามแผล/ภาวะแทรกซ้อนหลังจำหน่าย',
         ]);
 
-        CaseType::create([
+        $ortho = CaseType::create([
             'name' => 'กระดูกและข้อ',
             'slug' => 'ortho',
             'description' => 'ผู้ป่วยกระดูกและข้อที่ต้องติดตามการฟื้นตัว/กายภาพบำบัดที่บ้าน',
+        ]);
+
+        // เคสผ่าตัดเปลี่ยนข้อเข่า (TKA/UKA) ไม่ใช่ประเภทเคสแยก — ตรวจจับจาก surgery_history อิสระ
+        // (ดู Referral::isTkaUkaCase()) referral กระดูกและข้ออื่นๆ ที่ไม่ใช่ TKA/UKA ยังใช้กติกาสำรอง
+        // ตามกลุ่มความรุนแรงเหมือนเดิม (VisitPlanService จะข้ามเกณฑ์นี้ถ้าไม่ใช่เคส TKA/UKA จริง)
+        VisitRule::create([
+            'case_type_id' => $ortho->id,
+            'rule_type' => VisitRule::TYPE_MILESTONE_BASED,
+            'milestones' => [
+                ['visit_number' => 2, 'offset_days' => 90, 'label' => 'ติดตาม 3 เดือนหลังผ่าตัด'],
+                ['visit_number' => 3, 'offset_days' => 120, 'label' => 'ติดตาม 4 เดือนหลังผ่าตัด'],
+                ['visit_number' => 4, 'offset_days' => 365, 'label' => 'ติดตาม 1 ปีหลังผ่าตัด (ครั้งสุดท้าย)'],
+            ],
         ]);
 
         CaseType::create([
