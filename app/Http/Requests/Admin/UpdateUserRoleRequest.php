@@ -16,7 +16,6 @@ class UpdateUserRoleRequest extends FormRequest
     {
         return [
             'role' => ['required', 'in:'.implode(',', array_keys(User::ROLES))],
-            'department' => ['nullable', 'string', 'max:255'],
             'ward_id' => ['nullable', 'exists:wards,id'],
         ];
     }
@@ -25,6 +24,7 @@ class UpdateUserRoleRequest extends FormRequest
     {
         return [
             'role' => 'สิทธิ์การใช้งาน',
+            'ward_id' => 'หน่วยงาน',
         ];
     }
 }

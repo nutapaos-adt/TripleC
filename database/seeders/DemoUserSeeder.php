@@ -22,7 +22,6 @@ class DemoUserSeeder extends Seeder
                 'name' => 'กัลยา เจ้าหน้าที่ธุรการ',
                 'password' => Hash::make('password'),
                 'role' => User::ROLE_WARD_STAFF,
-                'department' => 'หอผู้ป่วยอายุรกรรม',
                 'ward_id' => $ward?->id,
                 'email_verified_at' => now(),
             ]
@@ -34,7 +33,6 @@ class DemoUserSeeder extends Seeder
                 'name' => 'พว.กัญญา รักษ์ผู้ป่วย',
                 'password' => Hash::make('password'),
                 'role' => User::ROLE_HOME_VISIT_TEAM,
-                'department' => 'ทีมเยี่ยมบ้าน',
                 'ward_id' => null,
                 'email_verified_at' => now(),
             ]
@@ -46,7 +44,6 @@ class DemoUserSeeder extends Seeder
                 'name' => 'ธนกร ฝ่ายสารสนเทศ',
                 'password' => Hash::make('password'),
                 'role' => User::ROLE_ADMIN,
-                'department' => 'จัดการระบบ',
                 'ward_id' => null,
                 'email_verified_at' => now(),
             ]

@@ -38,12 +38,7 @@
                 </div>
 
                 <div class="field">
-                    <label>แผนก</label>
-                    <input type="text" name="department" value="{{ old('department', $user->department) }}" class="input">
-                </div>
-
-                <div class="field">
-                    <label>วอร์ด</label>
+                    <label>หน่วยงาน</label>
                     <select name="ward_id" class="input">
                         <option value="" @selected(! old('ward_id', $user->ward_id))>— ไม่ระบุ —</option>
                         @foreach (\App\Models\Ward::orderBy('name')->get() as $ward)
