@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -95,6 +96,7 @@ class Referral extends Model
         'clinical_tracers',
         'admit_date',
         'discharge_date',
+        'encounter_date',
         'opd_followup_date',
         'attending_physician',
         'severity_group',
@@ -121,6 +123,7 @@ class Referral extends Model
             'clinical_tracers' => 'array',
             'admit_date' => 'date',
             'discharge_date' => 'date',
+            'encounter_date' => 'date',
             'opd_followup_date' => 'date',
         ];
     }
@@ -158,6 +161,26 @@ class Referral extends Model
     public function ward(): BelongsTo
     {
         return $this->belongsTo(Ward::class);
+    }
+
+    /**
+     * เจ้าหน้าที่หอผู้ป่วย (ward_staff) เห็นเฉพาะใบส่งต่อของหน่วยงานตัวเอง — บัญชีที่ยังไม่ผูกหน่วยงานไม่เห็นอะไรเลย
+     * (ไม่ใช่เห็นเคสที่ไม่มีหน่วยงาน) ส่วนทีมเยี่ยมบ้าน/แอดมินเห็นทุกหน่วยงาน
+     */
+    public function scopeVisibleTo(Builder $query, User $user): Builder
+    {
+        if (! $user->isWardStaff()) {
+            return $query;
+        }
+
+        return $user->ward_id
+            ? $query->where('ward_id', $user->ward_id)
+            : $query->whereRaw('1 = 0');
+    }
+
+    public function isVisibleTo(User $user): bool
+    {
+        return ! $user->isWardStaff() || ($user->ward_id !== null && $user->ward_id === $this->ward_id);
     }
 
     public function satisfactionSurveys(): HasMany

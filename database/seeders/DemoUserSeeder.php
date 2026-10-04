@@ -14,7 +14,7 @@ class DemoUserSeeder extends Seeder
      */
     public function run(): void
     {
-        $ward = Ward::where('name', 'หอผู้ป่วยอายุรกรรม')->first();
+        $ward = Ward::where('name', 'หอผู้ป่วยชาย')->first();
 
         User::firstOrCreate(
             ['email' => 'ward@example.com'],

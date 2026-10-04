@@ -51,9 +51,15 @@
                 default => $referral->source_type,
             } }} — {{ $referral->caseType?->name }}</div></div>
             <div class="info-row"><div class="info-label">แพทย์เจ้าของไข้</div><div class="info-value">{{ $referral->attending_physician ?? '—' }}</div></div>
-            <div class="info-row"><div class="info-label">วันที่ Admit / จำหน่าย / นัด OPD</div><div class="info-value">
-                {{ $referral->admit_date?->format('d/m/Y') ?? '—' }} / {{ $referral->discharge_date?->format('d/m/Y') ?? '—' }} / {{ $referral->opd_followup_date?->format('d/m/Y') ?? '—' }}
-            </div></div>
+            @if ($referral->ward && ! $referral->ward->has_admission)
+                <div class="info-row"><div class="info-label">วันที่พบผู้ป่วย / นัด OPD</div><div class="info-value">
+                    {{ $referral->encounter_date?->format('d/m/Y') ?? '—' }} / {{ $referral->opd_followup_date?->format('d/m/Y') ?? '—' }}
+                </div></div>
+            @else
+                <div class="info-row"><div class="info-label">วันที่ Admit / จำหน่าย / นัด OPD</div><div class="info-value">
+                    {{ $referral->admit_date?->format('d/m/Y') ?? '—' }} / {{ $referral->discharge_date?->format('d/m/Y') ?? '—' }} / {{ $referral->opd_followup_date?->format('d/m/Y') ?? '—' }}
+                </div></div>
+            @endif
             <div class="info-row"><div class="info-label">การวินิจฉัย</div><div class="info-value">{{ $referral->diagnosis ?? '—' }}</div></div>
             <div class="info-row"><div class="info-label">โรคประจำตัว</div><div class="info-value">{{ $referral->underlying_disease ?? '—' }}</div></div>
             <div class="info-row"><div class="info-label">ประวัติการผ่าตัด</div><div class="info-value">{{ $referral->surgery_history ?? '—' }}</div></div>

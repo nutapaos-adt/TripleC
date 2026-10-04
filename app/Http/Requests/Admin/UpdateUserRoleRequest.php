@@ -4,6 +4,7 @@ namespace App\Http\Requests\Admin;
 
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateUserRoleRequest extends FormRequest
 {
@@ -16,7 +17,10 @@ class UpdateUserRoleRequest extends FormRequest
     {
         return [
             'role' => ['required', 'in:'.implode(',', array_keys(User::ROLES))],
-            'ward_id' => ['nullable', 'exists:wards,id'],
+            // เลือกได้เฉพาะหน่วยงานที่ยังเปิดใช้งาน (หรือหน่วยงานเดิมของผู้ใช้คนนี้ ที่อาจถูกปิดใช้งานไปแล้ว)
+            'ward_id' => ['nullable', Rule::exists('wards', 'id')->where(
+                fn ($query) => $query->where('is_active', true)->orWhere('id', $this->route('user')?->ward_id)
+            )],
         ];
     }
 

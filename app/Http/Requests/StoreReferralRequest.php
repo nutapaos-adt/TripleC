@@ -62,6 +62,7 @@ class StoreReferralRequest extends FormRequest
 
             'admit_date' => ['nullable', 'date'],
             'discharge_date' => ['nullable', 'date'],
+            'encounter_date' => ['nullable', 'date'],
             'opd_followup_date' => ['nullable', 'date'],
             'attending_physician' => ['nullable', 'string', 'max:255'],
 

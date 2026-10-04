@@ -26,7 +26,7 @@ class WardController extends Controller
 
         $referrals = Referral::query()
             ->whereHas('followUpPlans.record')
-            ->when($user->isWardStaff(), fn ($query) => $query->where('ward_id', $user->ward_id))
+            ->visibleTo($user)
             ->when($q !== '', function ($query) use ($q) {
                 $query->whereHas('patient', function ($patientQuery) use ($q) {
                     $patientQuery->where('name', 'like', "%{$q}%")

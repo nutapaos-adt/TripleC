@@ -4,6 +4,10 @@
 
     $militaryUnitOptions = ['มทบ.31', 'ร้อย.มทบ.31', 'ร้อย.สห.มทบ.31', 'ศฝ.นศท.มทบ.31', 'รพ.ค่ายจิรประวัติ', 'ร.4', 'ร.4 พัน.1', 'ร.4 พัน.2', 'ข.พัน.4 พล.ร.4', 'ป.4 พัน.4', 'คลังแสง3.คส.สพ.ทบ.', 'ผอส.กษส.3 กส.ทบ.', 'มว.ขบร.สน.3 กอง สพ.พล.ร.4', 'สง.สด.จว.นว.', 'สง.สด.จว.อน.'];
     $storedMilitaryUnit = $referral?->military_unit;
+
+    // ห้องฉุกเฉิน/ห้องตรวจโรคผู้ป่วยนอกไม่มีวันที่ Admit/จำหน่าย — ใช้ "วันที่พบผู้ป่วย" แทน (ดู wards.has_admission)
+    $unitWard = $referral?->ward ?? auth()->user()->ward;
+    $hasAdmission = $unitWard?->has_admission ?? true;
     $militaryUnitIsOther = $storedMilitaryUnit && ! in_array($storedMilitaryUnit, $militaryUnitOptions, true);
 
     $equipmentOptions = ['NG-Tube', 'TT-Tube', 'Foley cath', 'Colostomy bag', 'Oxygen'];
@@ -116,14 +120,21 @@
 </div>
 
 <div class="grid-3" style="margin-bottom:var(--space-6);">
-    <div class="field">
-        <label>วันที่ Admit</label>
-        <input type="date" name="admit_date" value="{{ old('admit_date', $referral?->admit_date?->format('Y-m-d')) }}">
-    </div>
-    <div class="field">
-        <label>วันที่จำหน่าย</label>
-        <input type="date" name="discharge_date" value="{{ old('discharge_date', $referral?->discharge_date?->format('Y-m-d')) }}">
-    </div>
+    @if ($hasAdmission)
+        <div class="field">
+            <label>วันที่ Admit</label>
+            <input type="date" name="admit_date" value="{{ old('admit_date', $referral?->admit_date?->format('Y-m-d')) }}">
+        </div>
+        <div class="field">
+            <label>วันที่จำหน่าย</label>
+            <input type="date" name="discharge_date" value="{{ old('discharge_date', $referral?->discharge_date?->format('Y-m-d')) }}">
+        </div>
+    @else
+        <div class="field">
+            <label>วันที่พบผู้ป่วย</label>
+            <input type="date" name="encounter_date" value="{{ old('encounter_date', $referral?->encounter_date?->format('Y-m-d')) }}">
+        </div>
+    @endif
     <div class="field">
         <label>วันที่นัดติดตามอาการ</label>
         <input type="date" name="opd_followup_date" value="{{ old('opd_followup_date', $referral?->opd_followup_date?->format('Y-m-d')) }}">

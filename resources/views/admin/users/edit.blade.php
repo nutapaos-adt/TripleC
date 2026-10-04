@@ -41,7 +41,7 @@
                     <label>หน่วยงาน</label>
                     <select name="ward_id" class="input">
                         <option value="" @selected(! old('ward_id', $user->ward_id))>— ไม่ระบุ —</option>
-                        @foreach (\App\Models\Ward::orderBy('name')->get() as $ward)
+                        @foreach (\App\Models\Ward::where('is_active', true)->orWhere('id', $user->ward_id)->orderBy('name')->get() as $ward)
                             <option value="{{ $ward->id }}" @selected((int) old('ward_id', $user->ward_id) === $ward->id)>{{ $ward->name }}</option>
                         @endforeach
                     </select>

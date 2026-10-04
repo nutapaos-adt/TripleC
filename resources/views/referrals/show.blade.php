@@ -127,6 +127,12 @@
                         <div class="info-value">{{ $referral->caseType->name }}</div>
                     </div>
                 @endif
+                @if ($referral->encounter_date)
+                    <div class="info-row">
+                        <div class="info-label">วันที่พบผู้ป่วย</div>
+                        <div class="info-value due-date">{{ $referral->encounter_date->format('d/m/Y') }}</div>
+                    </div>
+                @endif
                 @if ($referral->admit_date)
                     <div class="info-row">
                         <div class="info-label">วันที่ Admit</div>
