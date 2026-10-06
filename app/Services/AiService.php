@@ -306,7 +306,12 @@ class AiService
                     'model' => $config['model'],
                     'prompt' => $prompt,
                     'format' => 'json',
-                    'stream' => false,
+                    // stream=true: Ollama starts sending the response as soon as the first token is ready. A single
+                    // non-streamed reply would sit silent for the whole generation, and Cloudflare (in front of the
+                    // department PC) drops any origin that sends nothing for ~100s (HTTP 524) — which happened for
+                    // long notes on a cold model. We still read the whole body before returning.
+                    'stream' => true,
+                    'keep_alive' => $config['keep_alive'],
                 ]);
         } catch (\Throwable $e) {
             Log::error('Ollama connection failed', ['message' => $e->getMessage()]);
@@ -320,7 +325,38 @@ class AiService
             throw new \RuntimeException('เรียกใช้ AI ไม่สำเร็จ กรุณาลองใหม่ หรือกรอกข้อมูลด้วยตนเอง');
         }
 
-        return (string) $response->json('response', '');
+        return $this->assembleStreamedResponse($response->body());
+    }
+
+    /**
+     * Ollama streams one JSON object per line ({"response":"<piece>", ...}); join the pieces into the full text.
+     * A single non-streamed JSON object (one line) is handled the same way.
+     */
+    protected function assembleStreamedResponse(string $body): string
+    {
+        $text = '';
+
+        foreach (preg_split('/\R/', trim($body)) as $line) {
+            if (trim($line) === '') {
+                continue;
+            }
+
+            $chunk = json_decode($line, true);
+
+            if (! is_array($chunk)) {
+                continue;
+            }
+
+            if (isset($chunk['error'])) {
+                Log::error('Ollama returned an error while generating', ['error' => $chunk['error']]);
+
+                throw new \RuntimeException('เรียกใช้ AI ไม่สำเร็จ กรุณาลองใหม่ หรือกรอกข้อมูลด้วยตนเอง');
+            }
+
+            $text .= (string) ($chunk['response'] ?? '');
+        }
+
+        return $text;
     }
 
     /**
