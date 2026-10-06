@@ -171,6 +171,7 @@ class ReferralController extends Controller
             'diagnosis' => $data['diagnosis'] ?? null,
             'underlying_disease' => $data['underlying_disease'] ?? null,
             'surgery_history' => $data['surgery_history'] ?? null,
+            'surgery_date' => $data['surgery_date'] ?? null,
             'equipment' => array_values(array_filter([
                 ...($data['equipment'] ?? []),
                 $data['equipment_other'] ?? null,

@@ -109,6 +109,7 @@ class Referral extends Model
         'diagnosis',
         'underlying_disease',
         'surgery_history',
+        'surgery_date',
         'equipment',
         'clinical_tracers',
         'admit_date',
@@ -141,6 +142,7 @@ class Referral extends Model
             'admit_date' => 'date',
             'discharge_date' => 'date',
             'encounter_date' => 'date',
+            'surgery_date' => 'date',
             'opd_followup_date' => 'date',
         ];
     }

@@ -121,7 +121,7 @@
                 @endif
                 <div class="it full"><span class="lb">การวินิจฉัย</span><span class="vl">{{ $referral->diagnosis ?? '—' }}</span></div>
                 <div class="it"><span class="lb">โรคประจำตัว</span><span class="vl">{{ $referral->underlying_disease ?? '—' }}</span></div>
-                <div class="it"><span class="lb">ประวัติการผ่าตัด</span><span class="vl">{{ $referral->surgery_history ?? '—' }}</span></div>
+                <div class="it"><span class="lb">การผ่าตัดครั้งนี้</span><span class="vl">{{ $referral->surgery_history ?? '—' }}@if ($referral->surgery_date) — เมื่อวันที่ {{ $referral->surgery_date->format('d/m/Y') }}@endif</span></div>
                 <div class="it {{ $isPalliative ? '' : 'full' }}"><span class="lb">อุปกรณ์ของผู้ป่วย</span><span class="vl">{{ !empty($referral->equipment) ? implode(', ', $referral->equipment) : '—' }}</span></div>
                 @if ($isPalliative)
                     <div class="it"><span class="lb">PPS Score เริ่มต้น</span><span class="vl">{{ $referral->initial_pps_score ?? '—' }}</span></div>

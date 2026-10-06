@@ -208,8 +208,8 @@
                 @endif
                 @if ($referral->surgery_history)
                     <div class="info-row">
-                        <div class="info-label">ประวัติการผ่าตัด</div>
-                        <div class="info-value">{{ $referral->surgery_history }}</div>
+                        <div class="info-label">การผ่าตัดครั้งนี้</div>
+                        <div class="info-value">{{ $referral->surgery_history }}@if ($referral->surgery_date) — เมื่อวันที่ {{ $referral->surgery_date->format('d/m/Y') }}@endif</div>
                     </div>
                 @endif
                 @if (!empty($referral->equipment))

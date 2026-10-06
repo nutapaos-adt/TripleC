@@ -55,6 +55,7 @@ class StoreReferralRequest extends FormRequest
             'diagnosis' => ['required', 'string', 'max:255'],
             'underlying_disease' => ['nullable', 'string'],
             'surgery_history' => ['nullable', 'string'],
+            'surgery_date' => ['nullable', 'date'],
             'equipment' => ['nullable', 'array'],
             'equipment.*' => ['string', 'max:255'],
             'equipment_other' => ['nullable', 'string', 'max:255'],

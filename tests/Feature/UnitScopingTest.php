@@ -227,4 +227,27 @@ class UnitScopingTest extends TestCase
             ->assertSee('ไม่ยินยอมให้เยี่ยม')
             ->assertSee('กรุณาตรวจสอบก่อนยืนยันแผนติดตาม');
     }
+
+    // ---------- การผ่าตัดครั้งนี้ + ช่องวันที่ พ.ศ. ----------
+
+    public function test_surgery_and_dob_dates_are_saved_from_iso_values_and_shown_in_the_form(): void
+    {
+        $staff = User::factory()->create(['role' => User::ROLE_WARD_STAFF, 'ward_id' => Ward::factory()->create()->id]);
+
+        $this->actingAs($staff)->post(route('referrals.store'), $this->consentPayload([
+            'visit_consent' => 'home_visit', 'surgery_history' => 'ผ่าตัดไส้ติ่ง', 'surgery_date' => '2026-10-01', 'patient_dob' => '1956-03-09',
+        ]))->assertRedirect();
+
+        $referral = Referral::firstOrFail();
+        $this->assertSame('2026-10-01', $referral->surgery_date->toDateString());
+        $this->assertSame('1956-03-09', $referral->patient->dob->toDateString());
+
+        // ฟอร์มแก้ไขแสดงปี พ.ศ. ในช่องเลือก และส่งค่า ISO (ค.ศ.) ผ่าน input ซ่อน
+        $this->actingAs($staff)->get(route('referrals.edit', $referral))
+            ->assertOk()
+            ->assertSee('การผ่าตัดครั้งนี้')
+            ->assertSeeInOrder(['name="surgery_date"', 'value="2026-10-01"'], false)
+            ->assertSee('<option value="2569" selected>2569</option>', false)
+            ->assertSee('<option value="2499" selected>2499</option>', false);
+    }
 }

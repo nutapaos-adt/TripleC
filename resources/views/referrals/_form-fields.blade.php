@@ -149,21 +149,21 @@
     @if ($hasAdmission)
         <div class="field">
             <label>วันที่ Admit</label>
-            <input type="date" name="admit_date" value="{{ old('admit_date', $referral?->admit_date?->format('Y-m-d')) }}">
+            <x-thai-date name="admit_date" :value="old('admit_date', $referral?->admit_date)" :years-back="2" :years-forward="1" />
         </div>
         <div class="field">
             <label>วันที่จำหน่าย</label>
-            <input type="date" name="discharge_date" value="{{ old('discharge_date', $referral?->discharge_date?->format('Y-m-d')) }}">
+            <x-thai-date name="discharge_date" :value="old('discharge_date', $referral?->discharge_date)" :years-back="2" :years-forward="1" />
         </div>
     @else
         <div class="field">
             <label>วันที่พบผู้ป่วย</label>
-            <input type="date" name="encounter_date" value="{{ old('encounter_date', $referral?->encounter_date?->format('Y-m-d')) }}">
+            <x-thai-date name="encounter_date" :value="old('encounter_date', $referral?->encounter_date)" :years-back="2" :years-forward="1" />
         </div>
     @endif
     <div class="field">
         <label>วันที่นัดติดตามอาการ</label>
-        <input type="date" name="opd_followup_date" value="{{ old('opd_followup_date', $referral?->opd_followup_date?->format('Y-m-d')) }}">
+        <x-thai-date name="opd_followup_date" :value="old('opd_followup_date', $referral?->opd_followup_date)" :years-back="1" :years-forward="2" />
         <span class="hint">วันนัด OPD/แพทย์เจ้าของไข้ครั้งถัดไป</span>
     </div>
     <div class="field full" style="grid-column:1 / -1;">
@@ -191,7 +191,7 @@
 
     <div class="field">
         <label>วันเดือนปีเกิด</label>
-        <input type="date" name="patient_dob" id="patient_dob" value="{{ old('patient_dob', $patient?->dob?->format('Y-m-d')) }}">
+        <x-thai-date name="patient_dob" id="patient_dob" :value="old('patient_dob', $patient?->dob)" :years-back="120" :years-forward="0" />
     </div>
     <div class="field">
         <label>อายุ</label>
@@ -288,8 +288,14 @@
 </div>
 
 <div class="field" style="margin-bottom:var(--space-4);">
-    <label>ประวัติการผ่าตัด (ถ้ามี)</label>
-    <input type="text" name="surgery_history" id="surgery_history" value="{{ old('surgery_history', $referral?->surgery_history) }}" placeholder="เช่น ผ่าตัดไส้ติ่ง 15 ส.ค. 2569 — เว้นว่างได้หากไม่มี">
+    <label>การผ่าตัดครั้งนี้ (ถ้ามี)</label>
+    <div class="grid-2" style="align-items:end;">
+        <input type="text" name="surgery_history" id="surgery_history" value="{{ old('surgery_history', $referral?->surgery_history) }}" placeholder="เช่น ผ่าตัดไส้ติ่ง — เว้นว่างได้หากไม่มีการผ่าตัด">
+        <div>
+            <span class="hint" style="display:block;margin:0 0 4px;">เมื่อวันที่</span>
+            <x-thai-date name="surgery_date" :value="old('surgery_date', $referral?->surgery_date)" :years-back="3" :years-forward="1" />
+        </div>
+    </div>
     <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;">
         <button type="button" class="btn btn-secondary btn-sm surgery-tag" data-tag="ผ่าตัดเปลี่ยนข้อเข่า (TKA/UKA)">ผ่าตัดเปลี่ยนข้อเข่า (TKA/UKA)</button>
     </div>
