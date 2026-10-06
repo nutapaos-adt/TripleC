@@ -28,13 +28,18 @@ class AiService
     {
         $prompt = $this->buildSummaryPrompt($referral);
 
-        return $this->parseJsonResponse($this->callOllama($prompt), [
+        $result = $this->parseJsonResponse($this->callOllama($prompt), [
             'patient_type' => null,
             'main_problem' => null,
             'follow_up_need' => null,
             'risk_signals' => [],
             'suggested_case_type_slug' => null,
         ]);
+
+        // problems เป็นแค่ขั้นช่วยให้โมเดลไล่อ่านทุกหัวข้อก่อนสรุป ไม่ใช่ส่วนหนึ่งของผลลัพธ์ที่สัญญาไว้
+        unset($result['problems']);
+
+        return $result;
     }
 
     /**
@@ -276,6 +281,8 @@ class AiService
             5. ช่อง follow_up_need และ risk_signals ต้องครอบคลุม "ทุก" ประเด็นที่ข้อความต้นฉบับสั่งให้ติดตาม/ระวังไว้ ไม่ใช่แค่ประเด็นเดียวที่เด่นที่สุด
                — ถ้าข้อความมีทั้งคำสั่งดูแลแผล/สังเกตอาการติดเชื้อ และคำเตือนเรื่องความปลอดภัย (เช่น ระวังพลัดตกหกล้ม) ต้องใส่ทั้งสองเรื่องแยกกัน ห้ามเลือกใส่แค่เรื่องเดียว
                — risk_signals ให้แยกเป็นรายการย่อยตามแต่ละสัญญาณ/คำเตือนที่พบ ไม่ใช่สรุปรวมเป็นประโยคเดียว
+            6. ช่อง problems ให้ทำก่อนช่องอื่น: ไล่อ่านข้อความทีละบรรทัดจนครบ แล้วจดทุกปัญหา/หัวข้อที่ข้อความพูดถึง (เช่น แต่ละข้อที่มีเลขกำกับ) ข้อละ 1 รายการสั้นๆ ห้ามข้ามข้อใด
+               — main_problem ต้องกล่าวถึงทุกรายการใน problems และ follow_up_need ต้องมีสิ่งที่ต้องติดตามของทุกรายการ รวมถึงวันนัดหรือแล็บที่ข้อความระบุไว้ ไม่ใช่แค่ปัญหาแรกหรือปัญหาที่เด่นที่สุด
 
             ตัวอย่างรูปแบบคำตอบที่ครอบคลุมทุกประเด็น (เป็นแค่ตัวอย่างรูปแบบ ห้ามนำเนื้อหานี้ไปใช้ตอบเด็ดขาด — ต้องใช้ข้อมูลผู้ป่วยจริงด้านบนเท่านั้น
             สมมติว่าข้อความต้นฉบับคือ "ผป. COPD on home O2 2 LPM ญาติดูแลเหนื่อยล้า สอน pursed-lip breathing ระวัง sat drop"):
@@ -283,7 +290,7 @@ class AiService
             (สังเกตว่าตัวอย่างนี้ดึงทุกประเด็นที่ต้นฉบับพูดถึงมาครบ — ทั้งออกซิเจน เทคนิคหายใจ และภาวะผู้ดูแล — ไม่ได้เลือกใส่แค่ประเด็นเดียว)
 
             ตอบกลับเป็น JSON เท่านั้น ห้ามมีข้อความอื่นใดนอกเหนือจาก JSON ตามโครงสร้างนี้:
-            {"patient_type": string, "main_problem": string, "follow_up_need": string, "risk_signals": string[], "suggested_case_type_slug": string}
+            {"problems": string[], "patient_type": string, "main_problem": string, "follow_up_need": string, "risk_signals": string[], "suggested_case_type_slug": string}
             PROMPT;
     }
 

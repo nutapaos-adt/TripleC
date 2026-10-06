@@ -55,4 +55,15 @@ class AiServiceStreamingTest extends TestCase
 
         app(AiService::class)->summarizeReferral($this->referral());
     }
+
+    public function test_scratch_problems_list_is_asked_for_but_not_kept_in_the_summary(): void
+    {
+        Http::fake(['*' => Http::response(['response' => '{"problems":["ก","ข"],"main_problem":"สรุป"}'])]);
+
+        $result = app(AiService::class)->summarizeReferral($this->referral());
+
+        $this->assertSame('สรุป', $result['main_problem']);
+        $this->assertArrayNotHasKey('problems', $result);
+        Http::assertSent(fn (Request $r) => str_contains($r['prompt'], '"problems": string[]'));
+    }
 }
