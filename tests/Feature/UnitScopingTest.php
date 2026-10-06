@@ -165,4 +165,17 @@ class UnitScopingTest extends TestCase
             ->assertSee('วันที่พบผู้ป่วย')
             ->assertSee('03/10/2026');
     }
+
+    public function test_editing_a_referral_keeps_its_original_source_unit_not_the_editors(): void
+    {
+        $male = Ward::factory()->create(['name' => 'หอผู้ป่วยชาย']);
+        $female = Ward::factory()->create(['name' => 'หอผู้ป่วยหญิง']);
+        $referral = $this->referralFor($female, 'เคสจากหอหญิง');
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN, 'ward_id' => $male->id]);
+
+        $this->actingAs($admin)->get(route('referrals.edit', $referral))
+            ->assertOk()
+            ->assertSee('<input type="hidden" name="source_detail" value="หอผู้ป่วยหญิง">', false)
+            ->assertDontSee('<input type="hidden" name="source_detail" value="หอผู้ป่วยชาย">', false);
+    }
 }

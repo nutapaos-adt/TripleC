@@ -19,7 +19,8 @@
     <h2 class="h2">แหล่งที่มาของเคส</h2>
 </div>
 <div class="grid-3" style="margin-bottom:var(--space-6);">
-    @php $userWard = auth()->user()->ward; @endphp
+    {{-- สร้างใหม่: ดึงหน่วยงานจากบัญชีผู้ใช้ / แก้ไข: คงหน่วยงานต้นทางของใบส่งต่อไว้ ไม่ใช้หน่วยงานของผู้ที่กำลังแก้ไข --}}
+    @php $userWard = $referral ? $referral->ward : auth()->user()->ward; @endphp
     <div class="field full" style="grid-column:1 / -1;">
         <label>แหล่งข้อมูล (source_type)</label>
         @if ($userWard)
@@ -28,7 +29,7 @@
                 <span>
                     <span class="chip chip-inzone">หอผู้ป่วย (ward)</span>
                     <strong style="margin-left:6px;">{{ $userWard->name }}</strong>
-                    <br><span class="hint" style="margin:0;">ดึงข้อมูลอัตโนมัติจากบัญชีผู้ใช้งานที่เข้าสู่ระบบ ({{ auth()->user()->name }})</span>
+                    <br><span class="hint" style="margin:0;">@if ($referral)ใช้หน่วยงานต้นทางเดิมของใบส่งต่อ (ไม่เปลี่ยนตามผู้แก้ไข)@else ดึงข้อมูลอัตโนมัติจากบัญชีผู้ใช้งานที่เข้าสู่ระบบ ({{ auth()->user()->name }})@endif</span>
                 </span>
             </div>
             <input type="hidden" name="source_type" value="ward">
@@ -43,7 +44,7 @@
                 </select>
                 <input type="text" name="source_detail" value="{{ old('source_detail', $referral?->source_detail) }}" placeholder="รายละเอียดแหล่งที่มา เช่น ชื่อหอผู้ป่วย/แผนกต้นทาง">
             </div>
-            <span class="hint">บัญชีนี้ยังไม่ผูกกับหอผู้ป่วย — เลือกแหล่งที่มาเอง (ติดต่อแอดมินเพื่อผูกวอร์ดให้บัญชีนี้)</span>
+            <span class="hint">@if ($referral)ใบส่งต่อนี้ไม่ได้ผูกกับหน่วยงานในระบบ — แก้แหล่งที่มาเองได้ @else บัญชีนี้ยังไม่ผูกกับหอผู้ป่วย — เลือกแหล่งที่มาเอง (ติดต่อแอดมินเพื่อผูกวอร์ดให้บัญชีนี้)@endif</span>
         @endif
     </div>
 
