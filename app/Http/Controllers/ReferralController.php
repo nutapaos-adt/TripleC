@@ -259,7 +259,6 @@ class ReferralController extends Controller
             'confirmed_summary' => [
                 'patient_type' => $request->validated('patient_type'),
                 'main_problem' => $request->validated('main_problem'),
-                'follow_up_need' => $request->validated('follow_up_need'),
                 'risk_signals' => $request->riskSignalsArray(),
             ],
             'confirmed_by' => Auth::id(),

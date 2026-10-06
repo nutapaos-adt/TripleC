@@ -24,7 +24,7 @@ class AiServiceStreamingTest extends TestCase
 
     public function test_streamed_ndjson_chunks_are_joined_into_one_json_answer(): void
     {
-        $json = '{"patient_type":"ทดสอบ","main_problem":"ปัญหา","follow_up_need":"x","risk_signals":[],"suggested_case_type_slug":"med"}';
+        $json = '{"patient_type":"ทดสอบ","main_problem":"ปัญหา","risk_signals":[],"suggested_case_type_slug":"med"}';
         $pieces = mb_str_split($json, 12);
         $lines = array_map(fn ($p) => json_encode(['model' => 'm', 'response' => $p, 'done' => false], JSON_UNESCAPED_UNICODE), $pieces);
         $lines[] = json_encode(['model' => 'm', 'response' => '', 'done' => true]);

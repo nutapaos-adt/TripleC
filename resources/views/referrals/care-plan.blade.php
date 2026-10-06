@@ -74,10 +74,6 @@
                     <div class="field-value multiline">{{ $summary['main_problem'] ?? '—' }}</div>
                 </div>
                 <div class="field full">
-                    <label>การวางแผนทางการพยาบาล</label>
-                    <div class="field-value multiline">{{ $summary['follow_up_need'] ?? '—' }}</div>
-                </div>
-                <div class="field full">
                     <label>ประเด็นที่ต้องติดตาม</label>
                     <div class="field-value">
                         @if (count($riskSignals))
@@ -133,17 +129,13 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="field">
+                    <div class="field full">
                         <label>สรุปสภาพผู้ป่วย</label>
-                        <input type="text" name="patient_type" value="{{ old('patient_type', $summary['patient_type'] ?? '') }}">
+                        <textarea name="patient_type" rows="2">{{ old('patient_type', $summary['patient_type'] ?? '') }}</textarea>
                     </div>
                     <div class="field full">
                         <label>ปัญหาหลัก</label>
                         <textarea name="main_problem" rows="2">{{ old('main_problem', $summary['main_problem'] ?? '') }}</textarea>
-                    </div>
-                    <div class="field full">
-                        <label>การวางแผนทางการพยาบาล</label>
-                        <textarea name="follow_up_need" rows="2">{{ old('follow_up_need', $summary['follow_up_need'] ?? '') }}</textarea>
                     </div>
                     <div class="field full">
                         <label>ประเด็นที่ต้องติดตาม <span class="hint" style="display:inline;margin:0;">(บรรทัดละ 1 รายการ)</span></label>

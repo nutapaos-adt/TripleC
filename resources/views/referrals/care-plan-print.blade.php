@@ -75,10 +75,6 @@
             <div class="box-label"><span class="dot"></span> แผนการพยาบาล</div>
             <div class="field-grid">
                 <div class="field full">
-                    <label>การวางแผนทางการพยาบาล</label>
-                    <div class="field-value multiline">{{ $summary['follow_up_need'] ?? '—' }}</div>
-                </div>
-                <div class="field full">
                     <label>ประเด็นที่ต้องติดตาม</label>
                     <div class="field-value">
                         @if (!empty($summary['risk_signals']))

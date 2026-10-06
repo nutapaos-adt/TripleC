@@ -24,7 +24,7 @@ class AiServiceGlossaryPromptTest extends TestCase
 
     protected function fakeOllama(): void
     {
-        Http::fake(['*' => Http::response(['response' => '{"patient_type":"x","main_problem":"x","follow_up_need":"x","risk_signals":[],"suggested_case_type_slug":"med"}'])]);
+        Http::fake(['*' => Http::response(['response' => '{"patient_type":"x","main_problem":"x","risk_signals":[],"suggested_case_type_slug":"med"}'])]);
     }
 
     public function test_summary_prompt_includes_glossary_for_terms_in_the_notes(): void
