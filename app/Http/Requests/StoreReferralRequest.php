@@ -47,6 +47,7 @@ class StoreReferralRequest extends FormRequest
                 Referral::PATIENT_STATUS_MILITARY,
                 Referral::PATIENT_STATUS_MILITARY_FAMILY,
             ])],
+            'visit_consent' => ['required', 'in:'.implode(',', array_keys(Referral::VISIT_CONSENT_LABELS))],
             'military_unit' => ['nullable', 'required_if:patient_status,military,military_family', 'string', 'max:255'],
             'military_unit_other' => ['nullable', 'required_if:military_unit,other', 'string', 'max:255'],
             'coverage_type' => ['nullable', 'string', 'max:255'],
@@ -87,6 +88,7 @@ class StoreReferralRequest extends FormRequest
             'patient_name' => 'ชื่อ-สกุลผู้ป่วย',
             'raw_notes' => 'ข้อความสรุปอาการ/สถานการณ์',
             'zone' => 'เขตพื้นที่',
+            'visit_consent' => 'ความยินยอมในการเยี่ยมบ้าน',
         ];
     }
 }

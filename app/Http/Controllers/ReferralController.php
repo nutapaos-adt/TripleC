@@ -163,6 +163,7 @@ class ReferralController extends Controller
             'caregiver_phone' => $data['caregiver_phone'] ?? null,
             'caregiver_relationship' => $data['caregiver_relationship'] ?? null,
             'patient_status' => $data['patient_status'],
+            'visit_consent' => $data['visit_consent'],
             'military_unit' => ($data['military_unit'] ?? null) === 'other'
                 ? ($data['military_unit_other'] ?? null)
                 : ($data['military_unit'] ?? null),

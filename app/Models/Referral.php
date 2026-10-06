@@ -46,6 +46,22 @@ class Referral extends Model
         self::PATIENT_STATUS_MILITARY_FAMILY => 'ครอบครัวกำลังพล',
     ];
 
+    public const VISIT_CONSENT_HOME = 'home_visit';
+    public const VISIT_CONSENT_PHONE_ONLY = 'phone_only';
+    public const VISIT_CONSENT_DECLINED = 'declined';
+
+    public const VISIT_CONSENT_LABELS = [
+        self::VISIT_CONSENT_HOME => 'ยินยอมให้เยี่ยมบ้าน',
+        self::VISIT_CONSENT_PHONE_ONLY => 'ยินยอมให้เยี่ยมทางโทรศัพท์',
+        self::VISIT_CONSENT_DECLINED => 'ไม่ยินยอมให้เยี่ยม',
+    ];
+
+    public const VISIT_CONSENT_CHIP_CLASSES = [
+        self::VISIT_CONSENT_HOME => 'chip-done',
+        self::VISIT_CONSENT_PHONE_ONLY => 'chip-warning',
+        self::VISIT_CONSENT_DECLINED => 'chip-risk',
+    ];
+
     public const SEVERITY_GREEN = 'green';
     public const SEVERITY_YELLOW = 'yellow';
     public const SEVERITY_RED = 'red';
@@ -87,6 +103,7 @@ class Referral extends Model
         'caregiver_phone',
         'caregiver_relationship',
         'patient_status',
+        'visit_consent',
         'military_unit',
         'coverage_type',
         'diagnosis',
@@ -206,6 +223,16 @@ class Referral extends Model
     public function patientStatusLabel(): string
     {
         return self::PATIENT_STATUS_LABELS[$this->patient_status] ?? $this->patient_status;
+    }
+
+    public function visitConsentLabel(): ?string
+    {
+        return self::VISIT_CONSENT_LABELS[$this->visit_consent] ?? null;
+    }
+
+    public function visitConsentChipClass(): string
+    {
+        return self::VISIT_CONSENT_CHIP_CLASSES[$this->visit_consent] ?? 'chip-neutral';
     }
 
     public function statusLabel(): string

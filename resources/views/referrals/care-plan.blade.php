@@ -27,6 +27,21 @@
         $suggestedCaseType = $caseTypes->firstWhere('id', (int) old('case_type_id', $suggestedCaseTypeId));
     @endphp
 
+    @if (in_array($referral->visit_consent, [\App\Models\Referral::VISIT_CONSENT_PHONE_ONLY, \App\Models\Referral::VISIT_CONSENT_DECLINED], true) && ! $isConfirmed)
+        @php $consentTone = $referral->visit_consent === 'declined' ? 'risk' : 'warning'; @endphp
+        <div class="banner" style="background:var(--color-{{ $consentTone }}-tint);border-color:var(--color-{{ $consentTone }});">
+            <div class="banner-text">
+                <p style="color:var(--color-{{ $consentTone }});"><strong>{{ $referral->visitConsentLabel() }}</strong> —
+                    @if ($referral->visit_consent === 'declined')
+                        ผู้ป่วย/ญาติแจ้งว่าไม่ยินยอมให้เยี่ยม กรุณาตรวจสอบก่อนยืนยันแผนติดตาม
+                    @else
+                        ผู้ป่วย/ญาติยินยอมเฉพาะการติดตามทางโทรศัพท์ ไม่ควรนัดเยี่ยมบ้าน
+                    @endif
+                </p>
+            </div>
+        </div>
+    @endif
+
     @if (($referral->ai_summary['parse_error'] ?? false) && ! $isConfirmed)
         <div class="banner" style="background:var(--color-warning-tint);border-color:var(--color-warning);">
             <div class="banner-text">

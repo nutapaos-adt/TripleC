@@ -69,6 +69,31 @@
         <span class="hint">กำหนดความถี่/กำหนดเยี่ยมครั้งแรกตามกลุ่มนี้</span>
     </div>
 
+    <div class="field" style="grid-column:1 / -1;">
+        <label>ความยินยอมในการเยี่ยมบ้าน</label>
+        @php $consent = old('visit_consent', $referral?->visit_consent); @endphp
+        <div class="radio-cards" id="visit_consent_cards">
+            @foreach (\App\Models\Referral::VISIT_CONSENT_LABELS as $value => $label)
+                <label class="radio-card @if($consent === $value) selected @endif">
+                    <input type="radio" name="visit_consent" value="{{ $value }}" @checked($consent === $value) required>
+                    <div class="rc-title">{{ $label }}</div>
+                </label>
+            @endforeach
+        </div>
+        <span class="hint">สอบถามผู้ป่วย/ญาติก่อนส่งต่อ — ทีมเยี่ยมบ้านจะเห็นข้อมูลนี้ก่อนยืนยันแผนติดตาม</span>
+        <script>
+            (function () {
+                var cards = document.querySelectorAll('#visit_consent_cards .radio-card');
+                cards.forEach(function (card) {
+                    card.addEventListener('click', function () {
+                        cards.forEach(function (c) { c.classList.remove('selected'); });
+                        card.classList.add('selected');
+                    });
+                });
+            })();
+        </script>
+    </div>
+
     <div class="field">
         <label>สถานะผู้ป่วย</label>
         <select name="patient_status" id="patient_status" required>

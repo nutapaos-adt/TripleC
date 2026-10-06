@@ -56,6 +56,16 @@
                         @if ($age !== null) ({{ $age }} ปี) @endif
                     </div>
                 </div>
+                <div class="info-row">
+                    <div class="info-label">ความยินยอมในการเยี่ยมบ้าน</div>
+                    <div class="info-value">
+                        @if ($referral->visitConsentLabel())
+                            <span class="chip {{ $referral->visitConsentChipClass() }}">{{ $referral->visitConsentLabel() }}</span>
+                        @else
+                            <span class="caption">ยังไม่ได้สอบถาม (ใบส่งต่อเดิม)</span>
+                        @endif
+                    </div>
+                </div>
                 @if ($referral->severityLabel())
                     <div class="info-row">
                         <div class="info-label">การจำแนกกลุ่มความรุนแรง</div>

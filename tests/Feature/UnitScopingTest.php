@@ -153,7 +153,7 @@ class UnitScopingTest extends TestCase
         $caseType = CaseType::create(['name' => 'อายุรกรรม', 'slug' => 'med']);
 
         $this->actingAs($staff)->post(route('referrals.store'), [
-            'source_type' => 'ward', 'case_type_id' => $caseType->id, 'patient_status' => 'civilian', 'zone' => 'in_area',
+            'source_type' => 'ward', 'case_type_id' => $caseType->id, 'patient_status' => 'civilian', 'visit_consent' => 'home_visit', 'zone' => 'in_area',
             'patient_hn' => '700001', 'patient_name' => 'ผู้ป่วยห้องฉุกเฉิน', 'diagnosis' => 'ไข้สูง', 'raw_notes' => 'ต้องการติดตามอาการ',
             'encounter_date' => '2026-10-03',
         ])->assertRedirect();
@@ -177,5 +177,54 @@ class UnitScopingTest extends TestCase
             ->assertOk()
             ->assertSee('<input type="hidden" name="source_detail" value="หอผู้ป่วยหญิง">', false)
             ->assertDontSee('<input type="hidden" name="source_detail" value="หอผู้ป่วยชาย">', false);
+    }
+
+    // ---------- ความยินยอมในการเยี่ยมบ้าน ----------
+
+    private function consentPayload(array $overrides = []): array
+    {
+        return array_merge([
+            'source_type' => 'ward', 'case_type_id' => CaseType::firstOrCreate(['slug' => 'gen'], ['name' => 'ทั่วไป'])->id,
+            'patient_status' => 'civilian', 'zone' => 'in_area',
+            'patient_hn' => '710001', 'patient_name' => 'ผู้ป่วยทดสอบความยินยอม', 'diagnosis' => 'ทดสอบ', 'raw_notes' => 'ทดสอบ',
+        ], $overrides);
+    }
+
+    public function test_visit_consent_is_required_when_creating_a_referral(): void
+    {
+        $staff = User::factory()->create(['role' => User::ROLE_WARD_STAFF, 'ward_id' => Ward::factory()->create()->id]);
+
+        $this->actingAs($staff)->post(route('referrals.store'), $this->consentPayload())
+            ->assertSessionHasErrors('visit_consent');
+        $this->actingAs($staff)->post(route('referrals.store'), $this->consentPayload(['visit_consent' => 'maybe']))
+            ->assertSessionHasErrors('visit_consent');
+        $this->assertSame(0, Referral::count());
+    }
+
+    public function test_each_visit_consent_option_is_saved_and_shown(): void
+    {
+        $staff = User::factory()->create(['role' => User::ROLE_WARD_STAFF, 'ward_id' => Ward::factory()->create()->id]);
+
+        foreach (Referral::VISIT_CONSENT_LABELS as $value => $label) {
+            $this->actingAs($staff)->post(route('referrals.store'), $this->consentPayload(['visit_consent' => $value, 'patient_hn' => 'HN-'.$value]))
+                ->assertRedirect();
+            $referral = Referral::whereHas('patient', fn ($q) => $q->where('hn', 'HN-'.$value))->firstOrFail();
+
+            $this->assertSame($value, $referral->visit_consent);
+            $this->actingAs($staff)->get(route('referrals.show', $referral))->assertSee($label);
+        }
+    }
+
+    public function test_care_plan_warns_when_the_patient_declined_visits(): void
+    {
+        $unit = Ward::factory()->create();
+        $referral = $this->referralFor($unit, 'เคสไม่ยินยอม');
+        $referral->update(['visit_consent' => Referral::VISIT_CONSENT_DECLINED]);
+        $team = User::factory()->create(['role' => User::ROLE_HOME_VISIT_TEAM]);
+
+        $this->actingAs($team)->get(route('referrals.care-plan', $referral))
+            ->assertOk()
+            ->assertSee('ไม่ยินยอมให้เยี่ยม')
+            ->assertSee('กรุณาตรวจสอบก่อนยืนยันแผนติดตาม');
     }
 }

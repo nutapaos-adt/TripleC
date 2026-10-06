@@ -112,6 +112,7 @@
                 </span></div>
                 <div class="it"><span class="lb">แหล่งที่มา</span><span class="vl">{{ $sourceText }}</span></div>
                 <div class="it"><span class="lb">ประเภทเคส</span><span class="vl">{{ $referral->caseType?->name ?? '—' }}</span></div>
+                <div class="it"><span class="lb">ความยินยอมเยี่ยมบ้าน</span><span class="vl"><b>{{ $referral->visitConsentLabel() ?? 'ยังไม่ได้สอบถาม' }}</b></span></div>
                 <div class="it"><span class="lb">แพทย์เจ้าของไข้</span><span class="vl">{{ $referral->attending_physician ?? '—' }}</span></div>
                 @if ($referral->ward && ! $referral->ward->has_admission)
                     <div class="it"><span class="lb">วันที่พบผู้ป่วย / นัด OPD</span><span class="vl">{{ $referral->encounter_date?->format('d/m/Y') ?? '—' }} / {{ $referral->opd_followup_date?->format('d/m/Y') ?? '—' }}</span></div>
