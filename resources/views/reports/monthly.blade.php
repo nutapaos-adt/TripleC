@@ -33,7 +33,7 @@
 
         <div class="page-head">
             <h1 class="h1">แบบฟอร์มสรุปผลงานเยี่ยมบ้านประจำเดือน {{ $monthLabel }}</h1>
-            <span class="sub">Chira Continuity Care (Triple C) &middot; พิมพ์เมื่อ {{ now()->translatedFormat('d/m/Y') }}</span>
+            <span class="sub">Chira Continuity Care (Triple C) &middot; พิมพ์เมื่อ {{ \App\Support\ThaiDate::date(now()) }}</span>
         </div>
 
         @if ($report['total_referrals'] === 0)
@@ -381,8 +381,8 @@
                                 </div>
                             </div>
                             <div class="case-dates">
-                                กำหนดเยี่ยม {{ $row['due_date']?->format('d/m/Y') ?? '—' }}
-                                &middot; เยี่ยมจริง {{ $row['visited_at']?->format('d/m/Y') ?? '—' }}
+                                กำหนดเยี่ยม {{ \App\Support\ThaiDate::date($row['due_date']) ?? '—' }}
+                                &middot; เยี่ยมจริง {{ \App\Support\ThaiDate::date($row['visited_at']) ?? '—' }}
                             </div>
                             <div class="case-dx">
                                 <span class="l">วินิจฉัย/โรคประจำตัว:</span> {{ $row['diagnosis'] ?? '—' }}

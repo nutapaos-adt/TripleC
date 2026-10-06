@@ -62,7 +62,7 @@
         <div class="confirmed-box">
             <div class="box-label">
                 <span class="dot"></span>
-                ยืนยันแล้วโดย {{ $referral->confirmer->name }} เมื่อ {{ $referral->confirmed_at->format('d/m/Y H:i') }}
+                ยืนยันแล้วโดย {{ $referral->confirmer->name }} เมื่อ {{ \App\Support\ThaiDate::dateTime($referral->confirmed_at) }}
             </div>
 
             <div class="field-grid">

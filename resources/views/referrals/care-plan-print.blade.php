@@ -87,7 +87,7 @@
                     <div class="org">โรงพยาบาลค่ายจิรประวัติ</div>
                     <h1>รายงานสรุปแผนการดูแลผู้ป่วย</h1>
                 </div>
-                <div class="meta">พิมพ์เมื่อ {{ now()->format('d/m/Y H:i') }}</div>
+                <div class="meta">พิมพ์เมื่อ {{ \App\Support\ThaiDate::dateTime(now()) }}</div>
             </div>
 
             <div class="chips">
@@ -115,13 +115,13 @@
                 <div class="it"><span class="lb">ความยินยอมเยี่ยมบ้าน</span><span class="vl"><b>{{ $referral->visitConsentLabel() ?? 'ยังไม่ได้สอบถาม' }}</b></span></div>
                 <div class="it"><span class="lb">แพทย์เจ้าของไข้</span><span class="vl">{{ $referral->attending_physician ?? '—' }}</span></div>
                 @if ($referral->ward && ! $referral->ward->has_admission)
-                    <div class="it"><span class="lb">วันที่พบผู้ป่วย / นัด OPD</span><span class="vl">{{ $referral->encounter_date?->format('d/m/Y') ?? '—' }} / {{ $referral->opd_followup_date?->format('d/m/Y') ?? '—' }}</span></div>
+                    <div class="it"><span class="lb">วันที่พบผู้ป่วย / นัด OPD</span><span class="vl">{{ \App\Support\ThaiDate::date($referral->encounter_date) ?? '—' }} / {{ \App\Support\ThaiDate::date($referral->opd_followup_date) ?? '—' }}</span></div>
                 @else
-                    <div class="it"><span class="lb">Admit / จำหน่าย / นัด OPD</span><span class="vl">{{ $referral->admit_date?->format('d/m/Y') ?? '—' }} / {{ $referral->discharge_date?->format('d/m/Y') ?? '—' }} / {{ $referral->opd_followup_date?->format('d/m/Y') ?? '—' }}</span></div>
+                    <div class="it"><span class="lb">Admit / จำหน่าย / นัด OPD</span><span class="vl">{{ \App\Support\ThaiDate::date($referral->admit_date) ?? '—' }} / {{ \App\Support\ThaiDate::date($referral->discharge_date) ?? '—' }} / {{ \App\Support\ThaiDate::date($referral->opd_followup_date) ?? '—' }}</span></div>
                 @endif
                 <div class="it full"><span class="lb">การวินิจฉัย</span><span class="vl">{{ $referral->diagnosis ?? '—' }}</span></div>
                 <div class="it"><span class="lb">โรคประจำตัว</span><span class="vl">{{ $referral->underlying_disease ?? '—' }}</span></div>
-                <div class="it"><span class="lb">การผ่าตัดครั้งนี้</span><span class="vl">{{ $referral->surgery_history ?? '—' }}@if ($referral->surgery_date) — เมื่อวันที่ {{ $referral->surgery_date->format('d/m/Y') }}@endif</span></div>
+                <div class="it"><span class="lb">การผ่าตัดครั้งนี้</span><span class="vl">{{ $referral->surgery_history ?? '—' }}@if ($referral->surgery_date) — เมื่อวันที่ {{ \App\Support\ThaiDate::date($referral->surgery_date) }}@endif</span></div>
                 <div class="it {{ $isPalliative ? '' : 'full' }}"><span class="lb">อุปกรณ์ของผู้ป่วย</span><span class="vl">{{ !empty($referral->equipment) ? implode(', ', $referral->equipment) : '—' }}</span></div>
                 @if ($isPalliative)
                     <div class="it"><span class="lb">PPS Score เริ่มต้น</span><span class="vl">{{ $referral->initial_pps_score ?? '—' }}</span></div>
@@ -149,7 +149,7 @@
                 @endphp
                 <div>
                     @forelse ($plans as $plan)
-                        ครั้งที่ {{ $plan->plan_number }} — {{ $plan->method === 'home_visit' ? 'เยี่ยมบ้าน' : 'โทรติดตาม' }} — กำหนด {{ $plan->due_date->format('d/m/Y') }}<br>
+                        ครั้งที่ {{ $plan->plan_number }} — {{ $plan->method === 'home_visit' ? 'เยี่ยมบ้าน' : 'โทรติดตาม' }} — กำหนด {{ \App\Support\ThaiDate::date($plan->due_date) }}<br>
                     @empty
                         ยังไม่มีกำหนดการ
                     @endforelse
@@ -165,7 +165,7 @@
             </div>
 
             <div class="sig">
-                <div>ยืนยันแผนโดย: {{ $referral->confirmer?->name ?? '—' }}@if($referral->confirmed_at) เมื่อ {{ $referral->confirmed_at->format('d/m/Y H:i') }}@endif</div>
+                <div>ยืนยันแผนโดย: {{ $referral->confirmer?->name ?? '—' }}@if($referral->confirmed_at) เมื่อ {{ \App\Support\ThaiDate::dateTime($referral->confirmed_at) }}@endif</div>
             </div>
         </section>
 
@@ -179,7 +179,7 @@
                 <div class="pt">
                     <b>{{ $referral->patient->name }}</b>
                     <span>HN {{ $referral->patient->hn }}</span>
-                    <span>{{ $referral->patient->dob ? 'เกิด '.$referral->patient->dob->format('d/m/Y').' ('.$referral->patient->dob->age.' ปี)' : '' }}</span>
+                    <span>{{ $referral->patient->dob ? 'เกิด '.\App\Support\ThaiDate::date($referral->patient->dob).' ('.$referral->patient->dob->age.' ปี)' : '' }}</span>
                 </div>
             </div>
 

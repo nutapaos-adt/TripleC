@@ -40,7 +40,7 @@
             @if ($referral->severityLabel())
                 <span class="chip {{ $referral->severityChipClass() }}">{{ $referral->severityLabel() }}</span>
             @endif
-            <span class="chip {{ $plan->isOverdue() ? 'chip-overdue' : 'chip-today' }}">กำหนด {{ $plan->due_date->format('d/m/Y') }}</span>
+            <span class="chip {{ $plan->isOverdue() ? 'chip-overdue' : 'chip-today' }}">กำหนด {{ \App\Support\ThaiDate::date($plan->due_date) }}</span>
         </div>
     </section>
 
@@ -66,7 +66,7 @@
 
                 <div class="field">
                     <label for="visited_at">วันเวลาที่เยี่ยม/โทร</label>
-                    <input type="datetime-local" id="visited_at" name="visited_at" value="{{ old('visited_at', now()->format('Y-m-d\TH:i')) }}" required>
+                    <x-thai-date name="visited_at" id="visited_at" :value="old('visited_at', now())" :time="true" :required="true" :years-back="1" :years-forward="0" />
                     <span class="hint">ระบบจะบันทึกเวลานี้เป็นเวลาที่ทำการติดตามจริง — แก้ไขได้หากบันทึกย้อนหลัง</span>
                 </div>
 

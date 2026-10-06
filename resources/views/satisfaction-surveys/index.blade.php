@@ -35,7 +35,7 @@
                                     <div class="patient-hn">HN {{ $referral->patient->hn }}</div>
                                 </td>
                                 <td class="due-date">
-                                    {{ $row['latest_visit'] ? $row['latest_visit']->format('d/m/Y') : '—' }}
+                                    {{ $row['latest_visit'] ? \App\Support\ThaiDate::date($row['latest_visit']) : '—' }}
                                 </td>
                                 <td>
                                     @if ($evaluated)

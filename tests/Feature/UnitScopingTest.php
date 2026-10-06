@@ -163,7 +163,7 @@ class UnitScopingTest extends TestCase
         $this->assertNull($referral->admit_date);
         $this->actingAs($staff)->get(route('referrals.show', $referral))
             ->assertSee('วันที่พบผู้ป่วย')
-            ->assertSee('03/10/2026');
+            ->assertSee('03/10/2569');
     }
 
     public function test_editing_a_referral_keeps_its_original_source_unit_not_the_editors(): void

@@ -48,7 +48,7 @@
             <div class="field-grid">
                 <div class="field">
                     <label>วัน-เวลาที่ติดตาม</label>
-                    <div class="field-value">{{ $record->visited_at->format('d/m/Y H:i') }}</div>
+                    <div class="field-value">{{ \App\Support\ThaiDate::dateTime($record->visited_at) }}</div>
                 </div>
                 @if ($plan->referral->severity_group === \App\Models\Referral::SEVERITY_PALLIATIVE)
                     <div class="field">
@@ -104,7 +104,7 @@
 
     @if ($isConfirmed)
         <div class="nurse-decision confirmed">
-            <span class="nurse-decision-label">การตัดสินใจของพยาบาล — ยืนยันแล้วโดย {{ $record->confirmer->name }} เมื่อ {{ $record->confirmed_at->format('d/m/Y H:i') }}</span>
+            <span class="nurse-decision-label">การตัดสินใจของพยาบาล — ยืนยันแล้วโดย {{ $record->confirmer->name }} เมื่อ {{ \App\Support\ThaiDate::dateTime($record->confirmed_at) }}</span>
             <p style="margin:0;font-size:14px;color:var(--color-neutral-900);">
                 การตัดสินใจ:
                 <strong>{{ $decisionLabels[$record->nurse_decision] ?? $record->nurse_decision }}</strong>

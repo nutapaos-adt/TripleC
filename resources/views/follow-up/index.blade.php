@@ -47,7 +47,7 @@
         <select name="year" onchange="document.getElementById('dateFilterForm').submit()" style="width:auto;">
             <option value="">ทุกปี</option>
             @foreach ($availableYears as $y)
-                <option value="{{ $y }}" @selected((string) $year === (string) $y)>{{ $y }}</option>
+                <option value="{{ $y }}" @selected((string) $year === (string) $y)>{{ \App\Support\ThaiDate::year((int) $y) }}</option>
             @endforeach
         </select>
         <select name="month" onchange="document.getElementById('dateFilterForm').submit()" style="width:auto;">
@@ -97,7 +97,7 @@
                                     {{ $plan->method === \App\Models\FollowUpPlan::METHOD_HOME_VISIT ? 'เยี่ยมบ้าน' : 'โทรติดตาม' }}
                                 </span>
                             </td>
-                            <td class="due-date">{{ $plan->due_date->format('d/m/Y') }}</td>
+                            <td class="due-date">{{ \App\Support\ThaiDate::date($plan->due_date) }}</td>
                             <td>
                                 @if ($isDone)
                                     <span class="chip chip-done">เยี่ยมแล้ว</span>
