@@ -19,6 +19,16 @@
         @endif
     </div>
 
+    @if ($referral->isConfirmed())
+        <div class="confirmed-box" style="margin-bottom:var(--space-6);">
+            <div class="box-label"><span class="dot"></span> ยืนยันแล้วโดย {{ $referral->confirmer->name }} เมื่อ {{ $referral->confirmed_at->format('d/m/Y H:i') }}</div>
+            <div class="btn-row">
+                <a href="{{ route('referrals.care-plan', $referral) }}" class="btn btn-secondary">ดูแผนการดูแล</a>
+                <a href="{{ route('referrals.care-plan.print', $referral) }}" class="btn btn-secondary">พิมพ์แผนการดูแล + แบบบันทึกการเยี่ยม</a>
+            </div>
+        </div>
+    @endif
+
     @php
         $age = null;
         if ($referral->patient->dob) {
@@ -241,21 +251,13 @@
         $firstPlan = $referral->followUpPlans->sortBy('plan_number')->first();
     @endphp
 
-    @if ($referral->isConfirmed())
-        <div class="confirmed-box">
-            <div class="box-label"><span class="dot"></span> ยืนยันแล้วโดย {{ $referral->confirmer->name }} เมื่อ {{ $referral->confirmed_at->format('d/m/Y H:i') }}</div>
-            <div class="btn-row">
-                <a href="{{ route('referrals.care-plan', $referral) }}" class="btn btn-secondary">ดูแผนการดูแล</a>
-                <a href="{{ route('referrals.care-plan.print', $referral) }}" class="btn btn-secondary">พิมพ์แผนการดูแล</a>
-            </div>
-        </div>
-    @elseif ($referral->ai_summary)
+    @if (! $referral->isConfirmed() && $referral->ai_summary)
         <div class="ai-box">
             <div class="box-label"><span class="dot"></span> ร่างจาก AI — ยังไม่ยืนยัน</div>
             <p style="margin:0 0 var(--space-4);color:var(--color-primary-800);">AI สรุปข้อมูลแล้ว รอพยาบาลตรวจสอบและยืนยันแผนการพยาบาล</p>
             <a href="{{ route('referrals.care-plan', $referral) }}" class="btn btn-primary">วิเคราะห์แผนการพยาบาล</a>
         </div>
-    @else
+    @elseif (! $referral->isConfirmed())
         <div class="banner">
             <div class="banner-text">
                 <p class="h3">ขั้นตอนถัดไป: ให้ AI ช่วยสรุปข้อมูลและแนะนำแผนติดตาม</p>
