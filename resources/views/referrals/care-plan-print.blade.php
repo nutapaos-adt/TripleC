@@ -224,16 +224,7 @@
                         <div class="r"><div class="c s12"><span class="l">PPS Score (Palliative Care)</span>คะแนน ........... <span class="u">(0–100: 100 = ปกติดี, 0 = เสียชีวิต)</span></div></div>
                     @endif
                     @if ($isRed)
-                        <div class="r"><div class="c s12" style="background:#f3f6f9;min-height:0;"><b>ADL (กลุ่ม 3 บ้านสีแดง)</b> <span class="u">&nbsp; ทำได้เอง = 2 &nbsp; ช่วยเหลือบางส่วน = 1 &nbsp; ทำเองไม่ได้ = 0</span></div></div>
-                        <div class="r">
-                            <div class="c s6"><span class="l">การรับประทานอาหาร</span><span class="o">☐ 2 &nbsp; ☐ 1 &nbsp; ☐ 0</span></div>
-                            <div class="c s6"><span class="l">การเคลื่อนไหว/ย้ายตัว</span><span class="o">☐ 2 &nbsp; ☐ 1 &nbsp; ☐ 0</span></div>
-                        </div>
-                        <div class="r">
-                            <div class="c s6"><span class="l">การขับถ่าย/ปัสสาวะ</span><span class="o">☐ 2 &nbsp; ☐ 1 &nbsp; ☐ 0</span></div>
-                            <div class="c s6"><span class="l">การอาบน้ำ/แต่งตัว</span><span class="o">☐ 2 &nbsp; ☐ 1 &nbsp; ☐ 0</span></div>
-                        </div>
-                        <div class="r"><div class="c s12" style="min-height:0;"><b>คะแนน ADL รวม</b> ......... / 8</div></div>
+                        <div class="r"><div class="c s12" style="min-height:0;"><b>คะแนน ADL รวม (กลุ่ม 3 บ้านสีแดง)</b> ...............</div></div>
                     @endif
                 @endif
 
@@ -260,7 +251,8 @@
 
                 <div class="sec">{{ 3 + (($isPalliative || $isRed) ? 1 : 0) + ($isTkaUka ? 1 : 0) }}. บันทึกผลการติดตาม <small>(อาการ/ปัญหาที่พบ สิ่งที่ทำ)</small></div>
                 <div class="r">
-                    @for ($i = 0; $i < 7; $i++)<div class="c rule" style="border-left:0;border-bottom:1px solid #bbb;"></div>@endfor
+                    @php $noteLines = ($isTkaUka ? 7 : 14) - (($isPalliative || $isRed) ? 3 : 0); @endphp
+                    @for ($i = 0; $i < $noteLines; $i++)<div class="c rule" style="border-left:0;border-bottom:1px solid #bbb;"></div>@endfor
                 </div>
 
                 <div class="sec">{{ 4 + (($isPalliative || $isRed) ? 1 : 0) + ($isTkaUka ? 1 : 0) }}. การประเมินความเสี่ยงและการตัดสินใจของพยาบาล</div>
