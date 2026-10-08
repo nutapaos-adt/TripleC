@@ -17,7 +17,6 @@ class AiService
      * @return array{
      *     patient_type: ?string,
      *     main_problem: ?string,
-     *     follow_up_need: ?string,
      *     risk_signals: array<int, string>,
      *     suggested_case_type_slug: ?string,
      *     parse_error: bool,
@@ -28,13 +27,22 @@ class AiService
     {
         $prompt = $this->buildSummaryPrompt($referral);
 
-        return $this->parseJsonResponse($this->callOllama($prompt), [
+        $result = $this->parseJsonResponse($this->callOllama($prompt), [
             'patient_type' => null,
             'main_problem' => null,
-            'follow_up_need' => null,
             'risk_signals' => [],
             'suggested_case_type_slug' => null,
         ]);
+
+        // patient_type ต้องเป็นสรุปสั้น (ฟอร์มยืนยันจำกัดความยาว) — ถ้าโมเดลเขียนยาวเกิน ตัดไว้ให้พยาบาลแก้ต่อได้
+        if (is_string($result['patient_type'] ?? null) && mb_strlen($result['patient_type']) > 400) {
+            $result['patient_type'] = mb_substr($result['patient_type'], 0, 399).'…';
+        }
+
+        // problems เป็นแค่ขั้นช่วยให้โมเดลไล่อ่านทุกหัวข้อก่อนสรุป ไม่ใช่ส่วนหนึ่งของผลลัพธ์ที่สัญญาไว้
+        unset($result['problems']);
+
+        return $result;
     }
 
     /**
@@ -270,20 +278,24 @@ class AiService
                (ตัวอย่างสิ่งที่ห้ามทำ: ข้อความเขียนว่า "OD" แล้วไปตีความว่าหมายถึงดวงตา ทั้งที่ไม่ได้เขียนไว้)
                — คำย่อที่อยู่ในอภิธานศัพท์ด้านบนใช้ความหมายนั้นได้ ยกเว้นคำที่มีหลายความหมาย ให้ตีความจากบริบท ถ้าไม่ชัดให้ระบุว่า "ไม่แน่ใจ"
             3. ความถูกต้องสำคัญกว่าความสละสลวย — ถ้าไม่มั่นใจ ให้เขียนสั้นและตรงตามข้อความเดิมไว้ก่อน ดีกว่าเขียนให้ดูดีแต่ผิดข้อเท็จจริง
-            4. ช่อง patient_type ต้องเป็นคำอธิบายเกี่ยวกับตัวผู้ป่วยเอง (เช่น เพศ วัย โรคประจำตัวเด่น) เท่านั้น
+            4. ช่อง patient_type ต้องเป็นคำอธิบายเกี่ยวกับตัวผู้ป่วยเอง (เช่น เพศ วัย โรคประจำตัวเด่น) เท่านั้น และต้องสั้น ไม่เกิน 1-2 ประโยค (ไม่เกิน 150 ตัวอักษร)
+               ห้ามใส่รายละเอียดของแต่ละปัญหาลงในช่องนี้ — รายละเอียดให้ไปอยู่ในช่อง main_problem และ risk_signals
                ห้ามใส่ slug หรือชื่อประเภทเคสในช่องนี้เด็ดขาด — slug ประเภทเคสให้ใส่เฉพาะในช่อง suggested_case_type_slug เท่านั้น
                ทั้งสองช่องนี้เป็นคนละเรื่องกัน ห้ามสลับหรือใส่ค่าเดียวกัน
-            5. ช่อง follow_up_need และ risk_signals ต้องครอบคลุม "ทุก" ประเด็นที่ข้อความต้นฉบับสั่งให้ติดตาม/ระวังไว้ ไม่ใช่แค่ประเด็นเดียวที่เด่นที่สุด
+            5. ช่อง risk_signals คือ "ประเด็นที่ต้องติดตาม" ต้องครอบคลุม "ทุก" ประเด็นที่ข้อความต้นฉบับสั่งให้ติดตาม/ระวังไว้ ไม่ใช่แค่ประเด็นเดียวที่เด่นที่สุด รวมถึงวันนัดหรือแล็บที่ข้อความระบุไว้
                — ถ้าข้อความมีทั้งคำสั่งดูแลแผล/สังเกตอาการติดเชื้อ และคำเตือนเรื่องความปลอดภัย (เช่น ระวังพลัดตกหกล้ม) ต้องใส่ทั้งสองเรื่องแยกกัน ห้ามเลือกใส่แค่เรื่องเดียว
                — risk_signals ให้แยกเป็นรายการย่อยตามแต่ละสัญญาณ/คำเตือนที่พบ ไม่ใช่สรุปรวมเป็นประโยคเดียว
+            6. ห้ามระบุชื่อโรค ชนิดของโรค หรือผลการวินิจฉัยที่ข้อความไม่ได้เขียนไว้ตรงๆ (เช่น ข้อความบอกแค่ "หัวใจล้มเหลว" ห้ามเติมว่าเป็นชนิดใด หรือค่า EF เท่าไร) ใช้เฉพาะคำที่มีในข้อความหรือในอภิธานศัพท์
+            7. ช่อง problems ให้ทำก่อนช่องอื่น: ไล่อ่านข้อความทีละบรรทัดจนครบ แล้วจดทุกปัญหา/หัวข้อที่ข้อความพูดถึง (เช่น แต่ละข้อที่มีเลขกำกับ) ข้อละ 1 รายการสั้นๆ ห้ามข้ามข้อใด
+               — main_problem ต้องกล่าวถึงทุกรายการใน problems และ risk_signals ต้องมีสิ่งที่ต้องติดตามของทุกรายการ ไม่ใช่แค่ปัญหาแรกหรือปัญหาที่เด่นที่สุด
 
             ตัวอย่างรูปแบบคำตอบที่ครอบคลุมทุกประเด็น (เป็นแค่ตัวอย่างรูปแบบ ห้ามนำเนื้อหานี้ไปใช้ตอบเด็ดขาด — ต้องใช้ข้อมูลผู้ป่วยจริงด้านบนเท่านั้น
             สมมติว่าข้อความต้นฉบับคือ "ผป. COPD on home O2 2 LPM ญาติดูแลเหนื่อยล้า สอน pursed-lip breathing ระวัง sat drop"):
-            {"patient_type": "ผู้สูงอายุ มีโรคปอดอุดกั้นเรื้อรังเป็นโรคประจำตัว ใช้ออกซิเจนที่บ้าน", "main_problem": "ต้องพึ่งออกซิเจนต่อเนื่องและผู้ดูแลเริ่มเหนื่อยล้าจากการดูแล", "follow_up_need": "ติดตามการใช้ออกซิเจนที่บ้านให้ถูกวิธี ทบทวนเทคนิคการหายใจแบบ pursed-lip ที่สอนไว้ และประเมินภาวะเหนื่อยล้าของผู้ดูแล", "risk_signals": ["ระดับออกซิเจนในเลือดอาจลดลง (sat drop)", "ผู้ดูแลเหนื่อยล้าจากภาระการดูแล"], "suggested_case_type_slug": "med"}
+            {"patient_type": "ผู้สูงอายุ มีโรคปอดอุดกั้นเรื้อรังเป็นโรคประจำตัว ใช้ออกซิเจนที่บ้าน", "main_problem": "ต้องพึ่งออกซิเจนต่อเนื่องและผู้ดูแลเริ่มเหนื่อยล้าจากการดูแล", "risk_signals": ["ติดตามการใช้ออกซิเจนที่บ้านให้ถูกวิธี และระดับออกซิเจนในเลือดที่อาจลดลง (sat drop)", "ทบทวนเทคนิคการหายใจแบบ pursed-lip ที่สอนไว้", "ประเมินภาวะเหนื่อยล้าของผู้ดูแล"], "suggested_case_type_slug": "med"}
             (สังเกตว่าตัวอย่างนี้ดึงทุกประเด็นที่ต้นฉบับพูดถึงมาครบ — ทั้งออกซิเจน เทคนิคหายใจ และภาวะผู้ดูแล — ไม่ได้เลือกใส่แค่ประเด็นเดียว)
 
             ตอบกลับเป็น JSON เท่านั้น ห้ามมีข้อความอื่นใดนอกเหนือจาก JSON ตามโครงสร้างนี้:
-            {"patient_type": string, "main_problem": string, "follow_up_need": string, "risk_signals": string[], "suggested_case_type_slug": string}
+            {"problems": string[], "patient_type": string, "main_problem": string, "risk_signals": string[], "suggested_case_type_slug": string}
             PROMPT;
     }
 
@@ -306,7 +318,12 @@ class AiService
                     'model' => $config['model'],
                     'prompt' => $prompt,
                     'format' => 'json',
-                    'stream' => false,
+                    // stream=true: Ollama starts sending the response as soon as the first token is ready. A single
+                    // non-streamed reply would sit silent for the whole generation, and Cloudflare (in front of the
+                    // department PC) drops any origin that sends nothing for ~100s (HTTP 524) — which happened for
+                    // long notes on a cold model. We still read the whole body before returning.
+                    'stream' => true,
+                    'keep_alive' => $config['keep_alive'],
                 ]);
         } catch (\Throwable $e) {
             Log::error('Ollama connection failed', ['message' => $e->getMessage()]);
@@ -320,7 +337,38 @@ class AiService
             throw new \RuntimeException('เรียกใช้ AI ไม่สำเร็จ กรุณาลองใหม่ หรือกรอกข้อมูลด้วยตนเอง');
         }
 
-        return (string) $response->json('response', '');
+        return $this->assembleStreamedResponse($response->body());
+    }
+
+    /**
+     * Ollama streams one JSON object per line ({"response":"<piece>", ...}); join the pieces into the full text.
+     * A single non-streamed JSON object (one line) is handled the same way.
+     */
+    protected function assembleStreamedResponse(string $body): string
+    {
+        $text = '';
+
+        foreach (preg_split('/\R/', trim($body)) as $line) {
+            if (trim($line) === '') {
+                continue;
+            }
+
+            $chunk = json_decode($line, true);
+
+            if (! is_array($chunk)) {
+                continue;
+            }
+
+            if (isset($chunk['error'])) {
+                Log::error('Ollama returned an error while generating', ['error' => $chunk['error']]);
+
+                throw new \RuntimeException('เรียกใช้ AI ไม่สำเร็จ กรุณาลองใหม่ หรือกรอกข้อมูลด้วยตนเอง');
+            }
+
+            $text .= (string) ($chunk['response'] ?? '');
+        }
+
+        return $text;
     }
 
     /**

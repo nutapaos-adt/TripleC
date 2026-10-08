@@ -44,7 +44,7 @@
                     <select id="month" name="month" class="input">
                         <option value="">ทุกเดือน</option>
                         @for ($m = 1; $m <= 12; $m++)
-                            <option value="{{ $m }}" @selected((string) $month === (string) $m)>{{ \Illuminate\Support\Carbon::create()->month($m)->translatedFormat('F') }}</option>
+                            <option value="{{ $m }}" @selected((string) $month === (string) $m)>{{ \App\Support\ThaiDate::monthName($m) }}</option>
                         @endfor
                     </select>
                 </div>
@@ -53,7 +53,7 @@
                     <select id="year" name="year" class="input">
                         <option value="">ทุกปี</option>
                         @for ($y = now()->year; $y >= now()->year - 5; $y--)
-                            <option value="{{ $y }}" @selected((string) $year === (string) $y)>{{ $y }}</option>
+                            <option value="{{ $y }}" @selected((string) $year === (string) $y)>{{ \App\Support\ThaiDate::year($y) }}</option>
                         @endfor
                     </select>
                 </div>
@@ -96,7 +96,7 @@
                                 <td>
                                     <span class="chip chip-casetype">{{ $referral->caseType?->name ?? '—' }}</span>
                                 </td>
-                                <td class="due-date">{{ $row['latest_visited_at']?->format('d/m/Y') ?? '—' }}</td>
+                                <td class="due-date">{{ \App\Support\ThaiDate::date($row['latest_visited_at']) ?? '—' }}</td>
                                 <td>
                                     @if ($row['is_risk'])
                                         <span class="chip chip-risk">พบความเสี่ยง</span>

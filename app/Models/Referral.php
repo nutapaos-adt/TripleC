@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -45,6 +46,38 @@ class Referral extends Model
         self::PATIENT_STATUS_MILITARY_FAMILY => 'ครอบครัวกำลังพล',
     ];
 
+    public const VISIT_CONSENT_HOME = 'home_visit';
+    public const VISIT_CONSENT_PHONE_ONLY = 'phone_only';
+    public const VISIT_CONSENT_DECLINED = 'declined';
+
+    public const VISIT_CONSENT_LABELS = [
+        self::VISIT_CONSENT_HOME => 'ยินยอมให้เยี่ยมบ้าน',
+        self::VISIT_CONSENT_PHONE_ONLY => 'ยินยอมให้เยี่ยมทางโทรศัพท์',
+        self::VISIT_CONSENT_DECLINED => 'ไม่ยินยอมให้เยี่ยม',
+    ];
+
+    public const VISIT_CONSENT_CHIP_CLASSES = [
+        self::VISIT_CONSENT_HOME => 'chip-done',
+        self::VISIT_CONSENT_PHONE_ONLY => 'chip-warning',
+        self::VISIT_CONSENT_DECLINED => 'chip-risk',
+    ];
+
+    public const DRUG_ALLERGY_NONE = 'none';
+    public const DRUG_ALLERGY_YES = 'yes';
+    public const DRUG_ALLERGY_UNKNOWN = 'unknown';
+
+    public const DRUG_ALLERGY_LABELS = [
+        self::DRUG_ALLERGY_NONE => 'ไม่มีประวัติแพ้ยา',
+        self::DRUG_ALLERGY_YES => 'แพ้ยา',
+        self::DRUG_ALLERGY_UNKNOWN => 'ไม่ทราบประวัติแพ้ยา',
+    ];
+
+    public const DRUG_ALLERGY_CHIP_CLASSES = [
+        self::DRUG_ALLERGY_NONE => 'chip-done',
+        self::DRUG_ALLERGY_YES => 'chip-risk',
+        self::DRUG_ALLERGY_UNKNOWN => 'chip-warning',
+    ];
+
     public const SEVERITY_GREEN = 'green';
     public const SEVERITY_YELLOW = 'yellow';
     public const SEVERITY_RED = 'red';
@@ -86,15 +119,21 @@ class Referral extends Model
         'caregiver_phone',
         'caregiver_relationship',
         'patient_status',
+        'visit_consent',
         'military_unit',
         'coverage_type',
+        'drug_allergy_status',
+        'drug_allergy_detail',
         'diagnosis',
         'underlying_disease',
         'surgery_history',
+        'surgery_date',
         'equipment',
         'clinical_tracers',
+        'discharge_vitals',
         'admit_date',
         'discharge_date',
+        'encounter_date',
         'opd_followup_date',
         'attending_physician',
         'severity_group',
@@ -119,8 +158,11 @@ class Referral extends Model
             'closed_at' => 'datetime',
             'equipment' => 'array',
             'clinical_tracers' => 'array',
+            'discharge_vitals' => 'array',
             'admit_date' => 'date',
             'discharge_date' => 'date',
+            'encounter_date' => 'date',
+            'surgery_date' => 'date',
             'opd_followup_date' => 'date',
         ];
     }
@@ -160,6 +202,26 @@ class Referral extends Model
         return $this->belongsTo(Ward::class);
     }
 
+    /**
+     * เจ้าหน้าที่หอผู้ป่วย (ward_staff) เห็นเฉพาะใบส่งต่อของหน่วยงานตัวเอง — บัญชีที่ยังไม่ผูกหน่วยงานไม่เห็นอะไรเลย
+     * (ไม่ใช่เห็นเคสที่ไม่มีหน่วยงาน) ส่วนทีมเยี่ยมบ้าน/แอดมินเห็นทุกหน่วยงาน
+     */
+    public function scopeVisibleTo(Builder $query, User $user): Builder
+    {
+        if (! $user->isWardStaff()) {
+            return $query;
+        }
+
+        return $user->ward_id
+            ? $query->where('ward_id', $user->ward_id)
+            : $query->whereRaw('1 = 0');
+    }
+
+    public function isVisibleTo(User $user): bool
+    {
+        return ! $user->isWardStaff() || ($user->ward_id !== null && $user->ward_id === $this->ward_id);
+    }
+
     public function satisfactionSurveys(): HasMany
     {
         return $this->hasMany(SatisfactionSurvey::class);
@@ -183,6 +245,56 @@ class Referral extends Model
     public function patientStatusLabel(): string
     {
         return self::PATIENT_STATUS_LABELS[$this->patient_status] ?? $this->patient_status;
+    }
+
+    /**
+     * สัญญาณชีพก่อนกลับบ้าน เป็นข้อความสั้นสำหรับแสดงผล เช่น "BP 120/80 mmHg · PR 80 ครั้ง/นาที · SpO2 98 %"
+     * คืน null ถ้าไม่ได้กรอกค่าใดเลย
+     */
+    public function dischargeVitalsText(): ?string
+    {
+        $v = $this->discharge_vitals ?? [];
+        $parts = [];
+
+        if (($v['bp_sys'] ?? null) !== null || ($v['bp_dia'] ?? null) !== null) {
+            $parts[] = 'BP '.($v['bp_sys'] ?? '?').'/'.($v['bp_dia'] ?? '?').' mmHg';
+        }
+        foreach (['pr' => 'PR %s ครั้ง/นาที', 'rr' => 'RR %s ครั้ง/นาที', 'temp' => 'Temp %s °C', 'spo2' => 'SpO2 %s %%', 'pain' => 'Pain score %s/10'] as $key => $format) {
+            if (($v[$key] ?? null) !== null && $v[$key] !== '') {
+                $parts[] = sprintf($format, $v[$key]);
+            }
+        }
+
+        return $parts ? implode(' · ', $parts) : null;
+    }
+
+    /** เช่น "แพ้ยา: Penicillin (ผื่น)" / "ไม่มีประวัติแพ้ยา" — null ถ้ายังไม่เคยสอบถาม (ใบส่งต่อเดิม) */
+    public function drugAllergyText(): ?string
+    {
+        $label = self::DRUG_ALLERGY_LABELS[$this->drug_allergy_status] ?? null;
+
+        if ($label === null) {
+            return null;
+        }
+
+        return $this->drug_allergy_status === self::DRUG_ALLERGY_YES && $this->drug_allergy_detail
+            ? $label.': '.$this->drug_allergy_detail
+            : $label;
+    }
+
+    public function drugAllergyChipClass(): string
+    {
+        return self::DRUG_ALLERGY_CHIP_CLASSES[$this->drug_allergy_status] ?? 'chip-neutral';
+    }
+
+    public function visitConsentLabel(): ?string
+    {
+        return self::VISIT_CONSENT_LABELS[$this->visit_consent] ?? null;
+    }
+
+    public function visitConsentChipClass(): string
+    {
+        return self::VISIT_CONSENT_CHIP_CLASSES[$this->visit_consent] ?? 'chip-neutral';
     }
 
     public function statusLabel(): string

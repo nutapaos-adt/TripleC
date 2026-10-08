@@ -46,7 +46,7 @@
                                     {{ $referral->zone === 'in_area' ? 'ในเขต' : 'นอกเขต' }}
                                 </span>
                             </td>
-                            <td class="due-date">{{ $referral->created_at->format('d/m/Y') }}</td>
+                            <td class="due-date">{{ \App\Support\ThaiDate::date($referral->created_at) }}</td>
                             <td><span class="chip chip-warning">รอตรวจสอบ</span></td>
                             <td>
                                 <a href="{{ route('referrals.care-plan', $referral) }}" class="btn btn-primary btn-sm">ตรวจสอบแผน</a>

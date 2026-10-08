@@ -26,7 +26,10 @@ class FollowUpController extends Controller
         $year = $request->query('year');
         $month = $request->query('month');
 
-        $notCancelled = fn ($query) => $query->where('status', '!=', FollowUpPlan::STATUS_CANCELLED);
+        $user = Auth::user();
+        $notCancelled = fn ($query) => $query
+            ->where('status', '!=', FollowUpPlan::STATUS_CANCELLED)
+            ->whereHas('referral', fn ($referral) => $referral->visibleTo($user));
 
         $counts = [
             'all' => FollowUpPlan::tap($notCancelled)->count(),
@@ -81,6 +84,7 @@ class FollowUpController extends Controller
     public function createRecord(FollowUpPlan $plan): View
     {
         abort_if($plan->record()->exists(), 403, 'บันทึกผลติดตามครั้งนี้ไปแล้ว');
+        abort_unless($plan->referral->isVisibleTo(Auth::user()), 403, 'ไม่มีสิทธิ์เข้าถึงใบส่งต่อของหน่วยงานอื่น');
 
         $plan->load(['referral.patient', 'referral.caseType']);
 
@@ -160,6 +164,8 @@ class FollowUpController extends Controller
 
     public function review(FollowUpPlan $plan): View
     {
+        abort_unless($plan->referral->isVisibleTo(Auth::user()), 403, 'ไม่มีสิทธิ์เข้าถึงใบส่งต่อของหน่วยงานอื่น');
+
         $plan->load(['referral.patient', 'referral.caseType', 'record.confirmer']);
 
         abort_unless($plan->record, 404);

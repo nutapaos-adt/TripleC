@@ -25,19 +25,21 @@ class ReferralController extends Controller
     public function index(Request $request): View
     {
         $status = $request->query('status');
+        $user = Auth::user();
 
-        $referrals = Referral::with(['patient', 'caseType', 'creator'])
+        $referrals = Referral::visibleTo($user)
+            ->with(['patient', 'caseType', 'creator'])
             ->when($status, fn ($query) => $query->where('status', $status))
             ->latest()
             ->paginate(20)
             ->withQueryString();
 
         $statusCounts = [
-            'all' => Referral::count(),
-            Referral::STATUS_PENDING_REVIEW => Referral::where('status', Referral::STATUS_PENDING_REVIEW)->count(),
-            Referral::STATUS_PLAN_CONFIRMED => Referral::where('status', Referral::STATUS_PLAN_CONFIRMED)->count(),
-            Referral::STATUS_IN_PROGRESS => Referral::where('status', Referral::STATUS_IN_PROGRESS)->count(),
-            Referral::STATUS_CLOSED => Referral::where('status', Referral::STATUS_CLOSED)->count(),
+            'all' => Referral::visibleTo($user)->count(),
+            Referral::STATUS_PENDING_REVIEW => Referral::visibleTo($user)->where('status', Referral::STATUS_PENDING_REVIEW)->count(),
+            Referral::STATUS_PLAN_CONFIRMED => Referral::visibleTo($user)->where('status', Referral::STATUS_PLAN_CONFIRMED)->count(),
+            Referral::STATUS_IN_PROGRESS => Referral::visibleTo($user)->where('status', Referral::STATUS_IN_PROGRESS)->count(),
+            Referral::STATUS_CLOSED => Referral::visibleTo($user)->where('status', Referral::STATUS_CLOSED)->count(),
         ];
 
         return view('referrals.index', compact('referrals', 'status', 'statusCounts'));
@@ -85,6 +87,7 @@ class ReferralController extends Controller
 
     public function edit(Referral $referral): View
     {
+        $this->authorizeUnitAccess($referral);
         abort_unless($referral->status === Referral::STATUS_PENDING_REVIEW, 403, 'แก้ไขข้อมูลได้เฉพาะใบส่งต่อที่ยังไม่ได้ยืนยันแผนดูแล');
 
         $referral->load(['patient', 'attachments']);
@@ -95,6 +98,7 @@ class ReferralController extends Controller
 
     public function update(StoreReferralRequest $request, Referral $referral, ZoneResolver $zoneResolver): RedirectResponse
     {
+        $this->authorizeUnitAccess($referral);
         abort_unless($referral->status === Referral::STATUS_PENDING_REVIEW, 403, 'แก้ไขข้อมูลได้เฉพาะใบส่งต่อที่ยังไม่ได้ยืนยันแผนดูแล');
 
         $data = $request->validated();
@@ -117,6 +121,14 @@ class ReferralController extends Controller
         return redirect()
             ->route('referrals.show', $referral)
             ->with('status', 'บันทึกการแก้ไขเรียบร้อยแล้ว');
+    }
+
+    /**
+     * เจ้าหน้าที่หอผู้ป่วยเปิดดู/แก้ไขได้เฉพาะใบส่งต่อของหน่วยงานตัวเอง (กันการเดา URL /referrals/{id} ข้ามหน่วยงาน)
+     */
+    private function authorizeUnitAccess(Referral $referral): void
+    {
+        abort_unless($referral->isVisibleTo(Auth::user()), 403, 'ไม่มีสิทธิ์เข้าถึงใบส่งต่อของหน่วยงานอื่น');
     }
 
     private function resolveZone(array $data, ZoneResolver $zoneResolver): string
@@ -151,20 +163,26 @@ class ReferralController extends Controller
             'caregiver_phone' => $data['caregiver_phone'] ?? null,
             'caregiver_relationship' => $data['caregiver_relationship'] ?? null,
             'patient_status' => $data['patient_status'],
+            'visit_consent' => $data['visit_consent'],
             'military_unit' => ($data['military_unit'] ?? null) === 'other'
                 ? ($data['military_unit_other'] ?? null)
                 : ($data['military_unit'] ?? null),
             'coverage_type' => $data['coverage_type'] ?? null,
+            'drug_allergy_status' => $data['drug_allergy_status'],
+            'drug_allergy_detail' => $data['drug_allergy_status'] === 'yes' ? ($data['drug_allergy_detail'] ?? null) : null,
             'diagnosis' => $data['diagnosis'] ?? null,
             'underlying_disease' => $data['underlying_disease'] ?? null,
             'surgery_history' => $data['surgery_history'] ?? null,
+            'surgery_date' => $data['surgery_date'] ?? null,
             'equipment' => array_values(array_filter([
                 ...($data['equipment'] ?? []),
                 $data['equipment_other'] ?? null,
             ])),
             'clinical_tracers' => $data['clinical_tracers'] ?? [],
+            'discharge_vitals' => array_filter($data['discharge_vitals'] ?? [], fn ($v) => $v !== null && $v !== '') ?: null,
             'admit_date' => $data['admit_date'] ?? null,
             'discharge_date' => $data['discharge_date'] ?? null,
+            'encounter_date' => $data['encounter_date'] ?? null,
             'opd_followup_date' => $data['opd_followup_date'] ?? null,
             'attending_physician' => $data['attending_physician'] ?? null,
             'severity_group' => $data['severity_group'] ?? null,
@@ -190,6 +208,7 @@ class ReferralController extends Controller
 
     public function show(Referral $referral): View
     {
+        $this->authorizeUnitAccess($referral);
         $referral->load(['patient', 'caseType', 'creator', 'attachments.uploader', 'followUpPlans.record']);
 
         return view('referrals.show', compact('referral'));
@@ -197,6 +216,7 @@ class ReferralController extends Controller
 
     public function downloadAttachment(Referral $referral, ReferralAttachment $attachment): StreamedResponse
     {
+        $this->authorizeUnitAccess($referral);
         abort_unless($attachment->referral_id === $referral->id, 404);
 
         return Storage::disk('local')->download($attachment->file_path, $attachment->original_name);
@@ -204,6 +224,7 @@ class ReferralController extends Controller
 
     public function generateAiSummary(Referral $referral, AiService $ai): RedirectResponse
     {
+        $this->authorizeUnitAccess($referral);
         try {
             $summary = $ai->summarizeReferral($referral);
         } catch (\Throwable $e) {
@@ -224,6 +245,7 @@ class ReferralController extends Controller
 
     public function showCarePlan(Referral $referral): View
     {
+        $this->authorizeUnitAccess($referral);
         $referral->load('patient');
         $caseTypes = CaseType::where('is_active', true)->orderBy('name')->get();
 
@@ -232,6 +254,7 @@ class ReferralController extends Controller
 
     public function confirmCarePlan(ConfirmCarePlanRequest $request, Referral $referral, VisitPlanService $visitPlanService): RedirectResponse
     {
+        $this->authorizeUnitAccess($referral);
         abort_if($referral->isConfirmed(), 403, 'ยืนยันแผนติดตามไปแล้ว ไม่สามารถยืนยันซ้ำได้');
 
         $referral->update([
@@ -241,7 +264,6 @@ class ReferralController extends Controller
             'confirmed_summary' => [
                 'patient_type' => $request->validated('patient_type'),
                 'main_problem' => $request->validated('main_problem'),
-                'follow_up_need' => $request->validated('follow_up_need'),
                 'risk_signals' => $request->riskSignalsArray(),
             ],
             'confirmed_by' => Auth::id(),
@@ -265,6 +287,7 @@ class ReferralController extends Controller
 
     public function printCarePlan(Referral $referral): View
     {
+        $this->authorizeUnitAccess($referral);
         $referral->load(['patient', 'caseType.visitRules', 'confirmer']);
 
         return view('referrals.care-plan-print', compact('referral'));

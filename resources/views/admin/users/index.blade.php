@@ -3,7 +3,7 @@
 
     <div class="page-head">
         <h1 class="h1">ผู้ใช้งาน</h1>
-        <p class="sub">จัดการบทบาทและแผนกของผู้ใช้งานในระบบ</p>
+        <p class="sub">จัดการบทบาทและหน่วยงานของผู้ใช้งานในระบบ</p>
     </div>
 
     <div class="card">
@@ -15,7 +15,7 @@
                             <th>ชื่อ</th>
                             <th>อีเมล</th>
                             <th>บทบาท</th>
-                            <th>แผนก</th>
+                            <th>หน่วยงาน</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -25,7 +25,7 @@
                                 <td class="patient-name">{{ $user->name }}</td>
                                 <td>{{ $user->email }}</td>
                                 <td><span class="chip {{ $user->roleChipClass() }}">{{ $user->roleLabel() }}</span></td>
-                                <td>{{ $user->department ?: '—' }}</td>
+                                <td>{{ $user->ward?->name ?? '—' }}</td>
                                 <td style="text-align:right;">
                                     <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-secondary btn-sm">แก้ไข</a>
                                 </td>

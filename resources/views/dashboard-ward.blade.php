@@ -4,7 +4,7 @@
     <div class="page-head" style="flex-direction:row;align-items:center;justify-content:space-between;">
         <div>
             <h1 class="h1">ภาพรวมหอผู้ป่วยประจำเดือนนี้</h1>
-            <div class="sub">ข้อมูลใบส่งต่อของหอ {{ auth()->user()->ward?->name ?? '—' }} เดือน {{ now()->translatedFormat('F Y') }}</div>
+            <div class="sub">ข้อมูลใบส่งต่อของหอ {{ auth()->user()->ward?->name ?? '—' }} เดือน {{ \App\Support\ThaiDate::monthYear(now()) }}</div>
         </div>
         <a href="{{ route('referrals.create') }}" class="btn btn-primary">+ ส่งข้อมูลเยี่ยมบ้าน</a>
     </div>
@@ -19,7 +19,7 @@
         <div class="kpi-tile">
             <span class="caption">ส่งข้อมูลแล้ว</span>
             <span class="kpi-value">{{ $totalReferralsCount }}</span>
-            <span class="hint">ราย — เดือน{{ now()->translatedFormat('F Y') }} ทั้งหมด</span>
+            <span class="hint">ราย — เดือน{{ \App\Support\ThaiDate::monthYear(now()) }} ทั้งหมด</span>
         </div>
         <div class="kpi-tile">
             <span class="caption">รอยืนยัน</span>
@@ -80,7 +80,7 @@
                                 <td>
                                     <span class="chip chip-casetype">{{ $referral->caseType?->name ?? '— รอ AI ประเมิน —' }}</span>
                                 </td>
-                                <td class="due-date">{{ $referral->created_at->format('d/m/Y') }}</td>
+                                <td class="due-date">{{ \App\Support\ThaiDate::date($referral->created_at) }}</td>
                                 <td style="text-align:right;">
                                     <a href="{{ route('referrals.edit', $referral) }}" class="btn btn-secondary btn-sm">แก้ไขข้อมูล</a>
                                     <a href="{{ route('referrals.show', $referral) }}" class="btn btn-secondary btn-sm">ดูรายละเอียด</a>

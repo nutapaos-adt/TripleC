@@ -13,6 +13,9 @@ return [
     'ollama' => [
         'url' => env('OLLAMA_URL', 'http://127.0.0.1:11434'),
         'model' => env('OLLAMA_MODEL', 'typhoon'),
-        'timeout' => (int) env('OLLAMA_TIMEOUT', 60),
+        // เวลารอรวมสูงสุดต่อคำขอ (วินาที) — โมเดลที่เพิ่งถูกโหลดใหม่ + บันทึกยาวอาจใช้เกิน 2 นาที แนะนำ 300 บน production
+        'timeout' => (int) env('OLLAMA_TIMEOUT', 300),
+        // ให้โมเดลค้างอยู่ในหน่วยความจำหลังใช้งาน เพื่อไม่ต้องโหลดใหม่ทุกครั้ง (รูปแบบของ Ollama เช่น "30m", "2h", -1 = ตลอด)
+        'keep_alive' => env('OLLAMA_KEEP_ALIVE', '30m'),
     ],
 ];

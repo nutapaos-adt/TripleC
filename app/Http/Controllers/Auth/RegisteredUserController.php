@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -22,7 +23,7 @@ class RegisteredUserController extends Controller
     public function create(): View
     {
         return view('auth.register', [
-            'wards' => Ward::orderBy('name')->get(),
+            'wards' => Ward::active()->orderBy('name')->get(),
         ]);
     }
 
@@ -37,7 +38,7 @@ class RegisteredUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'ward_id' => ['required', 'exists:wards,id'],
+            'ward_id' => ['required', Rule::exists('wards', 'id')->where('is_active', true)],
         ]);
 
         $user = User::create([

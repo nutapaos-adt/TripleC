@@ -66,7 +66,7 @@
                             <td>
                                 <span class="chip {{ $referral->statusChipClass() }}">{{ $referral->statusLabel() }}</span>
                             </td>
-                            <td class="due-date">{{ $referral->created_at->format('d/m/Y') }}</td>
+                            <td class="due-date">{{ \App\Support\ThaiDate::date($referral->created_at) }}</td>
                         </tr>
                     @empty
                         <tr>

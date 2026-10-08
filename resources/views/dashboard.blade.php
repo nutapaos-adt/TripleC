@@ -84,7 +84,7 @@
                                 <td>
                                     <span class="chip chip-method">{{ $plan->method === 'home_visit' ? 'เยี่ยมบ้าน' : 'โทรติดตาม' }}</span>
                                 </td>
-                                <td class="due-date">{{ $plan->due_date->format('d/m/Y') }}</td>
+                                <td class="due-date">{{ \App\Support\ThaiDate::date($plan->due_date) }}</td>
                                 <td>
                                     @if ($plan->isOverdue())
                                         <span class="chip chip-overdue">เกินกำหนด {{ $plan->due_date->diffInDays(today()) }} วัน</span>
@@ -122,7 +122,7 @@
                             <span class="chip chip-risk">พบความเสี่ยง</span>
                         </div>
                         <div class="snippet">{{ Str::limit($record->decision_notes ?: $record->raw_notes, 120) }}</div>
-                        <div class="meta">ยืนยันความเสี่ยงโดย {{ $record->confirmer?->name }} เมื่อ {{ $record->confirmed_at?->format('d/m/Y H:i') }}</div>
+                        <div class="meta">ยืนยันความเสี่ยงโดย {{ $record->confirmer?->name }} เมื่อ {{ \App\Support\ThaiDate::dateTime($record->confirmed_at) }}</div>
                     </div>
                     <div class="actions">
                         <a class="btn btn-secondary btn-sm" href="{{ route('follow-up-plans.review', $record->plan) }}">ดูรายละเอียด</a>

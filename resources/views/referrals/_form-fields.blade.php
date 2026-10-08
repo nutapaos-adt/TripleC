@@ -4,6 +4,10 @@
 
     $militaryUnitOptions = ['มทบ.31', 'ร้อย.มทบ.31', 'ร้อย.สห.มทบ.31', 'ศฝ.นศท.มทบ.31', 'รพ.ค่ายจิรประวัติ', 'ร.4', 'ร.4 พัน.1', 'ร.4 พัน.2', 'ข.พัน.4 พล.ร.4', 'ป.4 พัน.4', 'คลังแสง3.คส.สพ.ทบ.', 'ผอส.กษส.3 กส.ทบ.', 'มว.ขบร.สน.3 กอง สพ.พล.ร.4', 'สง.สด.จว.นว.', 'สง.สด.จว.อน.'];
     $storedMilitaryUnit = $referral?->military_unit;
+
+    // ห้องฉุกเฉิน/ห้องตรวจโรคผู้ป่วยนอกไม่มีวันที่ Admit/จำหน่าย — ใช้ "วันที่พบผู้ป่วย" แทน (ดู wards.has_admission)
+    $unitWard = $referral?->ward ?? auth()->user()->ward;
+    $hasAdmission = $unitWard?->has_admission ?? true;
     $militaryUnitIsOther = $storedMilitaryUnit && ! in_array($storedMilitaryUnit, $militaryUnitOptions, true);
 
     $equipmentOptions = ['NG-Tube', 'TT-Tube', 'Foley cath', 'Colostomy bag', 'Oxygen'];
@@ -15,7 +19,8 @@
     <h2 class="h2">แหล่งที่มาของเคส</h2>
 </div>
 <div class="grid-3" style="margin-bottom:var(--space-6);">
-    @php $userWard = auth()->user()->ward; @endphp
+    {{-- สร้างใหม่: ดึงหน่วยงานจากบัญชีผู้ใช้ / แก้ไข: คงหน่วยงานต้นทางของใบส่งต่อไว้ ไม่ใช้หน่วยงานของผู้ที่กำลังแก้ไข --}}
+    @php $userWard = $referral ? $referral->ward : auth()->user()->ward; @endphp
     <div class="field full" style="grid-column:1 / -1;">
         <label>แหล่งข้อมูล (source_type)</label>
         @if ($userWard)
@@ -24,7 +29,7 @@
                 <span>
                     <span class="chip chip-inzone">หอผู้ป่วย (ward)</span>
                     <strong style="margin-left:6px;">{{ $userWard->name }}</strong>
-                    <br><span class="hint" style="margin:0;">ดึงข้อมูลอัตโนมัติจากบัญชีผู้ใช้งานที่เข้าสู่ระบบ ({{ auth()->user()->name }})</span>
+                    <br><span class="hint" style="margin:0;">@if ($referral)ใช้หน่วยงานต้นทางเดิมของใบส่งต่อ (ไม่เปลี่ยนตามผู้แก้ไข)@else ดึงข้อมูลอัตโนมัติจากบัญชีผู้ใช้งานที่เข้าสู่ระบบ ({{ auth()->user()->name }})@endif</span>
                 </span>
             </div>
             <input type="hidden" name="source_type" value="ward">
@@ -39,7 +44,7 @@
                 </select>
                 <input type="text" name="source_detail" value="{{ old('source_detail', $referral?->source_detail) }}" placeholder="รายละเอียดแหล่งที่มา เช่น ชื่อหอผู้ป่วย/แผนกต้นทาง">
             </div>
-            <span class="hint">บัญชีนี้ยังไม่ผูกกับหอผู้ป่วย — เลือกแหล่งที่มาเอง (ติดต่อแอดมินเพื่อผูกวอร์ดให้บัญชีนี้)</span>
+            <span class="hint">@if ($referral)ใบส่งต่อนี้ไม่ได้ผูกกับหน่วยงานในระบบ — แก้แหล่งที่มาเองได้ @else บัญชีนี้ยังไม่ผูกกับหอผู้ป่วย — เลือกแหล่งที่มาเอง (ติดต่อแอดมินเพื่อผูกวอร์ดให้บัญชีนี้)@endif</span>
         @endif
     </div>
 
@@ -62,6 +67,31 @@
             @endforeach
         </select>
         <span class="hint">กำหนดความถี่/กำหนดเยี่ยมครั้งแรกตามกลุ่มนี้</span>
+    </div>
+
+    <div class="field" style="grid-column:1 / -1;">
+        <label>ความยินยอมในการเยี่ยมบ้าน</label>
+        @php $consent = old('visit_consent', $referral?->visit_consent); @endphp
+        <div class="radio-cards" id="visit_consent_cards">
+            @foreach (\App\Models\Referral::VISIT_CONSENT_LABELS as $value => $label)
+                <label class="radio-card @if($consent === $value) selected @endif">
+                    <input type="radio" name="visit_consent" value="{{ $value }}" @checked($consent === $value) required>
+                    <div class="rc-title">{{ $label }}</div>
+                </label>
+            @endforeach
+        </div>
+        <span class="hint">สอบถามผู้ป่วย/ญาติก่อนส่งต่อ — ทีมเยี่ยมบ้านจะเห็นข้อมูลนี้ก่อนยืนยันแผนติดตาม</span>
+        <script>
+            (function () {
+                var cards = document.querySelectorAll('#visit_consent_cards .radio-card');
+                cards.forEach(function (card) {
+                    card.addEventListener('click', function () {
+                        cards.forEach(function (c) { c.classList.remove('selected'); });
+                        card.classList.add('selected');
+                    });
+                });
+            })();
+        </script>
     </div>
 
     <div class="field">
@@ -101,6 +131,36 @@
         </select>
     </div>
 
+    @php
+        $allergyStatus = old('drug_allergy_status', $referral?->drug_allergy_status);
+    @endphp
+    <div class="field">
+        <label>ประวัติแพ้ยา</label>
+        <div>
+            <select name="drug_allergy_status" id="drug_allergy_status" required>
+                <option value="">— เลือก —</option>
+                @foreach (\App\Models\Referral::DRUG_ALLERGY_LABELS as $value => $label)
+                    <option value="{{ $value }}" @selected($allergyStatus === $value)>{{ $label }}</option>
+                @endforeach
+            </select>
+            <input type="text" name="drug_allergy_detail" id="drug_allergy_detail" value="{{ old('drug_allergy_detail', $referral?->drug_allergy_detail) }}" placeholder="ระบุชื่อยา และอาการที่แพ้ เช่น Penicillin — ผื่นขึ้น" maxlength="255" style="margin-top:var(--space-2);" @if($allergyStatus !== 'yes') hidden @endif>
+        </div>
+        <span class="hint">ต้องเลือกทุกครั้ง — ถ้าไม่ทราบให้เลือก "ไม่ทราบประวัติแพ้ยา"</span>
+        <script>
+            (function () {
+                var sel = document.getElementById('drug_allergy_status');
+                var detail = document.getElementById('drug_allergy_detail');
+                sel.addEventListener('change', function () {
+                    var yes = sel.value === 'yes';
+                    detail.hidden = ! yes;
+                    detail.required = yes;
+                    if (! yes) detail.value = '';
+                });
+                detail.required = sel.value === 'yes';
+            })();
+        </script>
+    </div>
+
     <div class="field">
         <label>เขตพื้นที่</label>
         <select name="zone" id="zone_select" @style(['pointer-events:none;background:var(--color-neutral-200);' => ! old('zone_override', $referral !== null)])>
@@ -116,17 +176,24 @@
 </div>
 
 <div class="grid-3" style="margin-bottom:var(--space-6);">
-    <div class="field">
-        <label>วันที่ Admit</label>
-        <input type="date" name="admit_date" value="{{ old('admit_date', $referral?->admit_date?->format('Y-m-d')) }}">
-    </div>
-    <div class="field">
-        <label>วันที่จำหน่าย</label>
-        <input type="date" name="discharge_date" value="{{ old('discharge_date', $referral?->discharge_date?->format('Y-m-d')) }}">
-    </div>
+    @if ($hasAdmission)
+        <div class="field">
+            <label>วันที่ Admit</label>
+            <x-thai-date name="admit_date" :value="old('admit_date', $referral?->admit_date)" :years-back="2" :years-forward="1" />
+        </div>
+        <div class="field">
+            <label>วันที่จำหน่าย</label>
+            <x-thai-date name="discharge_date" :value="old('discharge_date', $referral?->discharge_date)" :years-back="2" :years-forward="1" />
+        </div>
+    @else
+        <div class="field">
+            <label>วันที่พบผู้ป่วย</label>
+            <x-thai-date name="encounter_date" :value="old('encounter_date', $referral?->encounter_date)" :years-back="2" :years-forward="1" />
+        </div>
+    @endif
     <div class="field">
         <label>วันที่นัดติดตามอาการ</label>
-        <input type="date" name="opd_followup_date" value="{{ old('opd_followup_date', $referral?->opd_followup_date?->format('Y-m-d')) }}">
+        <x-thai-date name="opd_followup_date" :value="old('opd_followup_date', $referral?->opd_followup_date)" :years-back="1" :years-forward="2" />
         <span class="hint">วันนัด OPD/แพทย์เจ้าของไข้ครั้งถัดไป</span>
     </div>
     <div class="field full" style="grid-column:1 / -1;">
@@ -154,7 +221,7 @@
 
     <div class="field">
         <label>วันเดือนปีเกิด</label>
-        <input type="date" name="patient_dob" id="patient_dob" value="{{ old('patient_dob', $patient?->dob?->format('Y-m-d')) }}">
+        <x-thai-date name="patient_dob" id="patient_dob" :value="old('patient_dob', $patient?->dob)" :years-back="120" :years-forward="0" />
     </div>
     <div class="field">
         <label>อายุ</label>
@@ -251,8 +318,14 @@
 </div>
 
 <div class="field" style="margin-bottom:var(--space-4);">
-    <label>ประวัติการผ่าตัด (ถ้ามี)</label>
-    <input type="text" name="surgery_history" id="surgery_history" value="{{ old('surgery_history', $referral?->surgery_history) }}" placeholder="เช่น ผ่าตัดไส้ติ่ง 15 ส.ค. 2569 — เว้นว่างได้หากไม่มี">
+    <label>การผ่าตัดครั้งนี้ (ถ้ามี)</label>
+    <div class="grid-2" style="align-items:end;">
+        <input type="text" name="surgery_history" id="surgery_history" value="{{ old('surgery_history', $referral?->surgery_history) }}" placeholder="เช่น ผ่าตัดไส้ติ่ง — เว้นว่างได้หากไม่มีการผ่าตัด">
+        <div>
+            <span class="hint" style="display:block;margin:0 0 4px;">เมื่อวันที่</span>
+            <x-thai-date name="surgery_date" :value="old('surgery_date', $referral?->surgery_date)" :years-back="3" :years-forward="1" />
+        </div>
+    </div>
     <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;">
         <button type="button" class="btn btn-secondary btn-sm surgery-tag" data-tag="ผ่าตัดเปลี่ยนข้อเข่า (TKA/UKA)">ผ่าตัดเปลี่ยนข้อเข่า (TKA/UKA)</button>
     </div>
@@ -275,6 +348,42 @@
         </div>
     </div>
     <input type="text" name="equipment_other" value="{{ old('equipment_other', $equipmentOther) }}" placeholder="อื่นๆ (ระบุ) — เช่น Tracheostomy tube, IV line" style="margin-top:var(--space-2);">
+</div>
+
+<div class="field full" style="margin-bottom:var(--space-4);">
+    <label>สัญญาณชีพก่อนกลับบ้าน</label>
+    @php $vit = fn (string $k) => old('discharge_vitals.'.$k, $referral?->discharge_vitals[$k] ?? null); @endphp
+    <div class="grid-3" style="grid-template-columns:repeat(auto-fit,minmax(120px,1fr));">
+        <div>
+            <span class="hint" style="display:block;margin:0 0 4px;">BP (mmHg)</span>
+            <div style="display:flex;align-items:center;gap:4px;">
+                <input type="number" name="discharge_vitals[bp_sys]" value="{{ $vit('bp_sys') }}" min="40" max="300" placeholder="ตัวบน" inputmode="numeric" style="min-width:0;">
+                <span>/</span>
+                <input type="number" name="discharge_vitals[bp_dia]" value="{{ $vit('bp_dia') }}" min="20" max="200" placeholder="ตัวล่าง" inputmode="numeric" style="min-width:0;">
+            </div>
+        </div>
+        <div>
+            <span class="hint" style="display:block;margin:0 0 4px;">PR (ครั้ง/นาที)</span>
+            <input type="number" name="discharge_vitals[pr]" value="{{ $vit('pr') }}" min="20" max="250" inputmode="numeric">
+        </div>
+        <div>
+            <span class="hint" style="display:block;margin:0 0 4px;">RR (ครั้ง/นาที)</span>
+            <input type="number" name="discharge_vitals[rr]" value="{{ $vit('rr') }}" min="4" max="80" inputmode="numeric">
+        </div>
+        <div>
+            <span class="hint" style="display:block;margin:0 0 4px;">Temp (°C)</span>
+            <input type="number" name="discharge_vitals[temp]" value="{{ $vit('temp') }}" min="30" max="45" step="0.1" inputmode="decimal">
+        </div>
+        <div>
+            <span class="hint" style="display:block;margin:0 0 4px;">SpO2 (%)</span>
+            <input type="number" name="discharge_vitals[spo2]" value="{{ $vit('spo2') }}" min="30" max="100" inputmode="numeric">
+        </div>
+        <div>
+            <span class="hint" style="display:block;margin:0 0 4px;">Pain score (0–10)</span>
+            <input type="number" name="discharge_vitals[pain]" value="{{ $vit('pain') }}" min="0" max="10" inputmode="numeric">
+        </div>
+    </div>
+    <span class="hint">ค่าล่าสุดก่อนผู้ป่วยกลับบ้าน — เว้นว่างได้ถ้าไม่มีหรือไม่ได้วัด</span>
 </div>
 
 <div class="field">

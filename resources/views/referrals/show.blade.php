@@ -19,6 +19,16 @@
         @endif
     </div>
 
+    @if ($referral->isConfirmed())
+        <div class="confirmed-box" style="margin-bottom:var(--space-6);">
+            <div class="box-label"><span class="dot"></span> ยืนยันแล้วโดย {{ $referral->confirmer->name }} เมื่อ {{ \App\Support\ThaiDate::dateTime($referral->confirmed_at) }}</div>
+            <div class="btn-row">
+                <a href="{{ route('referrals.care-plan', $referral) }}" class="btn btn-secondary">ดูแผนการดูแล</a>
+                <a href="{{ route('referrals.care-plan.print', $referral) }}" class="btn btn-secondary">พิมพ์แผนการดูแล + แบบบันทึกการเยี่ยม</a>
+            </div>
+        </div>
+    @endif
+
     @php
         $age = null;
         if ($referral->patient->dob) {
@@ -42,8 +52,18 @@
                 <div class="info-row">
                     <div class="info-label">วันเดือนปีเกิด / อายุ</div>
                     <div class="info-value">
-                        {{ $referral->patient->dob?->format('d/m/Y') ?? '—' }}
+                        {{ \App\Support\ThaiDate::date($referral->patient->dob) ?? '—' }}
                         @if ($age !== null) ({{ $age }} ปี) @endif
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">ความยินยอมในการเยี่ยมบ้าน</div>
+                    <div class="info-value">
+                        @if ($referral->visitConsentLabel())
+                            <span class="chip {{ $referral->visitConsentChipClass() }}">{{ $referral->visitConsentLabel() }}</span>
+                        @else
+                            <span class="caption">ยังไม่ได้สอบถาม (ใบส่งต่อเดิม)</span>
+                        @endif
                     </div>
                 </div>
                 @if ($referral->severityLabel())
@@ -58,6 +78,16 @@
                         <div class="info-value">{{ $referral->coverage_type }}</div>
                     </div>
                 @endif
+                <div class="info-row">
+                    <div class="info-label">ประวัติแพ้ยา</div>
+                    <div class="info-value">
+                        @if ($referral->drugAllergyText())
+                            <span class="chip {{ $referral->drugAllergyChipClass() }}">{{ $referral->drugAllergyText() }}</span>
+                        @else
+                            <span class="caption">ยังไม่ได้สอบถาม (ใบส่งต่อเดิม)</span>
+                        @endif
+                    </div>
+                </div>
                 <div class="info-row">
                     <div class="info-label">สถานะผู้ป่วย</div>
                     <div class="info-value">
@@ -127,22 +157,28 @@
                         <div class="info-value">{{ $referral->caseType->name }}</div>
                     </div>
                 @endif
+                @if ($referral->encounter_date)
+                    <div class="info-row">
+                        <div class="info-label">วันที่พบผู้ป่วย</div>
+                        <div class="info-value due-date">{{ \App\Support\ThaiDate::date($referral->encounter_date) }}</div>
+                    </div>
+                @endif
                 @if ($referral->admit_date)
                     <div class="info-row">
                         <div class="info-label">วันที่ Admit</div>
-                        <div class="info-value due-date">{{ $referral->admit_date->format('d/m/Y') }}</div>
+                        <div class="info-value due-date">{{ \App\Support\ThaiDate::date($referral->admit_date) }}</div>
                     </div>
                 @endif
                 @if ($referral->discharge_date)
                     <div class="info-row">
                         <div class="info-label">วันที่จำหน่าย</div>
-                        <div class="info-value due-date">{{ $referral->discharge_date->format('d/m/Y') }}</div>
+                        <div class="info-value due-date">{{ \App\Support\ThaiDate::date($referral->discharge_date) }}</div>
                     </div>
                 @endif
                 @if ($referral->opd_followup_date)
                     <div class="info-row">
                         <div class="info-label">วันที่นัดติดตามอาการ</div>
-                        <div class="info-value due-date">{{ $referral->opd_followup_date->format('d/m/Y') }}</div>
+                        <div class="info-value due-date">{{ \App\Support\ThaiDate::date($referral->opd_followup_date) }}</div>
                     </div>
                 @endif
                 @if ($referral->attending_physician)
@@ -157,7 +193,7 @@
                 </div>
                 <div class="info-row">
                     <div class="info-label">วันที่ส่งต่อข้อมูล</div>
-                    <div class="info-value due-date">{{ $referral->created_at->format('d/m/Y') }} · {{ $referral->created_at->format('H:i') }} น.</div>
+                    <div class="info-value due-date">{{ \App\Support\ThaiDate::date($referral->created_at) }} · {{ $referral->created_at->format('H:i') }} น.</div>
                 </div>
             </div>
         </div>
@@ -182,8 +218,8 @@
                 @endif
                 @if ($referral->surgery_history)
                     <div class="info-row">
-                        <div class="info-label">ประวัติการผ่าตัด</div>
-                        <div class="info-value">{{ $referral->surgery_history }}</div>
+                        <div class="info-label">การผ่าตัดครั้งนี้</div>
+                        <div class="info-value">{{ $referral->surgery_history }}@if ($referral->surgery_date) — เมื่อวันที่ {{ \App\Support\ThaiDate::date($referral->surgery_date) }}@endif</div>
                     </div>
                 @endif
                 @if (!empty($referral->equipment))
@@ -199,6 +235,11 @@
                     </div>
                 @endif
             </div>
+
+            @if ($referral->dischargeVitalsText())
+                <div class="section-title" style="margin-top:var(--space-5);"><span class="h3">สัญญาณชีพก่อนกลับบ้าน</span></div>
+                <div class="field-value">{{ $referral->dischargeVitalsText() }}</div>
+            @endif
 
             <div class="section-title" style="margin-top:var(--space-5);"><span class="h3">บันทึกดิบจากผู้ส่งต่อ</span></div>
             <div class="field-value multiline">{{ $referral->raw_notes }}</div>
@@ -235,21 +276,13 @@
         $firstPlan = $referral->followUpPlans->sortBy('plan_number')->first();
     @endphp
 
-    @if ($referral->isConfirmed())
-        <div class="confirmed-box">
-            <div class="box-label"><span class="dot"></span> ยืนยันแล้วโดย {{ $referral->confirmer->name }} เมื่อ {{ $referral->confirmed_at->format('d/m/Y H:i') }}</div>
-            <div class="btn-row">
-                <a href="{{ route('referrals.care-plan', $referral) }}" class="btn btn-secondary">ดูแผนการดูแล</a>
-                <a href="{{ route('referrals.care-plan.print', $referral) }}" class="btn btn-secondary">พิมพ์แผนการดูแล</a>
-            </div>
-        </div>
-    @elseif ($referral->ai_summary)
+    @if (! $referral->isConfirmed() && $referral->ai_summary)
         <div class="ai-box">
             <div class="box-label"><span class="dot"></span> ร่างจาก AI — ยังไม่ยืนยัน</div>
             <p style="margin:0 0 var(--space-4);color:var(--color-primary-800);">AI สรุปข้อมูลแล้ว รอพยาบาลตรวจสอบและยืนยันแผนการพยาบาล</p>
             <a href="{{ route('referrals.care-plan', $referral) }}" class="btn btn-primary">วิเคราะห์แผนการพยาบาล</a>
         </div>
-    @else
+    @elseif (! $referral->isConfirmed())
         <div class="banner">
             <div class="banner-text">
                 <p class="h3">ขั้นตอนถัดไป: ให้ AI ช่วยสรุปข้อมูลและแนะนำแผนติดตาม</p>
@@ -273,7 +306,7 @@
                                     <span class="patient-name">ครั้งที่ {{ $plan->plan_number }}</span>
                                     <span class="caption">— {{ $plan->method === 'home_visit' ? 'เยี่ยมบ้าน' : 'โทรติดตาม' }}</span>
                                 </td>
-                                <td class="due-date">กำหนด {{ $plan->due_date->format('d/m/Y') }}</td>
+                                <td class="due-date">กำหนด {{ \App\Support\ThaiDate::date($plan->due_date) }}</td>
                                 <td>
                                     <span class="chip {{ match(true) {
                                         $plan->status === 'done' => 'chip-done',
@@ -318,7 +351,7 @@
                         <div class="box-label">
                             <span class="dot"></span>
                             {{ $plan->method === 'home_visit' ? 'เยี่ยมบ้าน' : 'โทรติดตาม' }}ครั้งที่ {{ $plan->plan_number }}
-                            — {{ $record->visited_at->format('d/m/Y H:i') }} น.
+                            — {{ \App\Support\ThaiDate::dateTime($record->visited_at) }} น.
                         </div>
                         <div class="field-grid">
                             <div class="field full">
@@ -334,7 +367,7 @@
                         </div>
                         <p style="margin:var(--space-3) 0 0;font-size:14px;color:var(--color-neutral-900);">
                             การตัดสินใจของพยาบาล: <strong>{{ $decisionLabels[$record->nurse_decision] ?? $record->nurse_decision }}</strong>
-                            <span class="caption">— ยืนยันโดย {{ $record->confirmer->name }} เมื่อ {{ $record->confirmed_at->format('d/m/Y H:i') }}</span>
+                            <span class="caption">— ยืนยันโดย {{ $record->confirmer->name }} เมื่อ {{ \App\Support\ThaiDate::dateTime($record->confirmed_at) }}</span>
                         </p>
                         @if ($record->decision_notes)
                             <p style="margin:6px 0 0;font-size:14px;color:var(--color-neutral-700);">{{ $record->decision_notes }}</p>
@@ -351,7 +384,7 @@
             <div class="timeline">
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
-                    <div class="timeline-date">{{ $referral->created_at->format('d/m/Y') }} · {{ $referral->created_at->format('H:i') }} น.</div>
+                    <div class="timeline-date">{{ \App\Support\ThaiDate::date($referral->created_at) }} · {{ $referral->created_at->format('H:i') }} น.</div>
                     <div class="timeline-title">ส่งข้อมูลเยี่ยมบ้านจาก{{ $referral->source_detail ?: 'แหล่งข้อมูล' }}</div>
                     <div class="timeline-desc">
                         สร้างใบส่งต่อโดย{{ $referral->creator->name }}
@@ -361,7 +394,7 @@
                 @if ($referral->ai_summary_generated_at)
                     <div class="timeline-item">
                         <div class="timeline-dot"></div>
-                        <div class="timeline-date">{{ $referral->ai_summary_generated_at->format('d/m/Y') }} · {{ $referral->ai_summary_generated_at->format('H:i') }} น.</div>
+                        <div class="timeline-date">{{ \App\Support\ThaiDate::date($referral->ai_summary_generated_at) }} · {{ $referral->ai_summary_generated_at->format('H:i') }} น.</div>
                         <div class="timeline-title">AI ประมวลผลสรุปข้อมูลและประเภทเคสเบื้องต้น</div>
                         <div class="timeline-desc">
                             @if ($referral->ai_summary['parse_error'] ?? false)
@@ -375,7 +408,7 @@
                 @if ($referral->isConfirmed())
                     <div class="timeline-item">
                         <div class="timeline-dot"></div>
-                        <div class="timeline-date">{{ $referral->confirmed_at->format('d/m/Y') }} · {{ $referral->confirmed_at->format('H:i') }} น.</div>
+                        <div class="timeline-date">{{ \App\Support\ThaiDate::date($referral->confirmed_at) }} · {{ $referral->confirmed_at->format('H:i') }} น.</div>
                         <div class="timeline-title">ยืนยันแผนดูแลโดย {{ $referral->confirmer->name }}</div>
                         <div class="timeline-desc">สร้างกำหนดการติดตามครั้งแรกให้อัตโนมัติ</div>
                     </div>
@@ -390,7 +423,7 @@
                 @if ($firstPlan?->record)
                     <div class="timeline-item">
                         <div class="timeline-dot"></div>
-                        <div class="timeline-date">{{ $firstPlan->record->visited_at->format('d/m/Y') }} · {{ $firstPlan->record->visited_at->format('H:i') }} น.</div>
+                        <div class="timeline-date">{{ \App\Support\ThaiDate::date($firstPlan->record->visited_at) }} · {{ $firstPlan->record->visited_at->format('H:i') }} น.</div>
                         <div class="timeline-title">{{ $firstPlan->method === 'home_visit' ? 'เยี่ยมบ้าน' : 'โทรติดตาม' }}ครั้งที่ 1</div>
                         <div class="timeline-desc">บันทึกผลติดตามแล้ว</div>
                     </div>

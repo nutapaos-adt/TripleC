@@ -107,7 +107,7 @@
 @endif
 
 <div class="box-footnote" style="margin-top:var(--space-6);">
-    ประเมินเมื่อ {{ $survey->submitted_at?->format('d/m/Y H:i') }}
+    ประเมินเมื่อ {{ \App\Support\ThaiDate::dateTime($survey->submitted_at) }}
     @if ($survey->mode === \App\Models\SatisfactionSurvey::MODE_STAFF)
         · โดยเจ้าหน้าที่{{ $survey->submitter ? ' ('.$survey->submitter->name.')' : '' }}
     @else

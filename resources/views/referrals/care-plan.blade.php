@@ -27,6 +27,21 @@
         $suggestedCaseType = $caseTypes->firstWhere('id', (int) old('case_type_id', $suggestedCaseTypeId));
     @endphp
 
+    @if (in_array($referral->visit_consent, [\App\Models\Referral::VISIT_CONSENT_PHONE_ONLY, \App\Models\Referral::VISIT_CONSENT_DECLINED], true) && ! $isConfirmed)
+        @php $consentTone = $referral->visit_consent === 'declined' ? 'risk' : 'warning'; @endphp
+        <div class="banner" style="background:var(--color-{{ $consentTone }}-tint);border-color:var(--color-{{ $consentTone }});">
+            <div class="banner-text">
+                <p style="color:var(--color-{{ $consentTone }});"><strong>{{ $referral->visitConsentLabel() }}</strong> —
+                    @if ($referral->visit_consent === 'declined')
+                        ผู้ป่วย/ญาติแจ้งว่าไม่ยินยอมให้เยี่ยม กรุณาตรวจสอบก่อนยืนยันแผนติดตาม
+                    @else
+                        ผู้ป่วย/ญาติยินยอมเฉพาะการติดตามทางโทรศัพท์ ไม่ควรนัดเยี่ยมบ้าน
+                    @endif
+                </p>
+            </div>
+        </div>
+    @endif
+
     @if (($referral->ai_summary['parse_error'] ?? false) && ! $isConfirmed)
         <div class="banner" style="background:var(--color-warning-tint);border-color:var(--color-warning);">
             <div class="banner-text">
@@ -39,6 +54,14 @@
         <div class="card-body" style="padding-top:var(--space-5);">
             <div class="label" style="margin-bottom:6px;">ข้อมูลต้นทาง (บันทึกดิบก่อน AI สรุป)</div>
             <div class="field-value multiline">{{ $referral->raw_notes }}</div>
+            @if ($referral->drugAllergyText())
+                <div class="label" style="margin:10px 0 4px;">ประวัติแพ้ยา</div>
+                <div class="field-value"><span class="chip {{ $referral->drugAllergyChipClass() }}">{{ $referral->drugAllergyText() }}</span></div>
+            @endif
+            @if ($referral->dischargeVitalsText())
+                <div class="label" style="margin:10px 0 4px;">สัญญาณชีพก่อนกลับบ้าน</div>
+                <div class="field-value">{{ $referral->dischargeVitalsText() }}</div>
+            @endif
             <p class="caption" style="margin-top:8px;">เทียบกับร่างจาก AI ด้านล่าง เพื่อตรวจว่า AI สรุปครบถ้วนและตรงกับข้อมูลที่ส่งเข้ามาจริงหรือไม่</p>
         </div>
     </div>
@@ -47,7 +70,7 @@
         <div class="confirmed-box">
             <div class="box-label">
                 <span class="dot"></span>
-                ยืนยันแล้วโดย {{ $referral->confirmer->name }} เมื่อ {{ $referral->confirmed_at->format('d/m/Y H:i') }}
+                ยืนยันแล้วโดย {{ $referral->confirmer->name }} เมื่อ {{ \App\Support\ThaiDate::dateTime($referral->confirmed_at) }}
             </div>
 
             <div class="field-grid">
@@ -72,10 +95,6 @@
                 <div class="field full">
                     <label>ปัญหาหลัก</label>
                     <div class="field-value multiline">{{ $summary['main_problem'] ?? '—' }}</div>
-                </div>
-                <div class="field full">
-                    <label>การวางแผนทางการพยาบาล</label>
-                    <div class="field-value multiline">{{ $summary['follow_up_need'] ?? '—' }}</div>
                 </div>
                 <div class="field full">
                     <label>ประเด็นที่ต้องติดตาม</label>
@@ -133,17 +152,13 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="field">
+                    <div class="field full">
                         <label>สรุปสภาพผู้ป่วย</label>
-                        <input type="text" name="patient_type" value="{{ old('patient_type', $summary['patient_type'] ?? '') }}">
+                        <textarea name="patient_type" rows="2">{{ old('patient_type', $summary['patient_type'] ?? '') }}</textarea>
                     </div>
                     <div class="field full">
                         <label>ปัญหาหลัก</label>
                         <textarea name="main_problem" rows="2">{{ old('main_problem', $summary['main_problem'] ?? '') }}</textarea>
-                    </div>
-                    <div class="field full">
-                        <label>การวางแผนทางการพยาบาล</label>
-                        <textarea name="follow_up_need" rows="2">{{ old('follow_up_need', $summary['follow_up_need'] ?? '') }}</textarea>
                     </div>
                     <div class="field full">
                         <label>ประเด็นที่ต้องติดตาม <span class="hint" style="display:inline;margin:0;">(บรรทัดละ 1 รายการ)</span></label>
