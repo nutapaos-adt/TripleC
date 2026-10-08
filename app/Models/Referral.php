@@ -62,6 +62,22 @@ class Referral extends Model
         self::VISIT_CONSENT_DECLINED => 'chip-risk',
     ];
 
+    public const DRUG_ALLERGY_NONE = 'none';
+    public const DRUG_ALLERGY_YES = 'yes';
+    public const DRUG_ALLERGY_UNKNOWN = 'unknown';
+
+    public const DRUG_ALLERGY_LABELS = [
+        self::DRUG_ALLERGY_NONE => 'ไม่มีประวัติแพ้ยา',
+        self::DRUG_ALLERGY_YES => 'แพ้ยา',
+        self::DRUG_ALLERGY_UNKNOWN => 'ไม่ทราบประวัติแพ้ยา',
+    ];
+
+    public const DRUG_ALLERGY_CHIP_CLASSES = [
+        self::DRUG_ALLERGY_NONE => 'chip-done',
+        self::DRUG_ALLERGY_YES => 'chip-risk',
+        self::DRUG_ALLERGY_UNKNOWN => 'chip-warning',
+    ];
+
     public const SEVERITY_GREEN = 'green';
     public const SEVERITY_YELLOW = 'yellow';
     public const SEVERITY_RED = 'red';
@@ -106,6 +122,8 @@ class Referral extends Model
         'visit_consent',
         'military_unit',
         'coverage_type',
+        'drug_allergy_status',
+        'drug_allergy_detail',
         'diagnosis',
         'underlying_disease',
         'surgery_history',
@@ -241,13 +259,32 @@ class Referral extends Model
         if (($v['bp_sys'] ?? null) !== null || ($v['bp_dia'] ?? null) !== null) {
             $parts[] = 'BP '.($v['bp_sys'] ?? '?').'/'.($v['bp_dia'] ?? '?').' mmHg';
         }
-        foreach (['pr' => 'PR %s ครั้ง/นาที', 'rr' => 'RR %s ครั้ง/นาที', 'temp' => 'Temp %s °C', 'spo2' => 'SpO2 %s %%'] as $key => $format) {
+        foreach (['pr' => 'PR %s ครั้ง/นาที', 'rr' => 'RR %s ครั้ง/นาที', 'temp' => 'Temp %s °C', 'spo2' => 'SpO2 %s %%', 'pain' => 'Pain score %s/10'] as $key => $format) {
             if (($v[$key] ?? null) !== null && $v[$key] !== '') {
                 $parts[] = sprintf($format, $v[$key]);
             }
         }
 
         return $parts ? implode(' · ', $parts) : null;
+    }
+
+    /** เช่น "แพ้ยา: Penicillin (ผื่น)" / "ไม่มีประวัติแพ้ยา" — null ถ้ายังไม่เคยสอบถาม (ใบส่งต่อเดิม) */
+    public function drugAllergyText(): ?string
+    {
+        $label = self::DRUG_ALLERGY_LABELS[$this->drug_allergy_status] ?? null;
+
+        if ($label === null) {
+            return null;
+        }
+
+        return $this->drug_allergy_status === self::DRUG_ALLERGY_YES && $this->drug_allergy_detail
+            ? $label.': '.$this->drug_allergy_detail
+            : $label;
+    }
+
+    public function drugAllergyChipClass(): string
+    {
+        return self::DRUG_ALLERGY_CHIP_CLASSES[$this->drug_allergy_status] ?? 'chip-neutral';
     }
 
     public function visitConsentLabel(): ?string

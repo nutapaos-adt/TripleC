@@ -168,6 +168,8 @@ class ReferralController extends Controller
                 ? ($data['military_unit_other'] ?? null)
                 : ($data['military_unit'] ?? null),
             'coverage_type' => $data['coverage_type'] ?? null,
+            'drug_allergy_status' => $data['drug_allergy_status'],
+            'drug_allergy_detail' => $data['drug_allergy_status'] === 'yes' ? ($data['drug_allergy_detail'] ?? null) : null,
             'diagnosis' => $data['diagnosis'] ?? null,
             'underlying_disease' => $data['underlying_disease'] ?? null,
             'surgery_history' => $data['surgery_history'] ?? null,

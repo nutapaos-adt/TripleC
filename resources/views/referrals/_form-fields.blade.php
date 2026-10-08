@@ -131,6 +131,36 @@
         </select>
     </div>
 
+    @php
+        $allergyStatus = old('drug_allergy_status', $referral?->drug_allergy_status);
+    @endphp
+    <div class="field" style="grid-column:1 / -1;">
+        <label>ประวัติแพ้ยา</label>
+        <div class="grid-2" style="align-items:start;">
+            <select name="drug_allergy_status" id="drug_allergy_status" required>
+                <option value="">— เลือก —</option>
+                @foreach (\App\Models\Referral::DRUG_ALLERGY_LABELS as $value => $label)
+                    <option value="{{ $value }}" @selected($allergyStatus === $value)>{{ $label }}</option>
+                @endforeach
+            </select>
+            <input type="text" name="drug_allergy_detail" id="drug_allergy_detail" value="{{ old('drug_allergy_detail', $referral?->drug_allergy_detail) }}" placeholder="ระบุชื่อยา และอาการที่แพ้ เช่น Penicillin — ผื่นขึ้น" maxlength="255" @if($allergyStatus !== 'yes') hidden @endif>
+        </div>
+        <span class="hint">ต้องเลือกทุกครั้ง — ถ้าไม่ทราบให้เลือก "ไม่ทราบประวัติแพ้ยา" และสอบถามผู้ป่วย/ญาติเมื่อเยี่ยมครั้งแรก</span>
+        <script>
+            (function () {
+                var sel = document.getElementById('drug_allergy_status');
+                var detail = document.getElementById('drug_allergy_detail');
+                sel.addEventListener('change', function () {
+                    var yes = sel.value === 'yes';
+                    detail.hidden = ! yes;
+                    detail.required = yes;
+                    if (! yes) detail.value = '';
+                });
+                detail.required = sel.value === 'yes';
+            })();
+        </script>
+    </div>
+
     <div class="field">
         <label>เขตพื้นที่</label>
         <select name="zone" id="zone_select" @style(['pointer-events:none;background:var(--color-neutral-200);' => ! old('zone_override', $referral !== null)])>
@@ -347,6 +377,10 @@
         <div>
             <span class="hint" style="display:block;margin:0 0 4px;">SpO2 (%)</span>
             <input type="number" name="discharge_vitals[spo2]" value="{{ $vit('spo2') }}" min="30" max="100" inputmode="numeric">
+        </div>
+        <div>
+            <span class="hint" style="display:block;margin:0 0 4px;">Pain score (0–10)</span>
+            <input type="number" name="discharge_vitals[pain]" value="{{ $vit('pain') }}" min="0" max="10" inputmode="numeric">
         </div>
     </div>
     <span class="hint">ค่าล่าสุดก่อนผู้ป่วยกลับบ้าน — เว้นว่างได้ถ้าไม่มีหรือไม่ได้วัด</span>

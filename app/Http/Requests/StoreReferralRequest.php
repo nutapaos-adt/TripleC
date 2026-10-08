@@ -51,6 +51,8 @@ class StoreReferralRequest extends FormRequest
             'military_unit' => ['nullable', 'required_if:patient_status,military,military_family', 'string', 'max:255'],
             'military_unit_other' => ['nullable', 'required_if:military_unit,other', 'string', 'max:255'],
             'coverage_type' => ['nullable', 'string', 'max:255'],
+            'drug_allergy_status' => ['required', 'in:'.implode(',', array_keys(Referral::DRUG_ALLERGY_LABELS))],
+            'drug_allergy_detail' => ['nullable', 'required_if:drug_allergy_status,yes', 'string', 'max:255'],
 
             'diagnosis' => ['required', 'string', 'max:255'],
             'underlying_disease' => ['nullable', 'string'],
@@ -67,6 +69,7 @@ class StoreReferralRequest extends FormRequest
             'discharge_vitals.rr' => ['nullable', 'integer', 'between:4,80'],
             'discharge_vitals.temp' => ['nullable', 'numeric', 'between:30,45'],
             'discharge_vitals.spo2' => ['nullable', 'integer', 'between:30,100'],
+            'discharge_vitals.pain' => ['nullable', 'integer', 'between:0,10'],
             'clinical_tracers' => ['nullable', 'array'],
             'clinical_tracers.*' => ['string', 'max:255'],
 
@@ -98,6 +101,9 @@ class StoreReferralRequest extends FormRequest
             'raw_notes' => 'ข้อความสรุปอาการ/สถานการณ์',
             'zone' => 'เขตพื้นที่',
             'visit_consent' => 'ความยินยอมในการเยี่ยมบ้าน',
+            'drug_allergy_status' => 'ประวัติแพ้ยา',
+            'drug_allergy_detail' => 'รายละเอียดการแพ้ยา',
+            'discharge_vitals.pain' => 'Pain score',
             'discharge_vitals.bp_sys' => 'ความดันโลหิต (ตัวบน)',
             'discharge_vitals.bp_dia' => 'ความดันโลหิต (ตัวล่าง)',
             'discharge_vitals.pr' => 'ชีพจร (PR)',

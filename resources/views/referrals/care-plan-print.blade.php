@@ -102,6 +102,7 @@
                 <div class="it"><span class="lb">HN</span><span class="vl"><b>{{ $referral->patient->hn }}</b></span></div>
                 <div class="it"><span class="lb">เลขบัตรประชาชน</span><span class="vl">{{ $referral->patient->national_id ?? '—' }}</span></div>
                 <div class="it"><span class="lb">สิทธิการรักษา</span><span class="vl">{{ $referral->coverage_type ?? '—' }}</span></div>
+                <div class="it full"><span class="lb">ประวัติแพ้ยา</span><span class="vl"><b @if($referral->drug_allergy_status === 'yes') style="color:#b3261e;" @endif>{{ $referral->drugAllergyText() ?? 'ยังไม่ได้สอบถาม' }}</b></span></div>
                 <div class="it"><span class="lb">สถานะผู้ป่วย</span><span class="vl">{{ $referral->patientStatusLabel() }}@if($referral->military_unit) ({{ $referral->military_unit }})@endif</span></div>
                 <div class="it"><span class="lb">ผู้ดูแลหลัก</span><span class="vl">{{ $referral->caregiver_name ?? '—' }}@if($referral->caregiver_phone) — {{ $referral->caregiver_phone }}@endif</span></div>
                 <div class="it full"><span class="lb">ที่อยู่</span><span class="vl">

@@ -54,6 +54,10 @@
         <div class="card-body" style="padding-top:var(--space-5);">
             <div class="label" style="margin-bottom:6px;">ข้อมูลต้นทาง (บันทึกดิบก่อน AI สรุป)</div>
             <div class="field-value multiline">{{ $referral->raw_notes }}</div>
+            @if ($referral->drugAllergyText())
+                <div class="label" style="margin:10px 0 4px;">ประวัติแพ้ยา</div>
+                <div class="field-value"><span class="chip {{ $referral->drugAllergyChipClass() }}">{{ $referral->drugAllergyText() }}</span></div>
+            @endif
             @if ($referral->dischargeVitalsText())
                 <div class="label" style="margin:10px 0 4px;">สัญญาณชีพก่อนกลับบ้าน</div>
                 <div class="field-value">{{ $referral->dischargeVitalsText() }}</div>

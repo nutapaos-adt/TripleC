@@ -153,7 +153,7 @@ class UnitScopingTest extends TestCase
         $caseType = CaseType::create(['name' => 'อายุรกรรม', 'slug' => 'med']);
 
         $this->actingAs($staff)->post(route('referrals.store'), [
-            'source_type' => 'ward', 'case_type_id' => $caseType->id, 'patient_status' => 'civilian', 'visit_consent' => 'home_visit', 'zone' => 'in_area',
+            'source_type' => 'ward', 'case_type_id' => $caseType->id, 'patient_status' => 'civilian', 'visit_consent' => 'home_visit', 'drug_allergy_status' => 'none', 'zone' => 'in_area',
             'patient_hn' => '700001', 'patient_name' => 'ผู้ป่วยห้องฉุกเฉิน', 'diagnosis' => 'ไข้สูง', 'raw_notes' => 'ต้องการติดตามอาการ',
             'encounter_date' => '2026-10-03',
         ])->assertRedirect();
@@ -185,7 +185,7 @@ class UnitScopingTest extends TestCase
     {
         return array_merge([
             'source_type' => 'ward', 'case_type_id' => CaseType::firstOrCreate(['slug' => 'gen'], ['name' => 'ทั่วไป'])->id,
-            'patient_status' => 'civilian', 'zone' => 'in_area',
+            'patient_status' => 'civilian', 'zone' => 'in_area', 'drug_allergy_status' => 'none',
             'patient_hn' => '710001', 'patient_name' => 'ผู้ป่วยทดสอบความยินยอม', 'diagnosis' => 'ทดสอบ', 'raw_notes' => 'ทดสอบ',
         ], $overrides);
     }
@@ -281,5 +281,48 @@ class UnitScopingTest extends TestCase
         $this->actingAs($staff)->post(route('referrals.store'), $this->consentPayload([
             'visit_consent' => 'home_visit', 'patient_hn' => 'HN-bad', 'discharge_vitals' => ['bp_sys' => '1200', 'spo2' => '140'],
         ]))->assertSessionHasErrors(['discharge_vitals.bp_sys', 'discharge_vitals.spo2']);
+    }
+
+    // ---------- ประวัติแพ้ยา + Pain score ----------
+
+    public function test_drug_allergy_is_required_and_detail_is_needed_only_when_allergic(): void
+    {
+        $staff = User::factory()->create(['role' => User::ROLE_WARD_STAFF, 'ward_id' => Ward::factory()->create()->id]);
+        $base = ['visit_consent' => 'home_visit'];
+
+        $this->actingAs($staff)->post(route('referrals.store'), $this->consentPayload($base + ['drug_allergy_status' => '']))
+            ->assertSessionHasErrors('drug_allergy_status');
+        $this->actingAs($staff)->post(route('referrals.store'), $this->consentPayload($base + ['drug_allergy_status' => 'yes']))
+            ->assertSessionHasErrors('drug_allergy_detail');
+        $this->assertSame(0, Referral::count());
+
+        $this->actingAs($staff)->post(route('referrals.store'), $this->consentPayload($base + [
+            'drug_allergy_status' => 'yes', 'drug_allergy_detail' => 'Penicillin — ผื่นขึ้น', 'patient_hn' => 'HN-A1',
+        ]))->assertRedirect();
+        $this->actingAs($staff)->post(route('referrals.store'), $this->consentPayload($base + [
+            'drug_allergy_status' => 'none', 'drug_allergy_detail' => 'ต้องไม่ถูกเก็บ', 'patient_hn' => 'HN-A2',
+        ]))->assertRedirect();
+
+        $allergic = Referral::whereHas('patient', fn ($q) => $q->where('hn', 'HN-A1'))->firstOrFail();
+        $none = Referral::whereHas('patient', fn ($q) => $q->where('hn', 'HN-A2'))->firstOrFail();
+        $this->assertSame('แพ้ยา: Penicillin — ผื่นขึ้น', $allergic->drugAllergyText());
+        $this->assertSame('ไม่มีประวัติแพ้ยา', $none->drugAllergyText());
+        $this->assertNull($none->drug_allergy_detail);
+
+        $this->actingAs($staff)->get(route('referrals.show', $allergic))->assertSee('แพ้ยา: Penicillin');
+    }
+
+    public function test_pain_score_is_saved_after_spo2_and_limited_to_0_to_10(): void
+    {
+        $staff = User::factory()->create(['role' => User::ROLE_WARD_STAFF, 'ward_id' => Ward::factory()->create()->id]);
+
+        $this->actingAs($staff)->post(route('referrals.store'), $this->consentPayload([
+            'visit_consent' => 'home_visit', 'discharge_vitals' => ['spo2' => '98', 'pain' => '3'],
+        ]))->assertRedirect();
+        $this->assertSame('SpO2 98 % · Pain score 3/10', Referral::firstOrFail()->dischargeVitalsText());
+
+        $this->actingAs($staff)->post(route('referrals.store'), $this->consentPayload([
+            'visit_consent' => 'home_visit', 'patient_hn' => 'HN-pain', 'discharge_vitals' => ['pain' => '11'],
+        ]))->assertSessionHasErrors('discharge_vitals.pain');
     }
 }

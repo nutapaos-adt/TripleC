@@ -79,6 +79,16 @@
                     </div>
                 @endif
                 <div class="info-row">
+                    <div class="info-label">ประวัติแพ้ยา</div>
+                    <div class="info-value">
+                        @if ($referral->drugAllergyText())
+                            <span class="chip {{ $referral->drugAllergyChipClass() }}">{{ $referral->drugAllergyText() }}</span>
+                        @else
+                            <span class="caption">ยังไม่ได้สอบถาม (ใบส่งต่อเดิม)</span>
+                        @endif
+                    </div>
+                </div>
+                <div class="info-row">
                     <div class="info-label">สถานะผู้ป่วย</div>
                     <div class="info-value">
                         {{ $referral->patientStatusLabel() }}
