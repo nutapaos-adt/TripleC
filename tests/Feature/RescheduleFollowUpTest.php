@@ -138,9 +138,18 @@ class RescheduleFollowUpTest extends TestCase
 
     public function test_dashboard_counts_waiting_patients_and_cases_visited_today(): void
     {
-        // นัดครั้งที่ 1 เยี่ยมแล้ววันนี้ (เร็วกว่ากำหนด) นัดครั้งที่ 2 ยังรออยู่อีก 2 สัปดาห์
+        // เคส A: นัดครั้งที่ 1 เยี่ยมแล้ววันนี้ (เร็วกว่ากำหนด) นัดครั้งที่ 2 ยังรออยู่ — ต้องไม่นับเป็น "รอเยี่ยม" แล้ว
         [, $plans, $team] = $this->referralWithPlans(['2026-10-20', '2026-10-22']);
         $this->recordFor($plans[0], $team);
+
+        // เคส B: ยังไม่ได้เยี่ยมเลย มีนัดรออยู่ — นับเป็น "รอเยี่ยม"
+        $other = Patient::create(['hn' => 'R2', 'name' => 'ผู้ป่วยอีกราย', 'zone' => 'in_area']);
+        $referralB = Referral::create([
+            'patient_id' => $other->id, 'case_type_id' => $plans[0]->referral->case_type_id, 'source_type' => 'ward', 'created_by' => $team->id,
+            'raw_notes' => 'x', 'diagnosis' => 'x', 'patient_status' => 'civilian', 'zone' => 'in_area',
+            'status' => Referral::STATUS_PLAN_CONFIRMED, 'confirmed_by' => $team->id, 'confirmed_at' => now(),
+        ]);
+        FollowUpPlan::create(['referral_id' => $referralB->id, 'plan_number' => 1, 'method' => 'home_visit', 'due_date' => '2026-10-25', 'status' => 'scheduled']);
 
         $response = $this->actingAs($team)->get(route('dashboard'))->assertOk();
 
@@ -150,7 +159,8 @@ class RescheduleFollowUpTest extends TestCase
             ->assertDontSee('เกินกำหนด</span>', false);
         $this->assertSame(1, $response->viewData('waitingCount'));
         $this->assertSame(1, $response->viewData('visitedTodayCount'));
-        $this->assertSame(1, $response->viewData('waitingPhoneCallCount'));
+        $this->assertSame(0, $response->viewData('waitingPhoneCallCount'));
+        $this->assertSame(1, $response->viewData('waitingHomeVisitCount'));
     }
 
     // ---------- แก้การตัดสินใจที่ยืนยันแล้ว (เฉพาะแอดมิน) ----------

@@ -22,10 +22,21 @@ class DashboardController extends Controller
 
         $totalPatients = Patient::count();
 
-        // รอเยี่ยม = ผู้ป่วยที่ยังมีนัดค้างอยู่ (นับรายละ 1 ครั้ง ใช้นัดที่ใกล้ที่สุดของแต่ละราย) — ไม่ผูกกับ "วันนี้"
-        // เพราะทีมเยี่ยม/โทรได้ก่อนกำหนดอยู่แล้ว
+        // เคสที่ได้รับการเยี่ยม/โทรติดตามวันนี้ (นับตามวันที่เยี่ยมจริงที่บันทึกไว้ นับรายละ 1 ครั้ง)
+        $visitedTodayReferralIds = FollowUpRecord::whereDate('visited_at', $today)
+            ->with('plan:id,referral_id')
+            ->get()
+            ->pluck('plan.referral_id')
+            ->unique()
+            ->values();
+
+        $visitedTodayCount = $visitedTodayReferralIds->count();
+
+        // รอเยี่ยม = ผู้ป่วยที่ยังมีนัดค้างอยู่ และยังไม่ได้เยี่ยม/โทรวันนี้ (นับรายละ 1 ครั้ง ใช้นัดที่ใกล้ที่สุดของแต่ละราย)
+        // — ไม่ผูกกับวันครบกำหนด เพราะทีมเยี่ยม/โทรได้ก่อนกำหนดอยู่แล้ว เมื่อบันทึกผลเยี่ยมแล้วเคสนั้นจะออกจากช่องนี้ทันที
         $waitingPlans = FollowUpPlan::with('referral')
             ->where('status', FollowUpPlan::STATUS_SCHEDULED)
+            ->whereNotIn('referral_id', $visitedTodayReferralIds)
             ->whereHas('referral', fn ($q) => $q->where('status', '!=', Referral::STATUS_CLOSED))
             ->orderBy('plan_number')
             ->get()
@@ -38,14 +49,6 @@ class DashboardController extends Controller
         $waitingInAreaCount = $waitingPlans->where('method', FollowUpPlan::METHOD_HOME_VISIT)
             ->filter(fn ($plan) => $plan->referral->zone === 'in_area')->count();
         $waitingOutAreaCount = $waitingHomeVisitCount - $waitingInAreaCount;
-
-        // เคสที่ได้รับการเยี่ยม/โทรติดตามวันนี้ (นับตามวันที่เยี่ยมจริงที่บันทึกไว้ นับรายละ 1 ครั้ง)
-        $visitedTodayCount = FollowUpRecord::whereDate('visited_at', $today)
-            ->with('plan:id,referral_id')
-            ->get()
-            ->pluck('plan.referral_id')
-            ->unique()
-            ->count();
 
         $riskCount = FollowUpRecord::where('risk_flag', true)
             ->whereHas('plan.referral', fn ($q) => $q->where('status', '!=', Referral::STATUS_CLOSED))
