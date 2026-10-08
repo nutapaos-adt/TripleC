@@ -152,6 +152,22 @@
                     </div>
                 </div>
 
+                @php
+                    $upcomingPlan = $plan->referral->followUpPlans
+                        ->where('plan_number', '>', $plan->plan_number)->where('status', 'scheduled')->sortBy('plan_number')->first();
+                @endphp
+                <div class="field-group" id="nextDateField" @if($selectedDecision === 'close') hidden @endif>
+                    <label>วันนัดครั้งต่อไป <span class="hint" style="display:inline;margin:0;">(ไม่บังคับ)</span></label>
+                    <x-thai-date name="next_follow_up_date" :value="old('next_follow_up_date')" :years-back="0" :years-forward="2" />
+                    <span class="hint">
+                        @if ($upcomingPlan)
+                            ตอนนี้มีนัดครั้งที่ {{ $upcomingPlan->plan_number }} รออยู่วันที่ {{ \App\Support\ThaiDate::date($upcomingPlan->due_date) }} — เลือกวันที่นี่เพื่อเปลี่ยนวันนัด
+                        @else
+                            เว้นว่าง = ระบบกำหนดวันให้ตามกติกาของประเภทเคส เลือกวันเองได้ถ้าต้องการเยี่ยมห่างหรือถี่กว่านั้น
+                        @endif
+                    </span>
+                </div>
+
                 <div class="field-group">
                     <label for="decision_notes">
                         หมายเหตุการตัดสินใจ
@@ -183,6 +199,8 @@
                     cards.forEach(function (c) { c.classList.remove('selected'); });
                     card.classList.add('selected');
                     card.querySelector('input[type="radio"]').checked = true;
+                    var nextField = document.getElementById('nextDateField');
+                    if (nextField) nextField.hidden = card.dataset.value === 'close';
                 });
             });
         })();

@@ -55,6 +55,8 @@ Route::middleware('auth')->group(function () {
         ->name('follow-up-plans.analyze');
     Route::post('/follow-up-plans/{plan}/decision', [FollowUpController::class, 'confirmDecision'])
         ->name('follow-up-plans.decision');
+    Route::post('/follow-up-plans/{plan}/reschedule', [FollowUpController::class, 'reschedule'])
+        ->middleware('role:home_visit_team,admin')->name('follow-up-plans.reschedule');
 
     Route::get('/ward/visit-results', [WardController::class, 'visitResults'])->name('ward.visit-results');
 

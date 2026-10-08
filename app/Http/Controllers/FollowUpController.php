@@ -195,6 +195,27 @@ class FollowUpController extends Controller
         return redirect()->route('follow-up-plans.review', $plan);
     }
 
+    /**
+     * เลื่อน/เปลี่ยนวันนัดของนัดที่ยังไม่ได้ติดตาม — ทีมเยี่ยมบ้านเลือกวันเองได้ ไม่ต้องรอตามที่ระบบคำนวณ
+     */
+    public function reschedule(Request $request, FollowUpPlan $plan): RedirectResponse
+    {
+        abort_unless($plan->referral->isVisibleTo(Auth::user()), 403, 'ไม่มีสิทธิ์เข้าถึงใบส่งต่อของหน่วยงานอื่น');
+        abort_unless($plan->status === FollowUpPlan::STATUS_SCHEDULED, 403, 'เปลี่ยนวันนัดได้เฉพาะนัดที่ยังไม่ได้ติดตาม');
+
+        $data = $request->validate(
+            ['due_date' => ['required', 'date', 'after_or_equal:today']],
+            ['due_date.required' => 'กรุณาเลือกวันนัดใหม่ให้ครบ วัน เดือน ปี', 'due_date.after_or_equal' => 'วันนัดใหม่ต้องไม่ย้อนหลังก่อนวันนี้'],
+            ['due_date' => 'วันนัดใหม่']
+        );
+
+        $plan->update(['due_date' => $data['due_date']]);
+
+        return redirect()
+            ->route('referrals.show', $plan->referral)
+            ->with('status', 'เปลี่ยนวันนัดครั้งที่ '.$plan->plan_number.' เรียบร้อยแล้ว');
+    }
+
     public function confirmDecision(ConfirmFollowUpDecisionRequest $request, FollowUpPlan $plan, VisitPlanService $visitPlanService): RedirectResponse
     {
         abort_unless($plan->record, 404);
@@ -220,7 +241,7 @@ class FollowUpController extends Controller
                     'closed_at' => now(),
                 ]);
             } else {
-                $nextPlan = $visitPlanService->generateNextPlan($record);
+                $nextPlan = $visitPlanService->generateNextPlan($record, $request->validated('next_follow_up_date'));
 
                 if ($nextPlan) {
                     $record->update(['next_follow_up_plan_id' => $nextPlan->id]);

@@ -141,20 +141,54 @@ class VisitPlanService
      * วันครบกำหนดของครั้งถัดไปนับจากวันที่ไปเยี่ยม/โทรจริง ($record->visited_at) ไม่ใช่วันที่พยาบาลเพิ่งมา
      * ยืนยันการตัดสินใจ (Carbon::now()) — สองวันนี้มักไม่ตรงกันเพราะพยาบาลอาจตรวจสอบ/ยืนยันย้อนหลัง
      */
-    public function generateNextPlan(FollowUpRecord $record): ?FollowUpPlan
+    public function generateNextPlan(FollowUpRecord $record, ?string $dueDateOverride = null): ?FollowUpPlan
     {
         $plan = $record->plan;
         $referral = $plan->referral;
 
-        $hasUpcomingPlan = $referral->followUpPlans()
+        $upcomingPlan = $referral->followUpPlans()
             ->where('plan_number', '>', $plan->plan_number)
             ->where('status', FollowUpPlan::STATUS_SCHEDULED)
-            ->exists();
+            ->orderBy('plan_number')
+            ->first();
 
-        if ($hasUpcomingPlan) {
+        if ($upcomingPlan) {
+            // นัดถัดไปมีอยู่แล้ว (เช่น fixed_count ที่สร้างไว้ล่วงหน้า) — ถ้าพยาบาลเลือกวันเอง ให้ย้ายนัดนั้น
+            // ไม่เช่นนั้นไม่ทำอะไร
+            if ($dueDateOverride) {
+                $upcomingPlan->update(['due_date' => $dueDateOverride]);
+
+                return $upcomingPlan;
+            }
+
             return null;
         }
 
+        $nextPlan = $this->createRuleBasedNextPlan($record, $plan, $referral);
+
+        if ($dueDateOverride) {
+            // พยาบาลเลือกวันนัดเอง — ใช้แทนวันที่คำนวณจากกติกา (และสร้างนัดให้แม้กติกาจะไม่มีครั้งถัดไปแล้ว)
+            if ($nextPlan) {
+                $nextPlan->update(['due_date' => $dueDateOverride]);
+            } else {
+                $nextPlan = FollowUpPlan::create([
+                    'referral_id' => $referral->id,
+                    'plan_number' => $plan->plan_number + 1,
+                    'method' => $plan->method,
+                    'due_date' => $dueDateOverride,
+                    'status' => FollowUpPlan::STATUS_SCHEDULED,
+                ]);
+            }
+        }
+
+        return $nextPlan;
+    }
+
+    /**
+     * สร้างนัดครั้งถัดไปตามกติกา (ไม่รวมกรณีมีนัดรออยู่แล้ว และไม่รวมวันที่พยาบาลเลือกเอง)
+     */
+    protected function createRuleBasedNextPlan(FollowUpRecord $record, FollowUpPlan $plan, Referral $referral): ?FollowUpPlan
+    {
         $rule = $this->resolveEffectiveRule($referral);
 
         if ($rule && $rule->rule_type === VisitRule::TYPE_MILESTONE_BASED) {

@@ -326,6 +326,16 @@
                                     @elseif ($plan->record && ! $plan->record->isConfirmed())
                                         <a href="{{ route('follow-up-plans.review', $plan) }}" style="color:var(--color-warning);font-weight:600;">รอวิเคราะห์/ยืนยัน →</a>
                                     @endif
+                                    @if ($plan->status === 'scheduled' && in_array(auth()->user()->role, ['home_visit_team', 'admin'], true))
+                                        <details style="margin-top:6px;">
+                                            <summary style="cursor:pointer;color:var(--color-primary-700);font-size:13px;">เปลี่ยนวันนัด</summary>
+                                            <form method="POST" action="{{ route('follow-up-plans.reschedule', $plan) }}" style="margin-top:6px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                                                @csrf
+                                                <div style="min-width:300px;"><x-thai-date name="due_date" :value="$plan->due_date" :years-back="0" :years-forward="2" :required="true" /></div>
+                                                <button type="submit" class="btn btn-primary btn-sm">บันทึกวันนัดใหม่</button>
+                                            </form>
+                                        </details>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach

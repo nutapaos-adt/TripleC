@@ -21,6 +21,8 @@ class ConfirmFollowUpDecisionRequest extends FormRequest
                 FollowUpRecord::DECISION_CLOSE,
             ])],
             'decision_notes' => ['nullable', 'string'],
+            // วันนัดครั้งต่อไปที่ทีมเลือกเอง (ไม่บังคับ — เว้นว่าง = ใช้ตามกติกาของระบบ)
+            'next_follow_up_date' => ['nullable', 'date', 'after_or_equal:today'],
             'risk_flag' => ['nullable', 'boolean'],
             // เกตบังคับ human-in-the-loop (DESIGN.md §4.1 / review-decide.html) — พยาบาลต้องติ๊กยืนยันว่า
             // ตรวจสอบผลวิเคราะห์ AI แล้วก่อนส่งการตัดสินใจเสมอ ไม่ได้บันทึกลง DB (แค่เกตการ submit — เวลา/
@@ -33,6 +35,7 @@ class ConfirmFollowUpDecisionRequest extends FormRequest
     {
         return [
             'nurse_decision' => 'การตัดสินใจ',
+            'next_follow_up_date' => 'วันนัดครั้งต่อไป',
             'ai_review_confirmed' => 'ยืนยันความเสี่ยง',
         ];
     }
@@ -40,6 +43,7 @@ class ConfirmFollowUpDecisionRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'next_follow_up_date.after_or_equal' => 'วันนัดครั้งต่อไปต้องไม่ย้อนหลังก่อนวันนี้',
             'ai_review_confirmed.accepted' => 'กรุณาติ๊ก "ยืนยันความเสี่ยง" ก่อนยืนยันการตัดสินใจ',
         ];
     }
