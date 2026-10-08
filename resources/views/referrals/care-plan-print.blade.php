@@ -119,6 +119,9 @@
                 @else
                     <div class="it"><span class="lb">Admit / จำหน่าย / นัด OPD</span><span class="vl">{{ \App\Support\ThaiDate::date($referral->admit_date) ?? '—' }} / {{ \App\Support\ThaiDate::date($referral->discharge_date) ?? '—' }} / {{ \App\Support\ThaiDate::date($referral->opd_followup_date) ?? '—' }}</span></div>
                 @endif
+                @if ($referral->dischargeVitalsText())
+                    <div class="it full"><span class="lb">สัญญาณชีพก่อนกลับ</span><span class="vl">{{ $referral->dischargeVitalsText() }}</span></div>
+                @endif
                 <div class="it full"><span class="lb">การวินิจฉัย</span><span class="vl">{{ $referral->diagnosis ?? '—' }}</span></div>
                 <div class="it"><span class="lb">โรคประจำตัว</span><span class="vl">{{ $referral->underlying_disease ?? '—' }}</span></div>
                 <div class="it"><span class="lb">การผ่าตัดครั้งนี้</span><span class="vl">{{ $referral->surgery_history ?? '—' }}@if ($referral->surgery_date) — เมื่อวันที่ {{ \App\Support\ThaiDate::date($referral->surgery_date) }}@endif</span></div>

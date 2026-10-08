@@ -112,6 +112,7 @@ class Referral extends Model
         'surgery_date',
         'equipment',
         'clinical_tracers',
+        'discharge_vitals',
         'admit_date',
         'discharge_date',
         'encounter_date',
@@ -139,6 +140,7 @@ class Referral extends Model
             'closed_at' => 'datetime',
             'equipment' => 'array',
             'clinical_tracers' => 'array',
+            'discharge_vitals' => 'array',
             'admit_date' => 'date',
             'discharge_date' => 'date',
             'encounter_date' => 'date',
@@ -225,6 +227,27 @@ class Referral extends Model
     public function patientStatusLabel(): string
     {
         return self::PATIENT_STATUS_LABELS[$this->patient_status] ?? $this->patient_status;
+    }
+
+    /**
+     * สัญญาณชีพก่อนกลับบ้าน เป็นข้อความสั้นสำหรับแสดงผล เช่น "BP 120/80 mmHg · PR 80 ครั้ง/นาที · SpO2 98 %"
+     * คืน null ถ้าไม่ได้กรอกค่าใดเลย
+     */
+    public function dischargeVitalsText(): ?string
+    {
+        $v = $this->discharge_vitals ?? [];
+        $parts = [];
+
+        if (($v['bp_sys'] ?? null) !== null || ($v['bp_dia'] ?? null) !== null) {
+            $parts[] = 'BP '.($v['bp_sys'] ?? '?').'/'.($v['bp_dia'] ?? '?').' mmHg';
+        }
+        foreach (['pr' => 'PR %s ครั้ง/นาที', 'rr' => 'RR %s ครั้ง/นาที', 'temp' => 'Temp %s °C', 'spo2' => 'SpO2 %s %%'] as $key => $format) {
+            if (($v[$key] ?? null) !== null && $v[$key] !== '') {
+                $parts[] = sprintf($format, $v[$key]);
+            }
+        }
+
+        return $parts ? implode(' · ', $parts) : null;
     }
 
     public function visitConsentLabel(): ?string

@@ -59,6 +59,14 @@ class StoreReferralRequest extends FormRequest
             'equipment' => ['nullable', 'array'],
             'equipment.*' => ['string', 'max:255'],
             'equipment_other' => ['nullable', 'string', 'max:255'],
+            // สัญญาณชีพก่อนกลับบ้าน — ช่วงกว้างพอสำหรับค่าจริงทุกกรณี แต่กันพิมพ์ผิด เช่น 1200 แทน 120
+            'discharge_vitals' => ['nullable', 'array'],
+            'discharge_vitals.bp_sys' => ['nullable', 'integer', 'between:40,300'],
+            'discharge_vitals.bp_dia' => ['nullable', 'integer', 'between:20,200'],
+            'discharge_vitals.pr' => ['nullable', 'integer', 'between:20,250'],
+            'discharge_vitals.rr' => ['nullable', 'integer', 'between:4,80'],
+            'discharge_vitals.temp' => ['nullable', 'numeric', 'between:30,45'],
+            'discharge_vitals.spo2' => ['nullable', 'integer', 'between:30,100'],
             'clinical_tracers' => ['nullable', 'array'],
             'clinical_tracers.*' => ['string', 'max:255'],
 
@@ -90,6 +98,12 @@ class StoreReferralRequest extends FormRequest
             'raw_notes' => 'ข้อความสรุปอาการ/สถานการณ์',
             'zone' => 'เขตพื้นที่',
             'visit_consent' => 'ความยินยอมในการเยี่ยมบ้าน',
+            'discharge_vitals.bp_sys' => 'ความดันโลหิต (ตัวบน)',
+            'discharge_vitals.bp_dia' => 'ความดันโลหิต (ตัวล่าง)',
+            'discharge_vitals.pr' => 'ชีพจร (PR)',
+            'discharge_vitals.rr' => 'อัตราการหายใจ (RR)',
+            'discharge_vitals.temp' => 'อุณหภูมิ (Temp)',
+            'discharge_vitals.spo2' => 'SpO2',
         ];
     }
 }

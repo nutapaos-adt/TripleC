@@ -54,6 +54,10 @@
         <div class="card-body" style="padding-top:var(--space-5);">
             <div class="label" style="margin-bottom:6px;">ข้อมูลต้นทาง (บันทึกดิบก่อน AI สรุป)</div>
             <div class="field-value multiline">{{ $referral->raw_notes }}</div>
+            @if ($referral->dischargeVitalsText())
+                <div class="label" style="margin:10px 0 4px;">สัญญาณชีพก่อนกลับบ้าน</div>
+                <div class="field-value">{{ $referral->dischargeVitalsText() }}</div>
+            @endif
             <p class="caption" style="margin-top:8px;">เทียบกับร่างจาก AI ด้านล่าง เพื่อตรวจว่า AI สรุปครบถ้วนและตรงกับข้อมูลที่ส่งเข้ามาจริงหรือไม่</p>
         </div>
     </div>

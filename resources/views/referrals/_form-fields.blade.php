@@ -320,6 +320,38 @@
     <input type="text" name="equipment_other" value="{{ old('equipment_other', $equipmentOther) }}" placeholder="อื่นๆ (ระบุ) — เช่น Tracheostomy tube, IV line" style="margin-top:var(--space-2);">
 </div>
 
+<div class="field full" style="margin-bottom:var(--space-4);">
+    <label>สัญญาณชีพก่อนกลับบ้าน</label>
+    @php $vit = fn (string $k) => old('discharge_vitals.'.$k, $referral?->discharge_vitals[$k] ?? null); @endphp
+    <div class="grid-3" style="grid-template-columns:repeat(auto-fit,minmax(120px,1fr));">
+        <div>
+            <span class="hint" style="display:block;margin:0 0 4px;">BP (mmHg)</span>
+            <div style="display:flex;align-items:center;gap:4px;">
+                <input type="number" name="discharge_vitals[bp_sys]" value="{{ $vit('bp_sys') }}" min="40" max="300" placeholder="ตัวบน" inputmode="numeric" style="min-width:0;">
+                <span>/</span>
+                <input type="number" name="discharge_vitals[bp_dia]" value="{{ $vit('bp_dia') }}" min="20" max="200" placeholder="ตัวล่าง" inputmode="numeric" style="min-width:0;">
+            </div>
+        </div>
+        <div>
+            <span class="hint" style="display:block;margin:0 0 4px;">PR (ครั้ง/นาที)</span>
+            <input type="number" name="discharge_vitals[pr]" value="{{ $vit('pr') }}" min="20" max="250" inputmode="numeric">
+        </div>
+        <div>
+            <span class="hint" style="display:block;margin:0 0 4px;">RR (ครั้ง/นาที)</span>
+            <input type="number" name="discharge_vitals[rr]" value="{{ $vit('rr') }}" min="4" max="80" inputmode="numeric">
+        </div>
+        <div>
+            <span class="hint" style="display:block;margin:0 0 4px;">Temp (°C)</span>
+            <input type="number" name="discharge_vitals[temp]" value="{{ $vit('temp') }}" min="30" max="45" step="0.1" inputmode="decimal">
+        </div>
+        <div>
+            <span class="hint" style="display:block;margin:0 0 4px;">SpO2 (%)</span>
+            <input type="number" name="discharge_vitals[spo2]" value="{{ $vit('spo2') }}" min="30" max="100" inputmode="numeric">
+        </div>
+    </div>
+    <span class="hint">ค่าล่าสุดก่อนผู้ป่วยกลับบ้าน — เว้นว่างได้ถ้าไม่มีหรือไม่ได้วัด</span>
+</div>
+
 <div class="field">
     <label>ข้อความสรุปอาการ / สถานการณ์ผู้ป่วย (raw_notes)</label>
     <span class="hint">พิมพ์เป็นข้อความอิสระ — AI จะช่วยอ่านสรุปและประเมินความเสี่ยงในขั้นตอนถัดไป</span>

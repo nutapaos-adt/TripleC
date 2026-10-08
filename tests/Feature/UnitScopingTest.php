@@ -250,4 +250,36 @@ class UnitScopingTest extends TestCase
             ->assertSee('<option value="2569" selected>2569</option>', false)
             ->assertSee('<option value="2499" selected>2499</option>', false);
     }
+
+    // ---------- สัญญาณชีพก่อนกลับบ้าน ----------
+
+    public function test_discharge_vitals_are_saved_and_shown_and_blank_values_are_dropped(): void
+    {
+        $staff = User::factory()->create(['role' => User::ROLE_WARD_STAFF, 'ward_id' => Ward::factory()->create()->id]);
+
+        $this->actingAs($staff)->post(route('referrals.store'), $this->consentPayload([
+            'visit_consent' => 'home_visit',
+            'discharge_vitals' => ['bp_sys' => '128', 'bp_dia' => '76', 'pr' => '84', 'rr' => '', 'temp' => '36.8', 'spo2' => '97'],
+        ]))->assertRedirect();
+
+        $referral = Referral::firstOrFail();
+        $this->assertSame(['bp_sys' => '128', 'bp_dia' => '76', 'pr' => '84', 'temp' => '36.8', 'spo2' => '97'], $referral->discharge_vitals);
+        $this->assertSame('BP 128/76 mmHg · PR 84 ครั้ง/นาที · Temp 36.8 °C · SpO2 97 %', $referral->dischargeVitalsText());
+
+        $this->actingAs($staff)->get(route('referrals.show', $referral))
+            ->assertSee('สัญญาณชีพก่อนกลับบ้าน')
+            ->assertSee('BP 128/76 mmHg');
+    }
+
+    public function test_vitals_are_optional_and_implausible_values_are_rejected(): void
+    {
+        $staff = User::factory()->create(['role' => User::ROLE_WARD_STAFF, 'ward_id' => Ward::factory()->create()->id]);
+
+        $this->actingAs($staff)->post(route('referrals.store'), $this->consentPayload(['visit_consent' => 'home_visit']))->assertRedirect();
+        $this->assertNull(Referral::firstOrFail()->discharge_vitals);
+
+        $this->actingAs($staff)->post(route('referrals.store'), $this->consentPayload([
+            'visit_consent' => 'home_visit', 'patient_hn' => 'HN-bad', 'discharge_vitals' => ['bp_sys' => '1200', 'spo2' => '140'],
+        ]))->assertSessionHasErrors(['discharge_vitals.bp_sys', 'discharge_vitals.spo2']);
+    }
 }

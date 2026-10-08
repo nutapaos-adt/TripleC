@@ -226,6 +226,11 @@
                 @endif
             </div>
 
+            @if ($referral->dischargeVitalsText())
+                <div class="section-title" style="margin-top:var(--space-5);"><span class="h3">สัญญาณชีพก่อนกลับบ้าน</span></div>
+                <div class="field-value">{{ $referral->dischargeVitalsText() }}</div>
+            @endif
+
             <div class="section-title" style="margin-top:var(--space-5);"><span class="h3">บันทึกดิบจากผู้ส่งต่อ</span></div>
             <div class="field-value multiline">{{ $referral->raw_notes }}</div>
         </div>

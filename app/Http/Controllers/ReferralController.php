@@ -177,6 +177,7 @@ class ReferralController extends Controller
                 $data['equipment_other'] ?? null,
             ])),
             'clinical_tracers' => $data['clinical_tracers'] ?? [],
+            'discharge_vitals' => array_filter($data['discharge_vitals'] ?? [], fn ($v) => $v !== null && $v !== '') ?: null,
             'admit_date' => $data['admit_date'] ?? null,
             'discharge_date' => $data['discharge_date'] ?? null,
             'encounter_date' => $data['encounter_date'] ?? null,
