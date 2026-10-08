@@ -22,20 +22,29 @@ class DashboardController extends Controller
 
         $totalPatients = Patient::count();
 
-        $dueTodayPlans = FollowUpPlan::with('referral')
+        // รอเยี่ยม = ผู้ป่วยที่ยังมีนัดค้างอยู่ (นับรายละ 1 ครั้ง ใช้นัดที่ใกล้ที่สุดของแต่ละราย) — ไม่ผูกกับ "วันนี้"
+        // เพราะทีมเยี่ยม/โทรได้ก่อนกำหนดอยู่แล้ว
+        $waitingPlans = FollowUpPlan::with('referral')
             ->where('status', FollowUpPlan::STATUS_SCHEDULED)
-            ->whereDate('due_date', $today)
-            ->get();
+            ->whereHas('referral', fn ($q) => $q->where('status', '!=', Referral::STATUS_CLOSED))
+            ->orderBy('plan_number')
+            ->get()
+            ->groupBy('referral_id')
+            ->map(fn ($plans) => $plans->first());
 
-        $dueTodayCount = $dueTodayPlans->count();
-        $dueTodayHomeVisitCount = $dueTodayPlans->where('method', FollowUpPlan::METHOD_HOME_VISIT)->count();
-        $dueTodayPhoneCallCount = $dueTodayPlans->where('method', FollowUpPlan::METHOD_PHONE_CALL)->count();
-        $dueTodayInAreaCount = $dueTodayPlans->where('method', FollowUpPlan::METHOD_HOME_VISIT)
+        $waitingCount = $waitingPlans->count();
+        $waitingHomeVisitCount = $waitingPlans->where('method', FollowUpPlan::METHOD_HOME_VISIT)->count();
+        $waitingPhoneCallCount = $waitingPlans->where('method', FollowUpPlan::METHOD_PHONE_CALL)->count();
+        $waitingInAreaCount = $waitingPlans->where('method', FollowUpPlan::METHOD_HOME_VISIT)
             ->filter(fn ($plan) => $plan->referral->zone === 'in_area')->count();
-        $dueTodayOutAreaCount = $dueTodayHomeVisitCount - $dueTodayInAreaCount;
+        $waitingOutAreaCount = $waitingHomeVisitCount - $waitingInAreaCount;
 
-        $overdueCount = FollowUpPlan::where('status', FollowUpPlan::STATUS_SCHEDULED)
-            ->whereDate('due_date', '<', $today)
+        // เคสที่ได้รับการเยี่ยม/โทรติดตามวันนี้ (นับตามวันที่เยี่ยมจริงที่บันทึกไว้ นับรายละ 1 ครั้ง)
+        $visitedTodayCount = FollowUpRecord::whereDate('visited_at', $today)
+            ->with('plan:id,referral_id')
+            ->get()
+            ->pluck('plan.referral_id')
+            ->unique()
             ->count();
 
         $riskCount = FollowUpRecord::where('risk_flag', true)
@@ -59,12 +68,12 @@ class DashboardController extends Controller
 
         return view('dashboard', compact(
             'totalPatients',
-            'dueTodayCount',
-            'dueTodayHomeVisitCount',
-            'dueTodayPhoneCallCount',
-            'dueTodayInAreaCount',
-            'dueTodayOutAreaCount',
-            'overdueCount',
+            'waitingCount',
+            'waitingHomeVisitCount',
+            'waitingPhoneCallCount',
+            'waitingInAreaCount',
+            'waitingOutAreaCount',
+            'visitedTodayCount',
             'riskCount',
             'upcomingPlans',
             'recentRiskRecords',

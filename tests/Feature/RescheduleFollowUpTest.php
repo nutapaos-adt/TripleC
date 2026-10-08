@@ -135,4 +135,21 @@ class RescheduleFollowUpTest extends TestCase
         $this->assertSame(FollowUpPlan::STATUS_CANCELLED, $plans[1]->fresh()->status);
         $this->assertSame(Referral::STATUS_CLOSED, $referral->fresh()->status);
     }
+
+    public function test_dashboard_counts_waiting_patients_and_cases_visited_today(): void
+    {
+        // นัดครั้งที่ 1 เยี่ยมแล้ววันนี้ (เร็วกว่ากำหนด) นัดครั้งที่ 2 ยังรออยู่อีก 2 สัปดาห์
+        [, $plans, $team] = $this->referralWithPlans(['2026-10-20', '2026-10-22']);
+        $this->recordFor($plans[0], $team);
+
+        $response = $this->actingAs($team)->get(route('dashboard'))->assertOk();
+
+        $response->assertSee('รอเยี่ยม')
+            ->assertSee('เคสที่ได้รับการเยี่ยมวันนี้')
+            ->assertDontSee('นัดวันนี้')
+            ->assertDontSee('เกินกำหนด</span>', false);
+        $this->assertSame(1, $response->viewData('waitingCount'));
+        $this->assertSame(1, $response->viewData('visitedTodayCount'));
+        $this->assertSame(1, $response->viewData('waitingPhoneCallCount'));
+    }
 }

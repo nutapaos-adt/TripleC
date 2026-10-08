@@ -12,27 +12,27 @@
             <span class="hint">อยู่ระหว่างติดตามต่อเนื่อง</span>
         </div>
         <div class="kpi-tile">
-            <span class="caption">นัดวันนี้ &middot; {{ $dueTodayCount }} ราย</span>
+            <span class="caption">รอเยี่ยม &middot; {{ $waitingCount }} ราย</span>
             <div class="kpi-split-row">
                 <div class="kpi-split-item">
                     <div class="kpi-split-top">
                         <span class="kpi-split-label">เยี่ยมบ้าน</span>
-                        <span class="kpi-split-value">{{ $dueTodayHomeVisitCount }}</span>
+                        <span class="kpi-split-value">{{ $waitingHomeVisitCount }}</span>
                     </div>
-                    <span class="kpi-split-sub">ในเขต {{ $dueTodayInAreaCount }} &middot; นอกเขต {{ $dueTodayOutAreaCount }}</span>
+                    <span class="kpi-split-sub">ในเขต {{ $waitingInAreaCount }} &middot; นอกเขต {{ $waitingOutAreaCount }}</span>
                 </div>
                 <div class="kpi-split-item">
                     <div class="kpi-split-top">
                         <span class="kpi-split-label">โทรติดตาม</span>
-                        <span class="kpi-split-value">{{ $dueTodayPhoneCallCount }}</span>
+                        <span class="kpi-split-value">{{ $waitingPhoneCallCount }}</span>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="kpi-tile warn">
-            <span class="caption">เกินกำหนด</span>
-            <span class="kpi-value warning">{{ $overdueCount }}</span>
-            <span class="hint">ต้องติดตามโดยเร็ว</span>
+        <div class="kpi-tile">
+            <span class="caption">เคสที่ได้รับการเยี่ยมวันนี้</span>
+            <span class="kpi-value">{{ $visitedTodayCount }}</span>
+            <span class="hint">บันทึกผลเยี่ยม/โทรติดตามแล้ววันนี้</span>
         </div>
         <div class="kpi-tile alert">
             <span class="caption">พบความเสี่ยงยืนยันแล้ว</span>
