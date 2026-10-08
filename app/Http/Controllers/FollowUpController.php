@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\AmendFollowUpDecisionRequest;
 use App\Http\Requests\ConfirmFollowUpDecisionRequest;
 use App\Http\Requests\StoreFollowUpRecordRequest;
 use App\Models\FollowUpPlan;
@@ -216,9 +217,86 @@ class FollowUpController extends Controller
             ->with('status', 'เปลี่ยนวันนัดครั้งที่ '.$plan->plan_number.' เรียบร้อยแล้ว');
     }
 
+    /**
+     * แอดมินแก้การตัดสินใจที่ยืนยันแล้ว (1 ครั้ง ต้องมีเหตุผล) และปรับสถานะเคส/นัดที่เกี่ยวข้องให้สอดคล้อง
+     * - ติดตามซ้ำ/ส่งต่อ → ปิดเคส: ยกเลิกนัดที่เหลือและปิดเคส
+     * - ปิดเคส → ติดตามซ้ำ/ส่งต่อ: เปิดเคสกลับ และกำหนดนัดถัดไปตามวันที่แอดมินเลือก (ใช้นัดที่ถูกยกเลิกไว้ก่อนถ้ามี)
+     * - ติดตามซ้ำ ↔ ส่งต่อ: ไม่เปลี่ยนนัด (ถ้าเลือกวันก็ย้ายนัดถัดไปตามวันนั้น)
+     */
+    public function amendDecision(AmendFollowUpDecisionRequest $request, FollowUpPlan $plan, VisitPlanService $visitPlanService): RedirectResponse
+    {
+        abort_unless($plan->record, 404);
+        $record = $plan->record;
+        abort_unless($record->canAmendDecision(), 403, 'แก้ไขการตัดสินใจนี้ไม่ได้ (ถูกแก้ไปแล้ว หรือมีผลติดตามครั้งถัดไปบันทึกแล้ว)');
+
+        $referral = $plan->referral;
+        $old = $record->nurse_decision;
+        $new = $request->validated('nurse_decision');
+        $date = $request->validated('next_follow_up_date');
+
+        DB::transaction(function () use ($request, $record, $plan, $referral, $old, $new, $date, $visitPlanService) {
+            $record->update([
+                'nurse_decision' => $new,
+                'decision_notes' => $request->validated('decision_notes'),
+                'risk_flag' => (bool) $request->boolean('risk_flag'),
+                'decision_previous' => $old,
+                'decision_edited_by' => Auth::id(),
+                'decision_edited_at' => now(),
+                'decision_edit_reason' => $request->validated('edit_reason'),
+            ]);
+
+            $wasClosed = $old === FollowUpRecord::DECISION_CLOSE;
+            $isClosed = $new === FollowUpRecord::DECISION_CLOSE;
+
+            if (! $wasClosed && $isClosed) {
+                $visitPlanService->cancelRemainingPlans($referral);
+                $referral->update(['status' => Referral::STATUS_CLOSED, 'closed_at' => now()]);
+                $record->update(['next_follow_up_plan_id' => null]);
+
+                return;
+            }
+
+            if ($wasClosed && ! $isClosed) {
+                $referral->update(['status' => Referral::STATUS_IN_PROGRESS, 'closed_at' => null]);
+
+                $cancelled = $referral->followUpPlans()
+                    ->where('plan_number', '>', $plan->plan_number)
+                    ->where('status', FollowUpPlan::STATUS_CANCELLED)
+                    ->orderBy('plan_number')
+                    ->first();
+
+                if ($cancelled) {
+                    $cancelled->update(['status' => FollowUpPlan::STATUS_SCHEDULED, 'due_date' => $date]);
+                    $nextPlan = $cancelled;
+                } else {
+                    $nextPlan = $visitPlanService->generateNextPlan($record, $date);
+                }
+
+                if ($nextPlan) {
+                    $record->update(['next_follow_up_plan_id' => $nextPlan->id]);
+                }
+
+                return;
+            }
+
+            if (! $isClosed && $date) {
+                $nextPlan = $visitPlanService->generateNextPlan($record, $date);
+                if ($nextPlan) {
+                    $record->update(['next_follow_up_plan_id' => $nextPlan->id]);
+                }
+            }
+        });
+
+        return redirect()
+            ->route('follow-up-plans.review', $plan)
+            ->with('status', 'บันทึกการแก้ไขการตัดสินใจเรียบร้อยแล้ว');
+    }
+
     public function confirmDecision(ConfirmFollowUpDecisionRequest $request, FollowUpPlan $plan, VisitPlanService $visitPlanService): RedirectResponse
     {
         abort_unless($plan->record, 404);
+        abort_if($plan->record->isConfirmed(), 403, 'ยืนยันการตัดสินใจของนัดนี้ไปแล้ว — หากต้องแก้ไขให้ติดต่อแอดมิน');
+        abort_unless($plan->referral->isVisibleTo(Auth::user()), 403, 'ไม่มีสิทธิ์เข้าถึงใบส่งต่อของหน่วยงานอื่น');
 
         $record = $plan->record;
         $decision = $request->validated('nurse_decision');

@@ -112,7 +112,71 @@
             @if ($record->decision_notes)
                 <p style="margin:6px 0 0;font-size:14px;color:var(--color-neutral-700);">{{ $record->decision_notes }}</p>
             @endif
+            @if ($record->wasDecisionAmended())
+                <p style="margin:10px 0 0;font-size:13px;color:var(--color-warning);">
+                    แก้ไขโดย {{ $record->decisionEditor?->name }} เมื่อ {{ \App\Support\ThaiDate::dateTime($record->decision_edited_at) }}
+                    — เดิมเลือก "{{ $decisionLabels[$record->decision_previous] ?? $record->decision_previous }}" · เหตุผล: {{ $record->decision_edit_reason }}
+                </p>
+            @endif
         </div>
+
+        @if (auth()->user()->role === 'admin' && $record->canAmendDecision())
+            <details class="card" style="margin-top:var(--space-4);padding:var(--space-4);">
+                <summary style="cursor:pointer;font-weight:700;color:var(--color-primary-700);">แก้ไขการตัดสินใจ (เฉพาะแอดมิน — แก้ได้ 1 ครั้ง)</summary>
+                <form method="POST" action="{{ route('follow-up-plans.decision.amend', $plan) }}" id="amendForm" style="margin-top:var(--space-4);">
+                    @csrf
+                    <div class="radio-cards">
+                        @foreach ($decisionLabels as $value => $label)
+                            <label class="radio-card @if(old('nurse_decision', $record->nurse_decision) === $value) selected @endif" data-value="{{ $value }}">
+                                <input type="radio" name="nurse_decision" value="{{ $value }}" @checked(old('nurse_decision', $record->nurse_decision) === $value)>
+                                <div class="rc-title">{{ $label }}</div>
+                            </label>
+                        @endforeach
+                    </div>
+
+                    <div class="field-group" id="amendDateField" style="margin-top:var(--space-4);" @if(old('nurse_decision', $record->nurse_decision) === 'close' && $record->nurse_decision === 'close') hidden @endif>
+                        <label>วันนัดครั้งต่อไป
+                            <span class="hint" style="display:inline;margin:0;">
+                                @if ($record->nurse_decision === 'close') (บังคับเมื่อเปิดเคสกลับ — นัดเดิมถูกยกเลิกไปแล้ว) @else (ไม่บังคับ) @endif
+                            </span>
+                        </label>
+                        <x-thai-date name="next_follow_up_date" :value="old('next_follow_up_date')" :years-back="0" :years-forward="2" />
+                    </div>
+
+                    <div class="field-group">
+                        <div class="checkbox-row" style="background:var(--color-neutral-100);border-color:var(--color-neutral-300);">
+                            <input type="checkbox" id="amend_risk_flag" name="risk_flag" value="1" @checked(old('risk_flag', $record->risk_flag))>
+                            <label for="amend_risk_flag">ยืนยันว่าพบสัญญาณเสี่ยงจริง</label>
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <label for="amend_notes">หมายเหตุการตัดสินใจ</label>
+                        <textarea id="amend_notes" name="decision_notes" rows="2">{{ old('decision_notes', $record->decision_notes) }}</textarea>
+                    </div>
+
+                    <div class="field-group">
+                        <label for="edit_reason">เหตุผลที่แก้ไข <span class="req">*</span></label>
+                        <textarea id="edit_reason" name="edit_reason" rows="2" required>{{ old('edit_reason') }}</textarea>
+                        <span class="hint">จะถูกบันทึกพร้อมชื่อผู้แก้และเวลา เพื่อตรวจสอบย้อนหลัง</span>
+                    </div>
+
+                    <div class="field-group">
+                        <div class="checkbox-row">
+                            <input type="checkbox" id="amend_confirmed" name="ai_review_confirmed" value="1" required>
+                            <label for="amend_confirmed">
+                                <span class="cb-title">ยืนยันการแก้ไข</span>
+                                <span class="cb-sub">ข้าพเจ้าตรวจสอบแล้วว่าการตัดสินใจใหม่ถูกต้อง และเข้าใจว่าจะแก้ได้เพียงครั้งเดียว (ถ้าเปลี่ยนเป็น/จาก "ปิดเคส" ระบบจะยกเลิก/เปิดนัดที่เหลือให้สอดคล้อง)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="btn-row">
+                        <button type="submit" class="btn btn-primary">บันทึกการแก้ไข</button>
+                    </div>
+                </form>
+            </details>
+        @endif
     @else
         <div class="nurse-decision">
             <span class="nurse-decision-label">การตัดสินใจของพยาบาล — ต้องยืนยันเสมอ</span>
@@ -193,6 +257,17 @@
 
     <script>
         (function () {
+            var amendCards = document.querySelectorAll('#amendForm .radio-card');
+            amendCards.forEach(function (card) {
+                card.addEventListener('click', function () {
+                    amendCards.forEach(function (c) { c.classList.remove('selected'); });
+                    card.classList.add('selected');
+                    card.querySelector('input[type="radio"]').checked = true;
+                    var f = document.getElementById('amendDateField');
+                    if (f) f.hidden = card.dataset.value === 'close';
+                });
+            });
+
             var cards = document.querySelectorAll('#decisionForm .radio-card');
             cards.forEach(function (card) {
                 card.addEventListener('click', function () {

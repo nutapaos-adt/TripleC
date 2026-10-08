@@ -152,4 +152,100 @@ class RescheduleFollowUpTest extends TestCase
         $this->assertSame(1, $response->viewData('visitedTodayCount'));
         $this->assertSame(1, $response->viewData('waitingPhoneCallCount'));
     }
+
+    // ---------- แก้การตัดสินใจที่ยืนยันแล้ว (เฉพาะแอดมิน) ----------
+
+    private function confirmedDecision(string $decision, array $dueDates = ['2026-10-20', '2026-10-22']): array
+    {
+        [$referral, $plans, $team] = $this->referralWithPlans($dueDates);
+        $record = $this->recordFor($plans[0], $team);
+
+        $this->actingAs($team)->post(route('follow-up-plans.decision', $plans[0]), [
+            'nurse_decision' => $decision, 'ai_review_confirmed' => '1',
+        ])->assertRedirect();
+
+        return [$referral, $plans, $record->fresh(), User::factory()->create(['role' => User::ROLE_ADMIN]), $team];
+    }
+
+    public function test_a_confirmed_decision_cannot_be_submitted_twice(): void
+    {
+        [, $plans, , , $team] = $this->confirmedDecision('repeat');
+
+        $this->actingAs($team)->post(route('follow-up-plans.decision', $plans[0]), [
+            'nurse_decision' => 'close', 'ai_review_confirmed' => '1',
+        ])->assertForbidden();
+
+        $this->assertSame('repeat', $plans[0]->record->fresh()->nurse_decision);
+    }
+
+    public function test_only_admin_can_amend_and_a_reason_is_required(): void
+    {
+        [, $plans, , $admin, $team] = $this->confirmedDecision('repeat');
+        $payload = ['nurse_decision' => 'refer', 'ai_review_confirmed' => '1', 'edit_reason' => 'เลือกผิด'];
+
+        $this->actingAs($team)->post(route('follow-up-plans.decision.amend', $plans[0]), $payload)->assertForbidden();
+
+        $this->actingAs($admin)->post(route('follow-up-plans.decision.amend', $plans[0]), array_diff_key($payload, ['edit_reason' => 1]))
+            ->assertSessionHasErrors('edit_reason');
+
+        $this->actingAs($admin)->post(route('follow-up-plans.decision.amend', $plans[0]), $payload)->assertRedirect();
+        $record = $plans[0]->record->fresh();
+        $this->assertSame('refer', $record->nurse_decision);
+        $this->assertSame('repeat', $record->decision_previous);
+        $this->assertSame($admin->id, $record->decision_edited_by);
+        $this->assertSame('เลือกผิด', $record->decision_edit_reason);
+    }
+
+    public function test_a_decision_can_only_be_amended_once(): void
+    {
+        [, $plans, , $admin] = $this->confirmedDecision('repeat');
+        $payload = ['nurse_decision' => 'refer', 'ai_review_confirmed' => '1', 'edit_reason' => 'ครั้งแรก'];
+
+        $this->actingAs($admin)->post(route('follow-up-plans.decision.amend', $plans[0]), $payload)->assertRedirect();
+        $this->actingAs($admin)->post(route('follow-up-plans.decision.amend', $plans[0]), $payload + ['edit_reason' => 'ครั้งสอง'])->assertForbidden();
+    }
+
+    public function test_amending_to_close_cancels_remaining_appointments_and_closes_the_case(): void
+    {
+        [$referral, $plans, , $admin] = $this->confirmedDecision('repeat');
+
+        $this->actingAs($admin)->post(route('follow-up-plans.decision.amend', $plans[0]), [
+            'nurse_decision' => 'close', 'ai_review_confirmed' => '1', 'edit_reason' => 'ผู้ป่วยย้ายออก',
+        ])->assertRedirect();
+
+        $this->assertSame(FollowUpPlan::STATUS_CANCELLED, $plans[1]->fresh()->status);
+        $this->assertSame(Referral::STATUS_CLOSED, $referral->fresh()->status);
+    }
+
+    public function test_reopening_a_closed_case_needs_a_date_and_restores_the_cancelled_appointment(): void
+    {
+        [$referral, $plans, , $admin] = $this->confirmedDecision('close');
+        $this->assertSame(FollowUpPlan::STATUS_CANCELLED, $plans[1]->fresh()->status);
+        $payload = ['nurse_decision' => 'repeat', 'ai_review_confirmed' => '1', 'edit_reason' => 'ปิดผิดเคส'];
+
+        $this->actingAs($admin)->post(route('follow-up-plans.decision.amend', $plans[0]), $payload)
+            ->assertSessionHasErrors('next_follow_up_date');
+        $this->assertSame(Referral::STATUS_CLOSED, $referral->fresh()->status);
+
+        $this->actingAs($admin)->post(route('follow-up-plans.decision.amend', $plans[0]), $payload + ['next_follow_up_date' => '2026-10-30'])
+            ->assertRedirect();
+
+        $this->assertSame(Referral::STATUS_IN_PROGRESS, $referral->fresh()->status);
+        $this->assertNull($referral->fresh()->closed_at);
+        $restored = $plans[1]->fresh();
+        $this->assertSame(FollowUpPlan::STATUS_SCHEDULED, $restored->status);
+        $this->assertSame('2026-10-30', $restored->due_date->toDateString());
+        $this->assertSame($restored->id, $plans[0]->record->fresh()->next_follow_up_plan_id);
+        $this->assertSame(2, FollowUpPlan::count());
+    }
+
+    public function test_cannot_amend_when_a_later_visit_has_already_been_recorded(): void
+    {
+        [, $plans, , $admin, $team] = $this->confirmedDecision('repeat');
+        $this->recordFor($plans[1], $team);
+
+        $this->actingAs($admin)->post(route('follow-up-plans.decision.amend', $plans[0]), [
+            'nurse_decision' => 'refer', 'ai_review_confirmed' => '1', 'edit_reason' => 'x',
+        ])->assertForbidden();
+    }
 }

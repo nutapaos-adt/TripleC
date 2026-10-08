@@ -36,6 +36,10 @@ class FollowUpRecord extends Model
         'confirmed_by',
         'confirmed_at',
         'next_follow_up_plan_id',
+        'decision_previous',
+        'decision_edited_by',
+        'decision_edited_at',
+        'decision_edit_reason',
     ];
 
     protected function casts(): array
@@ -52,6 +56,7 @@ class FollowUpRecord extends Model
             'ai_analysis_generated_at' => 'datetime',
             'risk_flag' => 'boolean',
             'confirmed_at' => 'datetime',
+            'decision_edited_at' => 'datetime',
         ];
     }
 
@@ -115,5 +120,33 @@ class FollowUpRecord extends Model
     public function isConfirmed(): bool
     {
         return $this->confirmed_at !== null;
+    }
+
+    public function decisionEditor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'decision_edited_by');
+    }
+
+    public function wasDecisionAmended(): bool
+    {
+        return $this->decision_edited_at !== null;
+    }
+
+    /**
+     * แอดมินแก้การตัดสินใจได้เมื่อ: ยืนยันแล้ว, ยังไม่เคยถูกแก้ (แก้ได้ 1 ครั้ง) และนัดครั้งถัดๆ ไปของเคสนี้ยังไม่มี
+     * ผลติดตามบันทึกไว้ (ถ้ามีแล้ว การแก้ย้อนหลังจะทำให้ลำดับการติดตามเพี้ยน)
+     */
+    public function canAmendDecision(): bool
+    {
+        if (! $this->isConfirmed() || $this->wasDecisionAmended()) {
+            return false;
+        }
+
+        $plan = $this->plan;
+
+        return ! $plan->referral->followUpPlans()
+            ->where('plan_number', '>', $plan->plan_number)
+            ->whereHas('record')
+            ->exists();
     }
 }
