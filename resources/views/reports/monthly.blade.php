@@ -52,6 +52,11 @@
                 </div>
                 <div class="card-body">
                     @php $t = $report['visit_timeliness_table']; @endphp
+                    <style>
+                        /* ช่อง "ยังไม่ได้รับการเยี่ยม" สูง 2 แถวทางขวา (บนจอเล็กกลับเป็นกล่องปกติ) */
+                        .kpi-tile.span-tall { grid-column: 4; grid-row: 1 / span 2; justify-content: center; }
+                        @media (max-width: 1024px) { .kpi-tile.span-tall { grid-column: auto; grid-row: auto; } }
+                    </style>
                     <section class="kpi-grid" aria-label="สรุปตัวเลขการส่งเยี่ยมบ้านประจำเดือน">
                         <div class="kpi-tile">
                             <span class="caption">จำนวนการส่งเยี่ยมทั้งหมด</span>
@@ -68,6 +73,11 @@
                             <span class="kpi-value">{{ $report['out_area_count'] }}</span>
                             <span class="hint">ราย</span>
                         </div>
+                        <div class="kpi-tile alert span-tall">
+                            <span class="caption">ยังไม่ได้รับการเยี่ยม/ยืนยันแผน</span>
+                            <span class="kpi-value risk" style="font-size:56px;line-height:64px;">{{ $report['not_yet_visited_count'] }}</span>
+                            <span class="hint">ราย — ในเขต {{ $report['not_yet_visited_in_area'] }} &middot; นอกเขต {{ $report['not_yet_visited_out_area'] }}</span>
+                        </div>
                         <div class="kpi-tile">
                             <span class="caption">ทันใน 5 วัน (ด่วน)</span>
                             <span class="kpi-value">{{ $t['combined']['urgent']['on_time'] }}</span>
@@ -82,11 +92,6 @@
                             <span class="caption">ทันใน 30 วัน</span>
                             <span class="kpi-value">{{ $t['combined']['general']['within_30'] }}</span>
                             <span class="hint">ราย</span>
-                        </div>
-                        <div class="kpi-tile alert">
-                            <span class="caption">ยังไม่ได้รับการเยี่ยม/ยืนยันแผน</span>
-                            <span class="kpi-value risk">{{ $report['not_yet_visited_count'] }}</span>
-                            <span class="hint">ราย — ในเขต {{ $report['not_yet_visited_in_area'] }} &middot; นอกเขต {{ $report['not_yet_visited_out_area'] }}</span>
                         </div>
                     </section>
 
@@ -249,23 +254,8 @@
                             <thead>
                                 <tr><th>ผู้ป่วย</th><th>กลุ่มโรค</th><th>สรุปจาก AI</th></tr>
                             </thead>
-                            <tbody>
-                                @forelse ($dmCopdComplications as $row)
-                                    <tr>
-                                        <td>{{ $row['patient_name'] }}</td>
-                                        <td>
-                                            <span class="chip {{ $row['disease_tag'] === 'DM/COPD' ? 'chip-risk' : 'chip-warning' }}">{{ $row['disease_tag'] }}</span>
-                                        </td>
-                                        <td>
-                                            @if (($row['processed'] ?? true) === false)
-                                                <span class="chip chip-warning">AI ประมวลผลไม่สำเร็จ</span>
-                                            @endif
-                                            {{ $row['summary'] }}
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr><td colspan="3" style="text-align:center;">ไม่พบเคสที่เข้าเงื่อนไขในกลุ่มผู้ป่วย DM/COPD ในเดือนนี้</td></tr>
-                                @endforelse
+                            <tbody id="dmCopdBody">
+                                <tr><td colspan="3" style="text-align:center;color:var(--color-neutral-500);">กำลังโหลดรายชื่อเคส…</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -427,5 +417,68 @@
 
     </div>
 
+    <script>
+        // ส่วนที่ 3: แสดงรายชื่อเคสทันที แล้วให้ AI สรุปทีละเคสแบบเบื้องหลัง (เคสที่เคยสรุปไว้แล้วขึ้นทันที) ไม่ให้หน้ารายงานโหลดช้า
+        (function () {
+            var body = document.getElementById('dmCopdBody');
+            if (!body) return;
+            var casesUrl = @json($dmCopdCasesUrl);
+            var analyzeUrl = @json($dmCopdAnalyzeUrl);
+            var csrf = document.querySelector('meta[name="csrf-token"]');
+            csrf = csrf ? csrf.getAttribute('content') : '';
+
+            function esc(text) {
+                return String(text == null ? '' : text).replace(/[&<>"']/g, function (c) {
+                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+                });
+            }
+            function message(text) {
+                body.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--color-neutral-500);">' + esc(text) + '</td></tr>';
+            }
+            function fillSummary(cell, result) {
+                cell.innerHTML = (result.processed === false ? '<span class="chip chip-warning">AI ประมวลผลไม่สำเร็จ</span> ' : '') + esc(result.summary);
+            }
+
+            fetch(casesUrl, { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
+                .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+                .then(function (data) {
+                    if (!data.cases.length) { message('ไม่พบเคสที่เข้าเงื่อนไขในกลุ่มผู้ป่วย DM/COPD ในเดือนนี้'); return; }
+
+                    body.innerHTML = '';
+                    var pending = [];
+                    data.cases.forEach(function (c) {
+                        var tr = document.createElement('tr');
+                        tr.innerHTML = '<td>' + esc(c.patient_name) + '</td>'
+                            + '<td><span class="chip ' + (c.disease_tag === 'DM/COPD' ? 'chip-risk' : 'chip-warning') + '">' + esc(c.disease_tag) + '</span></td>'
+                            + '<td></td>';
+                        var cell = tr.lastChild;
+                        if (c.result) {
+                            fillSummary(cell, c.result);
+                        } else {
+                            cell.innerHTML = '<span class="caption">กำลังให้ AI สรุป… (ครั้งแรกอาจใช้เวลา 1–2 นาทีต่อเคส ไม่ต้องรอหน้านี้ — ผลจะถูกจดจำไว้)</span>';
+                            pending.push({ c: c, cell: cell });
+                        }
+                        body.appendChild(tr);
+                    });
+
+                    // ทำทีละเคสตามลำดับ ไม่ยิงพร้อมกัน (เครื่อง AI ที่แผนกประมวลผลได้ทีละคำขอ)
+                    return pending.reduce(function (chain, item) {
+                        return chain.then(function () {
+                            return fetch(analyzeUrl.replace('__ID__', item.c.referral_id), {
+                                method: 'POST',
+                                headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrf },
+                                credentials: 'same-origin'
+                            })
+                                .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+                                .then(function (result) { fillSummary(item.cell, result); })
+                                .catch(function () {
+                                    fillSummary(item.cell, { processed: false, summary: 'ไม่สามารถประมวลผลได้ — โหลดหน้านี้ใหม่เพื่อลองอีกครั้ง' });
+                                });
+                        });
+                    }, Promise.resolve());
+                })
+                .catch(function () { message('โหลดรายชื่อเคสไม่สำเร็จ — กรุณาโหลดหน้านี้ใหม่'); });
+        })();
+    </script>
 </body>
 </html>

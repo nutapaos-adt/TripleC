@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\MonthlyReportPhoto;
 use App\Services\VisitReportService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -29,20 +30,9 @@ class MonthlyReportController extends Controller
     public function show(Request $request, VisitReportService $reportService): View
     {
         $monthOptions = $this->monthOptions();
-        $defaultValue = now()->format('Y-m');
-
-        $monthValue = $request->query('month', $defaultValue);
-
-        if (! array_key_exists($monthValue, $monthOptions)) {
-            $monthValue = $defaultValue;
-        }
-
-        $month = Carbon::createFromFormat('Y-m-d', $monthValue.'-01')->startOfMonth();
+        [$month, $monthValue] = $this->resolveMonth($request, $monthOptions);
 
         $report = $reportService->monthlyReport($month);
-        $dmCopdComplications = $report['total_referrals'] > 0
-            ? $reportService->dmCopdComplications($month)
-            : [];
 
         $photos = MonthlyReportPhoto::whereYear('report_month', $month->year)
             ->whereMonth('report_month', $month->month)
@@ -56,9 +46,58 @@ class MonthlyReportController extends Controller
             'monthOptions' => $monthOptions,
             'month' => $month,
             'report' => $report,
-            'dmCopdComplications' => $dmCopdComplications,
+            // ส่วนที่ 3 (ภาวะแทรกซ้อน DM/COPD) ให้ AI สรุปทีละเคสแบบเบื้องหลัง ไม่รอตอนโหลดหน้า (ช้า)
+            'dmCopdCasesUrl' => route('reports.monthly.dm-copd', ['month' => $monthValue]),
+            'dmCopdAnalyzeUrl' => route('reports.monthly.dm-copd.analyze', ['referral' => '__ID__', 'month' => $monthValue]),
             'photos' => $photos,
         ]);
+    }
+
+    /**
+     * @param  array<string, string>  $monthOptions
+     * @return array{0: Carbon, 1: string}
+     */
+    private function resolveMonth(Request $request, array $monthOptions): array
+    {
+        $defaultValue = now()->format('Y-m');
+        $monthValue = $request->query('month', $defaultValue);
+
+        if (! is_string($monthValue) || ! array_key_exists($monthValue, $monthOptions)) {
+            $monthValue = $defaultValue;
+        }
+
+        return [Carbon::createFromFormat('Y-m-d', $monthValue.'-01')->startOfMonth(), $monthValue];
+    }
+
+    /**
+     * รายชื่อเคส DM/COPD ของเดือนนั้น (ตอบเร็ว ไม่เรียก AI) — เคสที่เคยสรุปไว้แล้วจะมีผลมาด้วย ที่เหลือหน้าเว็บจะขอสรุปทีละเคส
+     */
+    public function dmCopdCases(Request $request, VisitReportService $reportService): JsonResponse
+    {
+        [$month] = $this->resolveMonth($request, $this->monthOptions());
+
+        $cases = $reportService->dmCopdCases($month)->map(fn (array $case) => [
+            'referral_id' => $case['referral']->id,
+            'patient_name' => $case['patient_name'],
+            'disease_tag' => $case['disease_tag'],
+            'result' => $reportService->cachedDmCopdResult($case, $month),
+        ])->values();
+
+        return response()->json(['cases' => $cases]);
+    }
+
+    /**
+     * ให้ AI สรุปภาวะแทรกซ้อนของเคสเดียว (ช้าได้ 30-90 วินาที) — ผลที่สำเร็จถูกแคชไว้ เปิดรายงานครั้งต่อไปไม่ต้องรอ
+     */
+    public function dmCopdAnalyze(Request $request, int $referral, VisitReportService $reportService): JsonResponse
+    {
+        [$month] = $this->resolveMonth($request, $this->monthOptions());
+
+        $case = $reportService->dmCopdCases($month)->first(fn (array $c) => $c['referral']->id === $referral);
+
+        abort_unless($case, 404);
+
+        return response()->json($reportService->dmCopdCaseResult($case, $month));
     }
 
     public function storePhoto(Request $request): RedirectResponse

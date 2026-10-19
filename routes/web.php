@@ -72,6 +72,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/reports/visit-summary', [VisitSummaryController::class, 'show'])->name('reports.visit-summary');
     Route::get('/reports/monthly', [MonthlyReportController::class, 'show'])->name('reports.monthly');
+    Route::get('/reports/monthly/dm-copd', [MonthlyReportController::class, 'dmCopdCases'])->name('reports.monthly.dm-copd');
+    Route::post('/reports/monthly/dm-copd/{referral}', [MonthlyReportController::class, 'dmCopdAnalyze'])->whereNumber('referral')->name('reports.monthly.dm-copd.analyze');
     Route::post('/reports/monthly/photos', [MonthlyReportController::class, 'storePhoto'])->name('reports.monthly.photos.store');
     Route::get('/reports/monthly/photos/{photo}', [MonthlyReportController::class, 'showPhoto'])->name('reports.monthly.photos.show');
     Route::delete('/reports/monthly/photos/{photo}', [MonthlyReportController::class, 'destroyPhoto'])->name('reports.monthly.photos.destroy');

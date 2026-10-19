@@ -7,6 +7,7 @@ use App\Models\FollowUpRecord;
 use App\Models\Referral;
 use App\Models\SatisfactionSurvey;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Collection;
 
 class VisitReportService
@@ -58,16 +59,12 @@ class VisitReportService
     }
 
     /**
-     * เคสที่มีโรคประจำตัว DM หรือ COPD ในเดือนนั้น พร้อมสรุปภาวะแทรกซ้อนจาก AI (ถ้าเรียกใช้ AI ไม่สำเร็จ
-     * หรือ AI ตอบกลับมาแบบที่แปลผลเป็น JSON ไม่ได้ (parse_error) จะคืนข้อความ fallback ที่ระบุชัดเจนว่า
-     * "ประมวลผลไม่ได้" แทนแต่ละเคส — ต้องไม่ปนกับ "ไม่พบภาวะแทรกซ้อน" (ผลลบจริง) เพราะ parse_error ไม่ใช่
-     * ผลลัพธ์ทางคลินิก แค่ AI ตอบมาไม่ตรงรูปแบบเท่านั้น (ดู CLAUDE.md เรื่อง parse_error fallback contract)
-     * `processed: false` คือสัญญาณให้ view render ต่างจากกรณี "ไม่พบภาวะแทรกซ้อน" (processed: true, พบผลลบจริง)
-     * ไม่ทำให้ทั้งรายงานพัง
+     * เคสที่มีโรคประจำตัว DM หรือ COPD และมีผลเยี่ยม/โทรที่มีข้อความบันทึกในเดือนนั้น — ยังไม่เรียก AI (เร็ว)
+     * หน้ารายงานใช้แสดงรายชื่อทันที แล้วค่อยให้ AI สรุปทีละเคสแบบเบื้องหลัง (ดู dmCopdCaseResult)
      *
-     * @return array<int, array{patient_name: string, disease_tag: string, summary: string, processed: bool}>
+     * @return Collection<int, array{referral: Referral, records: Collection<int, FollowUpRecord>, patient_name: string, disease_tag: string}>
      */
-    public function dmCopdComplications(Carbon $month): array
+    public function dmCopdCases(Carbon $month): Collection
     {
         $start = $month->copy()->startOfMonth();
         $end = $month->copy()->endOfMonth();
@@ -81,7 +78,7 @@ class VisitReportService
             ->with('patient')
             ->get();
 
-        $results = [];
+        $cases = collect();
 
         foreach ($referrals as $referral) {
             $records = FollowUpRecord::query()
@@ -107,44 +104,104 @@ class VisitReportService
 
             $initial = $referral->patient ? mb_substr($referral->patient->name, 0, 1) : '';
 
-            $processed = true;
-
-            try {
-                $analysis = $this->aiService->summarizeDmCopdComplication($referral, $records);
-
-                if ($analysis['parse_error'] ?? false) {
-                    // AI ตอบกลับมาแปลเป็น JSON ไม่ได้ — ต้องไม่แสดงเป็น "ไม่พบภาวะแทรกซ้อน" (ผลลบปลอม)
-                    $summary = 'AI ไม่สามารถแปลผลลัพธ์เป็นข้อมูลที่ใช้ได้ในครั้งนี้ กรุณาตรวจสอบบันทึกการเยี่ยมด้วยตนเอง';
-                    $processed = false;
-                } else {
-                    $summary = $analysis['summary'] ?? null;
-
-                    // แสดงข้อความหลักฐานจากบันทึกต่อท้าย ให้ผู้อ่านรายงานตรวจสอบได้ว่า AI อ้างอิงอะไร
-                    if (! empty($summary) && ! empty($analysis['evidence']) && ($analysis['has_complication'] ?? false)) {
-                        $summary .= ' — จากบันทึก: "'.trim($analysis['evidence']).'"';
-                    }
-
-                    if (empty($summary)) {
-                        $summary = ($analysis['has_complication'] ?? false)
-                            ? 'พบสัญญาณภาวะแทรกซ้อน (AI ไม่ได้ระบุรายละเอียดเพิ่มเติม)'
-                            : 'ไม่พบสัญญาณภาวะแทรกซ้อนที่ชัดเจนจากบันทึกการเยี่ยม';
-                    }
-                }
-            } catch (\Throwable $e) {
-                report($e);
-                $summary = 'ไม่สามารถประมวลผลได้ (เรียกใช้ AI ไม่สำเร็จ)';
-                $processed = false;
-            }
-
-            $results[] = [
+            $cases->push([
+                'referral' => $referral,
+                'records' => $records,
                 'patient_name' => 'ผู้ป่วย #'.$referral->id.' ('.$initial.'.)',
                 'disease_tag' => $diseaseTag,
-                'summary' => $summary,
-                'processed' => $processed,
-            ];
+            ]);
         }
 
-        return $results;
+        return $cases;
+    }
+
+    /**
+     * คีย์แคชของผลสแกนต่อเคส — ผูกกับเดือน บันทึกที่ใช้ และโรคประจำตัว ถ้าบันทึกเปลี่ยนจะสแกนใหม่เอง
+     * (เปลี่ยนเลข v เมื่อแก้พรอมต์/กติกาการสแกน เพื่อไม่ให้ใช้ผลเก่า)
+     */
+    protected function dmCopdCacheKey(array $case, Carbon $month): string
+    {
+        $fingerprint = md5($case['records']->pluck('raw_notes')->implode("\n").'|'.$case['referral']->underlying_disease);
+
+        return 'dm_copd_scan:v2:'.$case['referral']->id.':'.$month->format('Y-m').':'.$fingerprint;
+    }
+
+    /**
+     * ผลสแกนที่เคยทำไว้แล้ว (ถ้ามี) — คืน null ถ้ายังไม่เคยสแกนเคสนี้
+     *
+     * @return array{summary: string, processed: bool}|null
+     */
+    public function cachedDmCopdResult(array $case, Carbon $month): ?array
+    {
+        return Cache::get($this->dmCopdCacheKey($case, $month));
+    }
+
+    /**
+     * ให้ AI สรุปภาวะแทรกซ้อนของ 1 เคส (ถ้าเรียก AI ไม่สำเร็จ หรือ AI ตอบกลับมาแบบที่แปลผลเป็น JSON ไม่ได้ (parse_error)
+     * จะคืนข้อความ fallback ที่ระบุชัดเจนว่า "ประมวลผลไม่ได้" — ต้องไม่ปนกับ "ไม่พบภาวะแทรกซ้อน" (ผลลบจริง)
+     * ดู CLAUDE.md เรื่อง parse_error fallback contract) `processed: false` คือสัญญาณให้ view render ต่างจากผลลบจริง
+     * ผลที่ประมวลผลสำเร็จจะถูกแคชไว้ ไม่เรียก AI ซ้ำทุกครั้งที่เปิดรายงาน; ผลที่ล้มเหลวไม่ถูกแคช เพื่อให้ลองใหม่ได้
+     *
+     * @return array{summary: string, processed: bool}
+     */
+    public function dmCopdCaseResult(array $case, Carbon $month): array
+    {
+        if ($cached = $this->cachedDmCopdResult($case, $month)) {
+            return $cached;
+        }
+
+        $processed = true;
+
+        try {
+            $analysis = $this->aiService->summarizeDmCopdComplication($case['referral'], $case['records']);
+
+            if ($analysis['parse_error'] ?? false) {
+                // AI ตอบกลับมาแปลเป็น JSON ไม่ได้ — ต้องไม่แสดงเป็น "ไม่พบภาวะแทรกซ้อน" (ผลลบปลอม)
+                $summary = 'AI ไม่สามารถแปลผลลัพธ์เป็นข้อมูลที่ใช้ได้ในครั้งนี้ กรุณาตรวจสอบบันทึกการเยี่ยมด้วยตนเอง';
+                $processed = false;
+            } else {
+                $summary = $analysis['summary'] ?? null;
+
+                // แสดงข้อความหลักฐานจากบันทึกต่อท้าย ให้ผู้อ่านรายงานตรวจสอบได้ว่า AI อ้างอิงอะไร
+                if (! empty($summary) && ! empty($analysis['evidence']) && ($analysis['has_complication'] ?? false)) {
+                    $summary .= ' — จากบันทึก: "'.trim($analysis['evidence']).'"';
+                }
+
+                if (empty($summary)) {
+                    $summary = ($analysis['has_complication'] ?? false)
+                        ? 'พบสัญญาณภาวะแทรกซ้อน (AI ไม่ได้ระบุรายละเอียดเพิ่มเติม)'
+                        : 'ไม่พบสัญญาณภาวะแทรกซ้อนที่ชัดเจนจากบันทึกการเยี่ยม';
+                }
+            }
+        } catch (\Throwable $e) {
+            report($e);
+            $summary = 'ไม่สามารถประมวลผลได้ (เรียกใช้ AI ไม่สำเร็จ)';
+            $processed = false;
+        }
+
+        $result = ['summary' => $summary, 'processed' => $processed];
+
+        if ($processed) {
+            Cache::put($this->dmCopdCacheKey($case, $month), $result, now()->addDays(60));
+        }
+
+        return $result;
+    }
+
+    /**
+     * เคสที่มีโรคประจำตัว DM หรือ COPD ในเดือนนั้น พร้อมสรุปภาวะแทรกซ้อนจาก AI ครบทุกเคส (เรียก AI ทีละเคสที่ยังไม่แคช)
+     * หน้ารายงานไม่เรียกฟังก์ชันนี้แล้ว (ช้า) แต่ใช้ dmCopdCases + dmCopdCaseResult ทีละเคสแทน — คงไว้สำหรับใช้ซ้ำ/ทดสอบ
+     *
+     * @return array<int, array{patient_name: string, disease_tag: string, summary: string, processed: bool}>
+     */
+    public function dmCopdComplications(Carbon $month): array
+    {
+        return $this->dmCopdCases($month)
+            ->map(fn (array $case) => [
+                'patient_name' => $case['patient_name'],
+                'disease_tag' => $case['disease_tag'],
+            ] + $this->dmCopdCaseResult($case, $month))
+            ->all();
     }
 
     /**
