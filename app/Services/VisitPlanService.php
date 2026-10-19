@@ -120,10 +120,18 @@ class VisitPlanService
      */
     protected function firstVisitDueDate(Referral $referral, int $intervalDays): string
     {
+        $fromNow = Carbon::now()->addDays($intervalDays);
         $deadline = Referral::SEVERITY_FIRST_VISIT_DEADLINE_DAYS[$referral->severity_group] ?? null;
-        $effectiveDays = $deadline !== null ? min($intervalDays, $deadline) : $intervalDays;
 
-        return Carbon::now()->addDays($effectiveDays)->toDateString();
+        if ($deadline === null) {
+            return $fromNow->toDateString();
+        }
+
+        // เพดานตามความรุนแรงนับจาก "วันที่ส่งต่อ" (referrals.created_at) ให้ตรงกับตัวชี้วัดในรายงานประจำเดือน —
+        // ไม่ใช่วันที่ยืนยันแผน (ถ้ายืนยันช้า นัดแรกอาจครบกำหนดแล้วหรือใกล้ครบทันที ซึ่งสะท้อนความเป็นจริง)
+        $fromReferral = $referral->created_at->copy()->addDays($deadline);
+
+        return ($fromNow->lt($fromReferral) ? $fromNow : $fromReferral)->toDateString();
     }
 
     /**

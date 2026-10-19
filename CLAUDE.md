@@ -75,8 +75,9 @@ only `admin` can reach the `/admin/*` routes.
   `scheduled` plan already exists (the fixed_count case, pre-generated). For a `severity_group=red`
   referral with no active `VisitRule`, generates a new plan every ~30 days indefinitely.
 - `cancelRemainingPlans()` — called on "close"; cancels all still-`scheduled` plans.
-- **First-visit deadline cap** — plan #1's due date is capped to `min(rule-derived interval, severity
-  deadline)`: green ≤30 days / yellow ≤14 days / red ≤5 days (palliative has no cap, since PPS Score
+- **First-visit deadline cap** — plan #1's due date is capped to `min(now + rule-derived interval, referral
+  created_at + severity deadline)` (the deadline is counted from the **referral date**, matching the monthly
+  report's timeliness): green ≤30 days / yellow ≤14 days / red ≤5 days (palliative has no cap, since PPS Score
   already governs its interval). This cap applies to plan #1 only — for `fixed_count` rules, plan #2
   onward use the rule's raw `fixed_interval_days * plan_number` uncapped, not chained off the
   (possibly-shortened) plan #1 date. This is a deliberate, confirmed choice, not a bug.

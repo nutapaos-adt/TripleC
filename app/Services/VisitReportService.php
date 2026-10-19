@@ -217,7 +217,9 @@ class VisitReportService
         $inArea = $referrals->where('zone', 'in_area');
         $outArea = $referrals->where('zone', 'out_area');
 
-        $notYetVisited = $referrals->where('status', Referral::STATUS_PENDING_REVIEW);
+        // ยังไม่ได้รับการเยี่ยม = ทุกรายที่ยังไม่มีผลเยี่ยม/โทรครั้งแรกบันทึกไว้ (ไม่ว่าจะยืนยันแผนแล้วหรือยัง ไม่ว่ากลุ่มใด)
+        $visitedIds = $this->firstVisitedReferralIds($referrals);
+        $notYetVisited = $referrals->reject(fn ($referral) => $visitedIds->contains($referral->id));
 
         return [
             'period_start' => $start,
@@ -237,6 +239,25 @@ class VisitReportService
             'out_area_responded_count' => $this->countOutAreaResponded($outArea),
             'out_area_no_response_count' => $outArea->count() - $this->countOutAreaResponded($outArea),
         ];
+    }
+
+    /**
+     * id ของใบส่งต่อที่ "มีผลเยี่ยม/โทรครั้งแรก" บันทึกไว้แล้ว (นัดครั้งที่ 1 มีบันทึกผลที่ยังไม่ถูกลบ)
+     *
+     * @param  Collection<int, Referral>  $referrals
+     * @return Collection<int, int>
+     */
+    protected function firstVisitedReferralIds(Collection $referrals): Collection
+    {
+        if ($referrals->isEmpty()) {
+            return collect();
+        }
+
+        return FollowUpPlan::query()
+            ->whereIn('referral_id', $referrals->pluck('id'))
+            ->where('plan_number', 1)
+            ->whereHas('record', fn ($q) => $q->whereNotNull('visited_at'))
+            ->pluck('referral_id');
     }
 
     /**
@@ -381,22 +402,25 @@ class VisitReportService
     }
 
     /**
-     * ตารางความทันเวลา×เขต แบบละเอียดของ monthly-visit-report.html §1 — ต่างจาก buildUrgencyBreakdown()
-     * (ใช้ในหน้า visit-summary) ตรงที่แยก "ทั่วไป" เป็น 3 ช่วง (14/30 วัน + เยี่ยมเดือนหน้า) และนับเฉพาะเคส
-     * ที่ "เยี่ยมแล้ว" หรือ "ยืนยันแผนแล้ว" เป็น "จำนวนเยี่ยมจริง" (ไม่นับเคสที่ส่งเข้าระบบแล้วยังไม่มีการ
-     * ตอบกลับเลย) — ผลรวมของแต่ละช่วงย่อยจึงเท่ากับ "จำนวนเยี่ยมจริง" ของแถวนั้นเสมอ ตามที่ต้นแบบระบุไว้ใน
-     * table-note ส่วน Palliative/ไม่ระบุกลุ่มความรุนแรง ไม่เข้าเกณฑ์ตารางนี้เช่นเดียวกับ buildUrgencyBreakdown()
+     * ตารางความทันเวลา×เขต ของรายงานประจำเดือน §1 — ผลรวมกระทบยอดกับ "จำนวนการส่งเยี่ยม" ได้เสมอ:
+     *   จำนวนการส่งเยี่ยม = เยี่ยมจริง + รอเยี่ยม + ไม่ระบุกลุ่ม/Palliative
+     * - เยี่ยมจริง: เฉพาะเคสที่มีผลเยี่ยม/โทรครั้งแรกบันทึกไว้ (แบ่งตามกลุ่มบ้านสี ด่วน = บ้านแดง / ทั่วไป = เหลือง+เขียว)
+     *   นับวันจากวันที่ส่งต่อ (created_at) ถึงวันที่เยี่ยมจริง: ด่วน ≤5 วัน = ทัน, ทั่วไป ≤14 / ≤30 / เกิน 30 วัน
+     * - รอเยี่ยม: เคสที่ระบุกลุ่มบ้านสีแล้วแต่ยังไม่มีผลเยี่ยมครั้งแรก (รวมที่ยังรอยืนยันแผน และที่นัดเดือนนี้/เดือนหน้า)
+     * - ไม่ระบุกลุ่ม/Palliative: ไม่มีเกณฑ์วันตายตัวให้จัดว่าทัน/ไม่ทัน จึงแยกไว้ช่องเดียว (ทั้งที่เยี่ยมแล้วและยังไม่เยี่ยม)
      *
      * @param  Collection<int, Referral>  $referrals
-     * @return array<string, array{total_referred: int, visited_actual: int, urgent: array{on_time: int, late: int, total: int}, general: array{within_14: int, within_30: int, next_month: int, total: int}}>
+     * @return array<string, array{total_referred: int, visited_actual: int, waiting: int, unclassified: int, urgent: array{on_time: int, late: int, total: int}, general: array{within_14: int, within_30: int, over_30: int, total: int}}>
      */
     protected function buildVisitTimelinessTable(Collection $referrals, Carbon $month): array
     {
         $emptyRow = fn () => [
             'total_referred' => 0,
             'visited_actual' => 0,
+            'waiting' => 0,
+            'unclassified' => 0,
             'urgent' => ['on_time' => 0, 'late' => 0, 'total' => 0],
-            'general' => ['within_14' => 0, 'within_30' => 0, 'next_month' => 0, 'total' => 0],
+            'general' => ['within_14' => 0, 'within_30' => 0, 'over_30' => 0, 'total' => 0],
         ];
 
         $rows = ['in_area' => $emptyRow(), 'out_area' => $emptyRow(), 'combined' => $emptyRow()];
@@ -413,8 +437,6 @@ class VisitReportService
             return $rows;
         }
 
-        $nextMonth = $month->copy()->addMonth();
-
         $firstPlans = FollowUpPlan::query()
             ->whereIn('referral_id', $referralIds)
             ->where('plan_number', 1)
@@ -423,32 +445,37 @@ class VisitReportService
             ->keyBy('referral_id');
 
         foreach ($referrals as $referral) {
-            if ($referral->severity_group === null || $referral->severity_group === Referral::SEVERITY_PALLIATIVE) {
-                continue; // Palliative หรือยังไม่ระบุกลุ่ม — ไม่เข้าตารางนี้ (เหมือน buildUrgencyBreakdown())
-            }
-
             $zoneKey = $referral->zone === 'in_area' ? 'in_area' : 'out_area';
+
+            if (! array_key_exists($referral->severity_group, Referral::SEVERITY_FIRST_VISIT_DEADLINE_DAYS)) {
+                // Palliative หรือยังไม่ระบุกลุ่ม — ไม่มีเกณฑ์วันตายตัว
+                foreach ([$zoneKey, 'combined'] as $target) {
+                    $rows[$target]['unclassified']++;
+                }
+
+                continue;
+            }
+
             $isUrgent = $referral->severity_group === Referral::SEVERITY_RED;
+            $visitedAt = $firstPlans->get($referral->id)?->record?->visited_at;
 
-            $plan = $firstPlans->get($referral->id);
-            $record = $plan?->record;
-            $visitedAt = $record?->visited_at;
+            if (! $visitedAt) {
+                foreach ([$zoneKey, 'combined'] as $target) {
+                    $rows[$target]['waiting']++;
+                }
 
-            $bucket = null;
-
-            if ($visitedAt) {
-                $days = $referral->created_at->diffInDays($visitedAt);
-                $bucket = $isUrgent
-                    ? ($days <= 5 ? 'on_time' : 'late')
-                    : ($days <= 14 ? 'within_14' : 'within_30');
-            } elseif (! $isUrgent && $referral->isConfirmed() && $plan
-                && $plan->due_date->year === $nextMonth->year && $plan->due_date->month === $nextMonth->month) {
-                $bucket = 'next_month';
+                continue;
             }
 
-            if ($bucket === null) {
-                continue; // ยังไม่ได้รับการเยี่ยม/ยืนยันแผน — ไม่นับใน "จำนวนเยี่ยมจริง"
-            }
+            $days = $referral->created_at->diffInDays($visitedAt);
+
+            $bucket = $isUrgent
+                ? ($days <= 5 ? 'on_time' : 'late')
+                : match (true) {
+                    $days <= 14 => 'within_14',
+                    $days <= 30 => 'within_30',
+                    default => 'over_30',
+                };
 
             $category = $isUrgent ? 'urgent' : 'general';
 

@@ -102,8 +102,10 @@
                                     <th style="text-align:right;">รวม (ด่วน)</th>
                                     <th style="text-align:right;">ทันใน 14 วัน (ทั่วไป)</th>
                                     <th style="text-align:right;">ทันใน 30 วัน (ทั่วไป)</th>
-                                    <th style="text-align:right;">เยี่ยมเดือนหน้า (ทั่วไป)</th>
+                                    <th style="text-align:right;">เกิน 30 วัน (ทั่วไป)</th>
                                     <th style="text-align:right;">รวม (ทั่วไป)</th>
+                                    <th style="text-align:right;">รอเยี่ยมทั้งหมด</th>
+                                    <th style="text-align:right;">ไม่ระบุกลุ่ม / Palliative</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -117,8 +119,10 @@
                                         <td style="text-align:right;">{{ $t[$zoneKey]['urgent']['total'] }}</td>
                                         <td style="text-align:right;">{{ $t[$zoneKey]['general']['within_14'] }}</td>
                                         <td style="text-align:right;">{{ $t[$zoneKey]['general']['within_30'] }}</td>
-                                        <td style="text-align:right;">{{ $t[$zoneKey]['general']['next_month'] }}</td>
+                                        <td style="text-align:right;">{{ $t[$zoneKey]['general']['over_30'] }}</td>
                                         <td style="text-align:right;">{{ $t[$zoneKey]['general']['total'] }}</td>
+                                        <td style="text-align:right;">{{ $t[$zoneKey]['waiting'] }}</td>
+                                        <td style="text-align:right;">{{ $t[$zoneKey]['unclassified'] }}</td>
                                     </tr>
                                 @endforeach
                                 <tr style="font-weight:700;background:var(--color-neutral-100);">
@@ -130,21 +134,24 @@
                                     <td style="text-align:right;">{{ $t['combined']['urgent']['total'] }}</td>
                                     <td style="text-align:right;">{{ $t['combined']['general']['within_14'] }}</td>
                                     <td style="text-align:right;">{{ $t['combined']['general']['within_30'] }}</td>
-                                    <td style="text-align:right;">{{ $t['combined']['general']['next_month'] }}</td>
+                                    <td style="text-align:right;">{{ $t['combined']['general']['over_30'] }}</td>
                                     <td style="text-align:right;">{{ $t['combined']['general']['total'] }}</td>
+                                    <td style="text-align:right;">{{ $t['combined']['waiting'] }}</td>
+                                    <td style="text-align:right;">{{ $t['combined']['unclassified'] }}</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
 
                     <div class="caption" style="margin-top:var(--space-3);display:flex;flex-direction:column;gap:4px;">
-                        <p>ด่วน = บ้านแดง, ทั่วไป = บ้านเหลืองและเขียว — ตัวเลข "ทันใน 5/14/30 วัน" และ "เยี่ยมเดือนหน้า" นับเฉพาะเคสในกลุ่ม "จำนวนเยี่ยมจริง" (แยกตามกลุ่มบ้านสี) ผลรวมจึงเท่ากับจำนวนเยี่ยมจริงของแต่ละแถวเสมอ ไม่ใช่จำนวนการส่งเยี่ยมทั้งหมด</p>
+                        <p><b>ตรวจยอด:</b> จำนวนการส่งเยี่ยม = จำนวนเยี่ยมจริง + รอเยี่ยมทั้งหมด + ไม่ระบุกลุ่ม/Palliative ในทุกแถว</p>
+                        <p>ด่วน = บ้านแดง, ทั่วไป = บ้านเหลืองและเขียว นับวันจากวันที่ส่งต่อถึงวันที่เยี่ยมจริง</p>
                         <p>นอกเขต หมายถึงผู้ป่วยที่ต้องการเยี่ยมบ้านและพักอาศัยนอกเขตพื้นที่รับผิดชอบ</p>
-                        <p>จำนวนเยี่ยมจริง หมายถึงจำนวนเคสที่ได้รับการเยี่ยมแล้ว หรือได้รับการยืนยันแผนการเยี่ยมแล้วในเดือนนั้นๆ (ไม่นับเคสที่ส่งเข้าระบบแล้วแต่ยังไม่มีการตอบกลับ)</p>
-                        <p>ทันใน 14 วัน หมายถึงเยี่ยมเคสที่ขึ้นทะเบียนในเดือนนั้นทันภายใน 14 วัน</p>
-                        <p>ทันใน 30 วัน หมายถึงเยี่ยมไม่ทันใน 14 วัน แต่ทันภายใน 30 วัน</p>
-                        <p>เยี่ยมเดือนหน้า หมายถึงเคสที่ยืนยันแผนแล้ว และมีกำหนดเยี่ยมครั้งถัดไปตกในเดือนถัดไปตามรอบปกติของแผน (คนละความหมายกับเคสที่ยังไม่ได้รับการเยี่ยม/ยืนยันแผนเลย)</p>
-                        <p>ยังไม่ได้รับการเยี่ยม/ยืนยันแผน (KPI ด้านบน) หมายถึงเคสที่ส่งเข้าระบบแล้วแต่ยังไม่มีการตอบกลับจากทีมเยี่ยมบ้าน — ไม่นับรวมอยู่ในตารางนี้</p>
+                        <p>จำนวนเยี่ยมจริง หมายถึงเคสที่มีผลการเยี่ยม/โทรติดตามครั้งแรกบันทึกไว้แล้วเท่านั้น (เฉพาะเคสที่ระบุกลุ่มบ้านสี) และเท่ากับผลรวม "รวม (ด่วน)" + "รวม (ทั่วไป)"</p>
+                        <p>ทันใน 5 วัน (ด่วน) เยี่ยมภายใน 5 วันนับจากส่งต่อ, ไม่ทัน (ด่วน) เกิน 5 วัน — ทันใน 14 วัน / ทันใน 30 วัน / เกิน 30 วัน (ทั่วไป) นับจากวันส่งต่อเช่นกัน</p>
+                        <p>รอเยี่ยมทั้งหมด หมายถึงเคสที่ระบุกลุ่มบ้านสีแล้วแต่ยังไม่ได้รับการเยี่ยม/โทรครั้งแรก — รวมทั้งที่ยังรอยืนยันแผน มีนัดภายในเดือนนี้ และมีนัดเดือนหน้า</p>
+                        <p>ไม่ระบุกลุ่ม / Palliative หมายถึงเคสที่ผู้ส่งต่อยังไม่ได้เลือก "การจำแนกกลุ่มความรุนแรง" หรือเป็นกลุ่ม 4 Palliative Care ซึ่งไม่มีเกณฑ์จำนวนวันตายตัว (Palliative ใช้คะแนน PPS กำหนดรอบเยี่ยม) จึงจัดว่าทัน/ไม่ทันไม่ได้ และแยกไว้ในช่องนี้ช่องเดียว ทั้งที่เยี่ยมแล้วและยังไม่ได้เยี่ยม</p>
+                        <p>ยังไม่ได้รับการเยี่ยม/ยืนยันแผน (KPI ด้านบน) หมายถึงทุกเคสที่ยังไม่มีผลเยี่ยมครั้งแรก ไม่ว่ากลุ่มใด (= รอเยี่ยมทั้งหมด + ไม่ระบุกลุ่ม/Palliative ที่ยังไม่ได้เยี่ยม)</p>
                     </div>
                 </div>
             </div>
