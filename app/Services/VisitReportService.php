@@ -645,6 +645,7 @@ class VisitReportService
 
     /**
      * ทะเบียนตอบกลับเยี่ยมบ้านรายเคส (ครั้งที่ 1) สำหรับ "ทะเบียนตอบกลับเยี่ยมบ้าน" ของรายงานประจำเดือน
+     * แสดงเฉพาะเคสที่ได้รับการเยี่ยม/โทรครั้งแรกแล้ว (มีผลการเยี่ยมบันทึกไว้) — เคสที่ยังไม่ได้เยี่ยมไม่แสดงในทะเบียนนี้
      *
      * @param  Collection<int, Referral>  $referrals
      * @return array<int, array<string, mixed>>
@@ -672,6 +673,10 @@ class VisitReportService
 
             $dueDate = $plan?->due_date;
             $visitedAt = $record?->visited_at;
+
+            if (! $visitedAt) {
+                continue; // ยังไม่ได้เยี่ยม — ไม่แสดงในทะเบียนตอบกลับ
+            }
 
             $onTime = null;
             if ($dueDate && $visitedAt) {

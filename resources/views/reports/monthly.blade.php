@@ -368,9 +368,7 @@
                                 </div>
                                 <div class="case-badges">
                                     <span class="badge badge-ward">{{ $row['ward_name'] }}</span>
-                                    @if ($row['on_time'] === null)
-                                        <span class="badge badge-ward">ยังไม่ได้เยี่ยม</span>
-                                    @elseif ($row['on_time'])
+                                    @if ($row['on_time'])
                                         <span class="badge badge-ontime">ทันเวลา</span>
                                     @else
                                         <span class="badge badge-late">ล่าช้า</span>
@@ -397,7 +395,7 @@
                             </div>
                         </div>
                     @empty
-                        <div class="empty-note">ยังไม่มีทะเบียนตอบกลับเยี่ยมบ้านในเดือนนี้</div>
+                        <div class="empty-note">ยังไม่มีเคสที่ได้รับการเยี่ยมในเดือนนี้</div>
                     @endforelse
                 </div>
             </div>

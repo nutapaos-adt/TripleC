@@ -127,4 +127,23 @@ class MonthlyReportReconciliationTest extends TestCase
         // เขียว: min(วันนี้+30 = 18 พ.ย., ส่งต่อ+30 = 17 พ.ย.) = 17 พ.ย.; ไม่มีเกณฑ์ visit_rule จึงใช้ค่าเริ่มต้น 30 วัน
         $this->assertSame('2026-11-17', $greenPlan->due_date->toDateString());
     }
+
+    public function test_case_log_lists_only_cases_that_have_been_visited(): void
+    {
+        $visited = $this->referral('2026-10-05 09:00', 'in_area', 'green');
+        $this->visited($visited, '2026-10-08 09:00');
+        $notVisited = $this->referral('2026-10-06 09:00', 'out_area', 'green');
+        $this->waiting($notVisited, '2026-11-05');
+        $this->referral('2026-10-07 09:00', 'out_area', 'yellow', 'pending_review');
+
+        $report = app(VisitReportService::class)->monthlyReport(Carbon::parse('2026-10-01'));
+
+        $this->assertSame(3, $report['total_referrals']);
+        $this->assertCount(1, $report['case_log']);
+        $this->assertSame($visited->id, $report['case_log'][0]['referral_id']);
+
+        $page = $this->actingAs(User::factory()->create(['role' => User::ROLE_HOME_VISIT_TEAM]))
+            ->get(route('reports.monthly', ['month' => '2026-10']))->assertOk();
+        $page->assertDontSee('ยังไม่มีผลการเยี่ยม')->assertDontSee('ยังไม่ได้เยี่ยม</span>', false);
+    }
 }
