@@ -1,15 +1,36 @@
 <x-app-layout>
     <x-slot name="header">ภาพรวมทีมเยี่ยมบ้าน</x-slot>
 
-    <div class="page-head">
+    <div class="page-head" style="flex-direction:row;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:var(--space-3);">
         <h1 class="h1">ภาพรวมทีมเยี่ยมบ้าน</h1>
+        <form method="GET" action="{{ route('dashboard') }}" style="display:flex;align-items:center;gap:var(--space-2);">
+            <label for="month" class="caption" style="margin:0;">ข้อมูลรายเดือน:</label>
+            <select id="month" name="month" onchange="this.form.submit()" style="width:auto;">
+                @foreach ($monthOptions as $value => $label)
+                    <option value="{{ $value }}" @selected($value === $monthValue)>{{ $label }}</option>
+                @endforeach
+            </select>
+        </form>
     </div>
 
     <div class="kpi-grid">
         <div class="kpi-tile">
-            <span class="caption">ผู้ป่วยในการดูแลทั้งหมด</span>
-            <span class="kpi-value">{{ $totalPatients }}</span>
-            <span class="hint">อยู่ระหว่างติดตามต่อเนื่อง</span>
+            <span class="caption">ผู้ป่วยในการดูแล &middot; {{ $monthLabel }}</span>
+            <a href="{{ route('dashboard.patients', ['month' => $monthValue, 'group' => 'total']) }}" class="kpi-value" style="text-decoration:none;color:inherit;">{{ $monthCounts['total'] }} <span style="font-size:14px;font-weight:600;">ราย</span></a>
+            <div class="kpi-split-row">
+                <div class="kpi-split-item">
+                    <div class="kpi-split-top">
+                        <a href="{{ route('dashboard.patients', ['month' => $monthValue, 'group' => 'new']) }}" class="kpi-split-label" style="text-decoration:none;">{{ $isCurrentMonth ? 'ส่งเยี่ยมเดือนนี้' : 'ส่งเยี่ยมในเดือนนั้น' }}</a>
+                        <span class="kpi-split-value">{{ $monthCounts['new'] }}</span>
+                    </div>
+                </div>
+                <div class="kpi-split-item">
+                    <div class="kpi-split-top">
+                        <a href="{{ route('dashboard.patients', ['month' => $monthValue, 'group' => 'continuing']) }}" class="kpi-split-label" style="text-decoration:none;">เยี่ยมต่อเนื่อง</a>
+                        <span class="kpi-split-value">{{ $monthCounts['continuing'] }}</span>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="kpi-tile">
             <span class="caption">รอเยี่ยม &middot; {{ $waitingCount }} ราย</span>
@@ -34,10 +55,23 @@
             <span class="kpi-value">{{ $visitedTodayCount }}</span>
             <span class="hint">บันทึกผลเยี่ยม/โทรติดตามแล้ววันนี้</span>
         </div>
-        <div class="kpi-tile alert">
-            <span class="caption">พบความเสี่ยงยืนยันแล้ว</span>
-            <span class="kpi-value risk">{{ $riskCount }}</span>
-            <span class="hint">พยาบาลยืนยันความเสี่ยงแล้ว</span>
+        <div class="kpi-tile">
+            <span class="caption">ผู้ป่วย TKA &middot; {{ $monthLabel }}</span>
+            <a href="{{ route('dashboard.patients', ['month' => $monthValue, 'group' => 'tka']) }}" class="kpi-value" style="text-decoration:none;color:inherit;">{{ $monthCounts['tka'] }} <span style="font-size:14px;font-weight:600;">ราย</span></a>
+            <div class="kpi-split-row">
+                <div class="kpi-split-item">
+                    <div class="kpi-split-top">
+                        <a href="{{ route('dashboard.patients', ['month' => $monthValue, 'group' => 'tka_new']) }}" class="kpi-split-label" style="text-decoration:none;">{{ $isCurrentMonth ? 'ส่งเยี่ยมเดือนนี้' : 'ส่งเยี่ยมในเดือนนั้น' }}</a>
+                        <span class="kpi-split-value">{{ $monthCounts['tka_new'] }}</span>
+                    </div>
+                </div>
+                <div class="kpi-split-item">
+                    <div class="kpi-split-top">
+                        <a href="{{ route('dashboard.patients', ['month' => $monthValue, 'group' => 'tka_continuing']) }}" class="kpi-split-label" style="text-decoration:none;">เยี่ยมต่อเนื่อง</a>
+                        <span class="kpi-split-value">{{ $monthCounts['tka_continuing'] }}</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

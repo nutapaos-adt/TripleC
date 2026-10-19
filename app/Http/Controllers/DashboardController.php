@@ -7,12 +7,14 @@ use App\Models\FollowUpRecord;
 use App\Models\Patient;
 use App\Models\Referral;
 use App\Models\User;
+use App\Services\DashboardMonthlyService;
+use Illuminate\Http\Request;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
 
 class DashboardController extends Controller
 {
-    public function index(): View
+    public function index(Request $request, DashboardMonthlyService $monthly): View
     {
         if (auth()->user()->role === User::ROLE_WARD_STAFF) {
             return $this->wardStaffIndex();
@@ -20,7 +22,12 @@ class DashboardController extends Controller
 
         $today = Carbon::today();
 
-        $totalPatients = Patient::count();
+        // ตัวกรองรายเดือน (ค่าเริ่มต้น = เดือนปัจจุบัน เปลี่ยนเองอัตโนมัติทุกเดือน) — ใช้กับช่อง "ผู้ป่วยในการดูแล" และ "ผู้ป่วย TKA"
+        [$monthStart, $monthEnd, $monthValue] = $monthly->bounds($request->query('month'));
+        $monthCounts = $monthly->counts($monthStart, $monthEnd);
+        $monthOptions = $monthly->monthOptions();
+        $monthLabel = \App\Support\ThaiDate::monthYear($monthStart);
+        $isCurrentMonth = $monthValue === $today->format('Y-m');
 
         // เคสที่ได้รับการเยี่ยม/โทรติดตามวันนี้ (นับตามวันที่เยี่ยมจริงที่บันทึกไว้ นับรายละ 1 ครั้ง)
         $visitedTodayReferralIds = FollowUpRecord::whereDate('visited_at', $today)
@@ -49,10 +56,6 @@ class DashboardController extends Controller
         $waitingInAreaCount = $waitingPlans->where('method', FollowUpPlan::METHOD_HOME_VISIT)
             ->filter(fn ($plan) => $plan->referral->zone === 'in_area')->count();
         $waitingOutAreaCount = $waitingHomeVisitCount - $waitingInAreaCount;
-
-        $riskCount = FollowUpRecord::where('risk_flag', true)
-            ->whereHas('plan.referral', fn ($q) => $q->where('status', '!=', Referral::STATUS_CLOSED))
-            ->count();
 
         // ทีมเยี่ยมก่อนกำหนดบ่อย จึงไม่กรองตามวันครบกำหนด — แยกเป็น "รอเยี่ยมครั้งแรก" กับ "ติดตามต่อเนื่อง (ครั้งที่ 2 เป็นต้นไป)"
         $openPlans = fn () => FollowUpPlan::with(['referral.patient', 'referral.caseType'])
@@ -91,14 +94,17 @@ class DashboardController extends Controller
         $pendingReviewCount = Referral::where('status', Referral::STATUS_PENDING_REVIEW)->count();
 
         return view('dashboard', compact(
-            'totalPatients',
+            'monthValue',
+            'monthOptions',
+            'monthLabel',
+            'isCurrentMonth',
+            'monthCounts',
             'waitingCount',
             'waitingHomeVisitCount',
             'waitingPhoneCallCount',
             'waitingInAreaCount',
             'waitingOutAreaCount',
             'visitedTodayCount',
-            'riskCount',
             'firstVisitPlans',
             'firstVisitTotal',
             'continuingPlans',
@@ -107,6 +113,29 @@ class DashboardController extends Controller
             'recentRiskRecords',
             'pendingReviewCount',
         ));
+    }
+
+    /**
+     * รายชื่อผู้ป่วยตามตัวเลขรายเดือนบนหน้าภาพรวม (คลิกจากตัวเลขในช่อง "ผู้ป่วยในการดูแล" / "ผู้ป่วย TKA")
+     */
+    public function monthlyPatients(Request $request, DashboardMonthlyService $monthly): View
+    {
+        $group = (string) $request->query('group', 'total');
+        abort_unless(array_key_exists($group, DashboardMonthlyService::GROUPS), 404);
+
+        [$start, $end, $monthValue] = $monthly->bounds($request->query('month'));
+
+        $referrals = $monthly->query($start, $end, $group)
+            ->with(['patient', 'caseType', 'followUpPlans'])
+            ->orderBy('created_at')
+            ->get();
+
+        return view('dashboard-patients', [
+            'groupLabel' => DashboardMonthlyService::GROUPS[$group],
+            'monthLabel' => \App\Support\ThaiDate::monthYear($start),
+            'monthValue' => $monthValue,
+            'referrals' => $referrals,
+        ]);
     }
 
     private function wardStaffIndex(): View

@@ -78,6 +78,9 @@ class Referral extends Model
         self::DRUG_ALLERGY_UNKNOWN => 'chip-warning',
     ];
 
+    /** คำที่ถือว่าเป็นการผ่าตัดเปลี่ยนข้อเข่า (TKA/UKA) ในช่อง "การผ่าตัดครั้งนี้" — ใช้ทั้งตรวจรายเคสและกรองรายงาน */
+    public const KNEE_REPLACEMENT_KEYWORDS = ['TKA', 'UKA', 'TKR', 'เปลี่ยนข้อเข่า'];
+
     public const SEVERITY_GREEN = 'green';
     public const SEVERITY_YELLOW = 'yellow';
     public const SEVERITY_RED = 'red';
@@ -287,6 +290,16 @@ class Referral extends Model
         return self::DRUG_ALLERGY_CHIP_CLASSES[$this->drug_allergy_status] ?? 'chip-neutral';
     }
 
+    /** เฉพาะใบส่งต่อที่ประวัติผ่าตัดเป็น TKA/UKA/TKR/เปลี่ยนข้อเข่า (ตรงกับ isTkaUkaCase) */
+    public function scopeKneeReplacement(\Illuminate\Database\Eloquent\Builder $query): void
+    {
+        $query->where(function ($q) {
+            foreach (self::KNEE_REPLACEMENT_KEYWORDS as $keyword) {
+                $q->orWhere('surgery_history', 'like', '%'.$keyword.'%');
+            }
+        });
+    }
+
     public function visitConsentLabel(): ?string
     {
         return self::VISIT_CONSENT_LABELS[$this->visit_consent] ?? null;
@@ -316,7 +329,7 @@ class Referral extends Model
         $text = $this->surgery_history ?? '';
 
         // TKA/UKA/TKR และคำไทย "เปลี่ยนข้อเข่า" — พยาบาลหอผู้ป่วยมักพิมพ์ต่างกัน ไม่ได้กดปุ่มลัดทุกครั้ง
-        foreach (['TKA', 'UKA', 'TKR', 'เปลี่ยนข้อเข่า'] as $keyword) {
+        foreach (self::KNEE_REPLACEMENT_KEYWORDS as $keyword) {
             if (mb_stripos($text, $keyword) !== false) {
                 return true;
             }
