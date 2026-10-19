@@ -16,7 +16,7 @@ class ConfirmCarePlanRequest extends FormRequest
     {
         return [
             'case_type_id' => ['required', 'exists:case_types,id'],
-            'severity_group' => ['nullable', 'in:'.implode(',', array_keys(Referral::SEVERITY_LABELS))],
+            'severity_group' => ['required', 'in:'.implode(',', array_keys(Referral::SEVERITY_LABELS))],
             'patient_type' => ['required', 'string', 'max:500'],
             'main_problem' => ['required', 'string'],
             'risk_signals' => ['nullable', 'string'],

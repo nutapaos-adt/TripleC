@@ -59,8 +59,8 @@
         <span class="hint">เลือกประเภทที่ตรงกับผู้ป่วยที่สุด — ใช้กำหนดเกณฑ์การเยี่ยม/ติดตาม</span>
     </div>
     <div class="field">
-        <label>การจำแนกผู้ป่วยตามระดับความรุนแรง</label>
-        <select name="severity_group" id="severity_group">
+        <label>การจำแนกผู้ป่วยตามระดับความรุนแรง <span class="req">*</span></label>
+        <select name="severity_group" id="severity_group" required>
             <option value="">— เลือกกลุ่ม —</option>
             @foreach (\App\Models\Referral::SEVERITY_LABELS as $value => $label)
                 <option value="{{ $value }}" @selected(old('severity_group', $referral?->severity_group) === $value)>{{ $label }}</option>

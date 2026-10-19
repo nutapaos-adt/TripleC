@@ -153,7 +153,7 @@ class UnitScopingTest extends TestCase
         $caseType = CaseType::create(['name' => 'อายุรกรรม', 'slug' => 'med']);
 
         $this->actingAs($staff)->post(route('referrals.store'), [
-            'source_type' => 'ward', 'case_type_id' => $caseType->id, 'patient_status' => 'civilian', 'visit_consent' => 'home_visit', 'drug_allergy_status' => 'none', 'zone' => 'in_area',
+            'source_type' => 'ward', 'case_type_id' => $caseType->id, 'patient_status' => 'civilian', 'visit_consent' => 'home_visit', 'drug_allergy_status' => 'none', 'severity_group' => 'green', 'zone' => 'in_area',
             'patient_hn' => '700001', 'patient_name' => 'ผู้ป่วยห้องฉุกเฉิน', 'diagnosis' => 'ไข้สูง', 'raw_notes' => 'ต้องการติดตามอาการ',
             'encounter_date' => '2026-10-03',
         ])->assertRedirect();
@@ -185,7 +185,7 @@ class UnitScopingTest extends TestCase
     {
         return array_merge([
             'source_type' => 'ward', 'case_type_id' => CaseType::firstOrCreate(['slug' => 'gen'], ['name' => 'ทั่วไป'])->id,
-            'patient_status' => 'civilian', 'zone' => 'in_area', 'drug_allergy_status' => 'none',
+            'patient_status' => 'civilian', 'zone' => 'in_area', 'drug_allergy_status' => 'none', 'severity_group' => 'green',
             'patient_hn' => '710001', 'patient_name' => 'ผู้ป่วยทดสอบความยินยอม', 'diagnosis' => 'ทดสอบ', 'raw_notes' => 'ทดสอบ',
         ], $overrides);
     }
@@ -324,5 +324,25 @@ class UnitScopingTest extends TestCase
         $this->actingAs($staff)->post(route('referrals.store'), $this->consentPayload([
             'visit_consent' => 'home_visit', 'patient_hn' => 'HN-pain', 'discharge_vitals' => ['pain' => '11'],
         ]))->assertSessionHasErrors('discharge_vitals.pain');
+    }
+
+    // ---------- การจำแนกกลุ่มความรุนแรง (บังคับเลือก) ----------
+
+    public function test_severity_group_is_required_on_a_referral(): void
+    {
+        $staff = User::factory()->create(['role' => User::ROLE_WARD_STAFF, 'ward_id' => Ward::factory()->create()->id]);
+
+        $this->actingAs($staff)->post(route('referrals.store'), $this->consentPayload(['visit_consent' => 'home_visit', 'severity_group' => '']))
+            ->assertSessionHasErrors('severity_group');
+        $this->actingAs($staff)->post(route('referrals.store'), $this->consentPayload(['visit_consent' => 'home_visit', 'severity_group' => 'purple']))
+            ->assertSessionHasErrors('severity_group');
+        $this->assertSame(0, Referral::count());
+
+        foreach (['green', 'yellow', 'red', 'palliative'] as $i => $group) {
+            $this->actingAs($staff)->post(route('referrals.store'), $this->consentPayload([
+                'visit_consent' => 'home_visit', 'severity_group' => $group, 'patient_hn' => 'HN-sev-'.$i,
+            ]))->assertRedirect();
+        }
+        $this->assertSame(4, Referral::count());
     }
 }

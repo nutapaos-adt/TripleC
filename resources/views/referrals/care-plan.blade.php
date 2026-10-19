@@ -145,7 +145,7 @@
                     </div>
                     <div class="field">
                         <label>การจำแนกกลุ่มความรุนแรง</label>
-                        <select name="severity_group">
+                        <select name="severity_group" required>
                             <option value="">— เลือกกลุ่ม —</option>
                             @foreach (\App\Models\Referral::SEVERITY_LABELS as $value => $label)
                                 <option value="{{ $value }}" @selected(old('severity_group', $referral->severity_group) === $value)>{{ $label }}</option>

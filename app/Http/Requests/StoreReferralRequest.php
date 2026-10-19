@@ -79,8 +79,8 @@ class StoreReferralRequest extends FormRequest
             'opd_followup_date' => ['nullable', 'date'],
             'attending_physician' => ['nullable', 'string', 'max:255'],
 
-            // ไม่บังคับ (ตาม referral-create.html — เว้นว่างได้) แต่ VisitPlanService รองรับกรณีไม่ระบุอยู่แล้ว
-            'severity_group' => ['nullable', 'in:'.implode(',', [
+            // บังคับเลือกทุกใบส่งต่อ (กำหนดโดยทีม 2026-10-19) — ใช้กำหนดเพดานวันเยี่ยมครั้งแรกและกระทบยอดรายงานประจำเดือน
+            'severity_group' => ['required', 'in:'.implode(',', [
                 Referral::SEVERITY_GREEN,
                 Referral::SEVERITY_YELLOW,
                 Referral::SEVERITY_RED,
@@ -101,6 +101,7 @@ class StoreReferralRequest extends FormRequest
             'raw_notes' => 'ข้อความสรุปอาการ/สถานการณ์',
             'zone' => 'เขตพื้นที่',
             'visit_consent' => 'ความยินยอมในการเยี่ยมบ้าน',
+            'severity_group' => 'การจำแนกผู้ป่วยตามระดับความรุนแรง',
             'drug_allergy_status' => 'ประวัติแพ้ยา',
             'drug_allergy_detail' => 'รายละเอียดการแพ้ยา',
             'discharge_vitals.pain' => 'Pain score',
