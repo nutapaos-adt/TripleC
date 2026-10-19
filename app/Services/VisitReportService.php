@@ -119,6 +119,11 @@ class VisitReportService
                 } else {
                     $summary = $analysis['summary'] ?? null;
 
+                    // แสดงข้อความหลักฐานจากบันทึกต่อท้าย ให้ผู้อ่านรายงานตรวจสอบได้ว่า AI อ้างอิงอะไร
+                    if (! empty($summary) && ! empty($analysis['evidence']) && ($analysis['has_complication'] ?? false)) {
+                        $summary .= ' — จากบันทึก: "'.trim($analysis['evidence']).'"';
+                    }
+
                     if (empty($summary)) {
                         $summary = ($analysis['has_complication'] ?? false)
                             ? 'พบสัญญาณภาวะแทรกซ้อน (AI ไม่ได้ระบุรายละเอียดเพิ่มเติม)'

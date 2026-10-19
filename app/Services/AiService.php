@@ -79,6 +79,7 @@ class AiService
      * @return array{
      *     has_complication: bool,
      *     summary: ?string,
+     *     evidence: ?string,
      *     parse_error: bool,
      *     raw_response?: string,
      * }
@@ -86,12 +87,59 @@ class AiService
     public function summarizeDmCopdComplication(Referral $referral, \Illuminate\Support\Collection $records): array
     {
         $prompt = $this->buildDmCopdPrompt($referral, $records);
+        $notesText = $records->map(fn (FollowUpRecord $r) => (string) $r->raw_notes)->implode("\n");
 
-        return $this->parseJsonResponse($this->callOllama($prompt), [
+        $result = $this->parseJsonResponse($this->callOllama($prompt), [
             'has_complication' => false,
             'summary' => null,
+            'evidence' => null,
         ]);
+
+        if ($result['parse_error'] ?? false) {
+            return $result;
+        }
+
+        // findings เป็นแค่ขั้นช่วยให้โมเดลไล่ดูบันทึกทีละบรรทัดก่อนตัดสิน ไม่ใช่ส่วนหนึ่งของผลลัพธ์
+        unset($result['findings']);
+
+        // กันโมเดลมั่วภาวะแทรกซ้อน: ถ้าตอบว่าพบ ต้องมีข้อความหลักฐานที่ "มีอยู่จริงในบันทึก" มายืนยัน — ไม่มีหลักฐาน
+        // หรือหลักฐานไม่ปรากฏในบันทึก (เช่น คัดลอกจากตัวอย่างในพรอมต์ หรือแต่งขึ้นเอง) ถือว่ายืนยันไม่ได้ ไม่รายงานว่าพบ
+        if (($result['has_complication'] ?? false) && ! $this->evidenceFoundInNotes((string) ($result['evidence'] ?? ''), $notesText)) {
+            Log::warning('DM/COPD scan: complication claimed without verifiable evidence in the notes', ['evidence' => $result['evidence'] ?? null]);
+            $result['has_complication'] = false;
+            $result['summary'] = null;
+            $result['evidence'] = null;
+        }
+
+        return $result;
     }
+
+    /**
+     * หลักฐานที่โมเดลคัดลอกมา (อาจคั่นหลายท่อนด้วย , ; หรือขึ้นบรรทัดใหม่) ต้องมีอย่างน้อย 1 ท่อนที่ยาวพอ (>= 6 ตัวอักษร)
+     * และปรากฏอยู่ในบันทึกจริง (เทียบโดยตัดช่องว่าง/เครื่องหมายวรรคตอน และไม่สนตัวพิมพ์เล็กใหญ่)
+     */
+    protected function evidenceFoundInNotes(string $evidence, string $notesText): bool
+    {
+        $normalize = fn (string $text) => mb_strtolower((string) preg_replace('/[\s\p{P}\p{S}]+/u', '', $text));
+        $notes = $normalize($notesText);
+
+        foreach (preg_split('/[,;\n\/]+/u', $evidence) ?: [] as $piece) {
+            $piece = $normalize($piece);
+
+            if (mb_strlen($piece) >= 6 && str_contains($notes, $piece)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * ภาวะแทรกซ้อน/เหตุการณ์ที่ถือว่า "เกี่ยวข้องกับโรค" ใช้ในพรอมต์ของรายงานประจำเดือน
+     */
+    public const DM_COMPLICATION_EXAMPLES = 'น้ำตาลในเลือดต่ำหรือสูงผิดปกติ/ซึมจากน้ำตาล, ภาวะ DKA/HHS, แผลเบาหวานที่เท้า หรือแผลหายช้า/ติดเชื้อที่แผลในผู้ป่วยเบาหวาน, ชาปลายมือปลายเท้า, ตามัวหรือโรคจอตาจากเบาหวาน, โรคไตจากเบาหวาน, ต้องเข้าห้องฉุกเฉินหรือนอนโรงพยาบาลเพราะน้ำตาล/แผลเบาหวาน';
+
+    public const COPD_COMPLICATION_EXAMPLES = 'หอบกำเริบเฉียบพลัน (acute exacerbation), เหนื่อยมากขึ้นกว่าปกติหรือต้องเพิ่มออกซิเจน, ออกซิเจนในเลือดต่ำผิดปกติ, ไอเสมหะมากขึ้น/เปลี่ยนสี, ปอดอักเสบหรือติดเชื้อทางเดินหายใจ, ภาวะหายใจล้มเหลว, ต้องเข้าห้องฉุกเฉินหรือนอนโรงพยาบาลเพราะปัญหาการหายใจ';
 
     protected function buildDmCopdPrompt(Referral $referral, \Illuminate\Support\Collection $records): string
     {
@@ -103,12 +151,29 @@ class AiService
 
         $glossaryText = $this->glossary()->promptSection($underlyingDisease, $notesText);
 
-        return <<<PROMPT
-            คุณเป็นผู้ช่วยพยาบาลในหน่วยเยี่ยมบ้าน ทำหน้าที่ช่วยอ่านโรคประจำตัวและผลการเยี่ยม/โทรติดตามของผู้ป่วย
-            ที่มีโรคประจำตัวเป็นเบาหวาน (DM) หรือถุงลมโป่งพอง (COPD) แล้วสรุปว่าพบสัญญาณภาวะแทรกซ้อนที่เกี่ยวข้องหรือไม่
-            (ใช้ประกอบรายงานประจำเดือนเท่านั้น ไม่ใช่การตัดสินใจทางคลินิก)
+        $diseaseLower = mb_strtolower($underlyingDisease);
+        $hasDm = str_contains($diseaseLower, 'dm');
+        $hasCopd = str_contains($diseaseLower, 'copd');
 
-            โรคประจำตัว: {$underlyingDisease}
+        // โรคเป้าหมายของเคสนี้เท่านั้น — กันโมเดลไปสรุปโรคอื่นที่ผู้ป่วยมี (เช่น HT) หรือเหตุการณ์ทั่วไปมาเป็นภาวะแทรกซ้อน
+        $targetLines = [];
+        if ($hasDm) {
+            $targetLines[] = '- เบาหวาน (DM) ภาวะที่นับว่าเกี่ยวข้อง เช่น: '.self::DM_COMPLICATION_EXAMPLES;
+        }
+        if ($hasCopd) {
+            $targetLines[] = '- ถุงลมโป่งพอง (COPD) ภาวะที่นับว่าเกี่ยวข้อง เช่น: '.self::COPD_COMPLICATION_EXAMPLES;
+        }
+        $targetText = implode("\n            ", $targetLines);
+        $targetNames = implode(' และ ', array_filter([$hasDm ? 'เบาหวาน (DM)' : null, $hasCopd ? 'COPD' : null]));
+
+        return <<<PROMPT
+            คุณเป็นผู้ช่วยพยาบาลในหน่วยเยี่ยมบ้าน ทำหน้าที่ช่วยอ่านผลการเยี่ยม/โทรติดตามของผู้ป่วย แล้วสรุปว่าพบ
+            "ภาวะแทรกซ้อนหรืออาการกำเริบที่เกิดจากโรค {$targetNames} โดยตรง" หรือไม่ (ใช้ประกอบรายงานประจำเดือนเท่านั้น ไม่ใช่การตัดสินใจทางคลินิก)
+
+            โรคประจำตัวของผู้ป่วย: {$underlyingDisease}
+
+            โรคเป้าหมายที่ต้องดูเท่านั้น และตัวอย่างภาวะที่นับว่าเกี่ยวข้อง:
+            {$targetText}
 
             ผลการเยี่ยม/โทรติดตามในเดือนนี้:
             """
@@ -117,8 +182,22 @@ class AiService
 
             {$glossaryText}
 
+            กฎที่ต้องทำตามอย่างเคร่งครัด:
+            1. ช่อง findings ให้ทำก่อนช่องอื่น: ไล่อ่านบันทึกทีละบรรทัด แล้วจดทุกอาการ/เหตุการณ์ที่บันทึกไว้สั้นๆ ข้อละ 1 รายการ
+            2. นับเป็นภาวะแทรกซ้อนเฉพาะที่เกี่ยวกับโรคเป้าหมายข้างต้นโดยตรงเท่านั้น
+            3. ห้ามนับเหตุการณ์หรือโรคอื่นที่ไม่ใช่ภาวะแทรกซ้อนของโรคเป้าหมาย เช่น พลัดตกหกล้ม แผลกดทับ ปัญหาผู้ดูแล การย้ายที่อยู่หรือส่งไปสถานดูแล/บ้านพักคนชรา ความดันโลหิตสูง (HT) โรคหัวใจ ไขมันในเลือด
+               แม้บันทึกจะพูดถึงเหตุการณ์เหล่านั้น และแม้ผู้ป่วยจะมีโรคเหล่านั้นเป็นโรคประจำตัวด้วย ก็ไม่ใช่ภาวะแทรกซ้อนของ {$targetNames}
+            4. ถ้าบันทึกไม่มีหลักฐานชัดเจนของภาวะแทรกซ้อนที่เกี่ยวข้อง ให้ตอบ has_complication เป็น false และ summary เป็น null ห้ามเดาหรือตีความเกินกว่าที่เขียนไว้
+            5. ถ้าตอบ true ช่อง summary ต้องระบุชื่อภาวะที่พบอย่างเจาะจง และบอกว่าเกี่ยวข้องกับโรคใด (เช่น "น้ำตาลในเลือดต่ำและซึม (DM)") ห้ามเขียนกว้างๆ เช่น "พบภาวะแทรกซ้อน"
+               และช่อง evidence ต้องคัดลอกข้อความสั้นๆ จากบันทึกที่ยืนยันภาวะนั้นมาตรงตามตัวอักษร (ห้ามเรียบเรียงใหม่)
+
+            ตัวอย่างรูปแบบคำตอบ (เป็นแค่ตัวอย่างรูปแบบ ห้ามนำเนื้อหานี้ไปใช้ตอบ — ต้องใช้บันทึกจริงด้านบนเท่านั้น):
+            {"findings": ["พลัดตกเตียง", "แผลกดทับก้นกบ", "ส่งไปสถานดูแล"], "has_complication": false, "summary": null, "evidence": null}
+            {"findings": ["ซึม", "น้ำตาลปลายนิ้ว 48"], "has_complication": true, "summary": "น้ำตาลในเลือดต่ำและซึม (DM)", "evidence": "ซึม น้ำตาลปลายนิ้ว 48"}
+            {"findings": ["ไอเสมหะมากขึ้น", "มีไข้", "ส่งห้องฉุกเฉิน"], "has_complication": true, "summary": "ติดเชื้อทางเดินหายใจ ไอเสมหะมากขึ้นและมีไข้ ต้องส่งห้องฉุกเฉิน (COPD)", "evidence": "ไอเสมหะมากขึ้น, มีไข้, ส่งห้องฉุกเฉิน"}
+
             ตอบกลับเป็น JSON เท่านั้น ห้ามมีข้อความอื่นใดนอกเหนือจาก JSON ตามโครงสร้างนี้เป๊ะๆ:
-            {"has_complication": true/false, "summary": "สรุปสั้นๆ ว่าพบภาวะแทรกซ้อนอะไรหรือไม่ (null ถ้าไม่พบ)"}
+            {"findings": string[], "has_complication": true/false, "summary": string หรือ null, "evidence": string หรือ null}
             PROMPT;
     }
 
