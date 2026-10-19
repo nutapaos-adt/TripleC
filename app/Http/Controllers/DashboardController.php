@@ -54,12 +54,33 @@ class DashboardController extends Controller
             ->whereHas('plan.referral', fn ($q) => $q->where('status', '!=', Referral::STATUS_CLOSED))
             ->count();
 
-        $upcomingPlans = FollowUpPlan::with(['referral.patient', 'referral.caseType'])
+        // ทีมเยี่ยมก่อนกำหนดบ่อย จึงไม่กรองตามวันครบกำหนด — แยกเป็น "รอเยี่ยมครั้งแรก" กับ "ติดตามต่อเนื่อง (ครั้งที่ 2 เป็นต้นไป)"
+        $openPlans = fn () => FollowUpPlan::with(['referral.patient', 'referral.caseType'])
             ->where('status', FollowUpPlan::STATUS_SCHEDULED)
-            ->whereDate('due_date', '<=', $today)
+            ->whereHas('referral', fn ($q) => $q->where('status', '!=', Referral::STATUS_CLOSED))
             ->orderBy('due_date')
-            ->limit(20)
-            ->get();
+            ->orderBy('plan_number');
+
+        $firstVisitPlans = $openPlans()->where('plan_number', 1)->limit(100)->get();
+        $firstVisitTotal = $openPlans()->where('plan_number', 1)->count();
+
+        $continuingPlans = $openPlans()->where('plan_number', '>=', 2)->limit(100)->get();
+        $continuingTotal = $openPlans()->where('plan_number', '>=', 2)->count();
+
+        // บ้านสีแดงในเขตที่ควรเยี่ยมต่อเนื่อง (เดือนละครั้ง) แต่ยังไม่มีนัดถัดไป — เคยเยี่ยมแล้ว เคสยังไม่ปิด และไม่มีนัดค้างอยู่
+        $redContinuingReferrals = Referral::with(['patient', 'followUpPlans.record'])
+            ->where('severity_group', Referral::SEVERITY_RED)
+            ->where('zone', 'in_area')
+            ->where('status', '!=', Referral::STATUS_CLOSED)
+            ->whereHas('followUpPlans.record')
+            ->whereDoesntHave('followUpPlans', fn ($q) => $q->where('status', FollowUpPlan::STATUS_SCHEDULED))
+            ->get()
+            ->map(function ($referral) {
+                $lastPlan = $referral->followUpPlans->filter(fn ($p) => $p->record)->sortByDesc('plan_number')->first();
+                $referral->setAttribute('last_visited_plan', $lastPlan);
+
+                return $referral;
+            });
 
         $recentRiskRecords = FollowUpRecord::with(['plan.referral.patient'])
             ->where('risk_flag', true)
@@ -78,7 +99,11 @@ class DashboardController extends Controller
             'waitingOutAreaCount',
             'visitedTodayCount',
             'riskCount',
-            'upcomingPlans',
+            'firstVisitPlans',
+            'firstVisitTotal',
+            'continuingPlans',
+            'continuingTotal',
+            'redContinuingReferrals',
             'recentRiskRecords',
             'pendingReviewCount',
         ));

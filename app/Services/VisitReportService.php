@@ -255,6 +255,7 @@ class VisitReportService
 
         return FollowUpRecord::query()
             ->join('follow_up_plans', 'follow_up_plans.id', '=', 'follow_up_records.follow_up_plan_id')
+            ->whereNull('follow_up_records.deleted_at')
             ->whereIn('follow_up_plans.referral_id', $referralIds)
             ->distinct()
             ->pluck('follow_up_plans.referral_id')

@@ -297,6 +297,26 @@
     <div class="card">
         <div class="card-head"><span class="h2">กำหนดการติดตาม</span></div>
         <div class="card-body">
+            @php
+                $canSeeTeamTools = in_array(auth()->user()->role, ['home_visit_team', 'admin'], true);
+                $needsMilestonePlan = $canSeeTeamTools
+                    && $referral->isTkaUkaCase()
+                    && in_array($referral->status, [\App\Models\Referral::STATUS_PLAN_CONFIRMED, \App\Models\Referral::STATUS_IN_PROGRESS], true)
+                    && $referral->followUpPlans->where('status', 'scheduled')->isEmpty()
+                    && $referral->followUpPlans->contains(fn ($p) => $p->record);
+            @endphp
+            @if ($needsMilestonePlan)
+                <div class="banner" style="margin-bottom:var(--space-4);">
+                    <div class="banner-text">
+                        <p class="h3">เคส TKA/UKA ยังไม่มีนัดครั้งถัดไป</p>
+                        <p>ระบบสร้างนัดตามเกณฑ์ (นับจากวันเยี่ยมครั้งแรก) ให้อัตโนมัติเมื่อบันทึกผลเยี่ยม กดปุ่มเพื่อสร้างนัดที่ขาดอยู่</p>
+                    </div>
+                    <form method="POST" action="{{ route('referrals.milestone-plan', $referral) }}">
+                        @csrf
+                        <button type="submit" class="btn btn-primary">สร้างนัดตามเกณฑ์ TKA/UKA</button>
+                    </form>
+                </div>
+            @endif
             @if ($referral->followUpPlans->isNotEmpty())
                 <table>
                     <tbody>
@@ -325,6 +345,8 @@
                                         <a href="{{ route('follow-up-plans.record.create', $plan) }}" style="color:var(--color-primary-700);font-weight:600;">เริ่มติดตาม →</a>
                                     @elseif ($plan->record && ! $plan->record->isConfirmed())
                                         <a href="{{ route('follow-up-plans.review', $plan) }}" style="color:var(--color-warning);font-weight:600;">รอวิเคราะห์/ยืนยัน →</a>
+                                    @elseif ($plan->record)
+                                        <a href="{{ route('follow-up-plans.review', $plan) }}" style="color:var(--color-primary-700);font-size:13px;">ดู/จัดการผลที่บันทึก →</a>
                                     @endif
                                     @if ($plan->status === 'scheduled' && in_array(auth()->user()->role, ['home_visit_team', 'admin'], true))
                                         <details style="margin-top:6px;">

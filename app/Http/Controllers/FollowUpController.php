@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\AmendFollowUpDecisionRequest;
 use App\Http\Requests\ConfirmFollowUpDecisionRequest;
 use App\Http\Requests\StoreFollowUpRecordRequest;
+use App\Http\Requests\VoidFollowUpRecordRequest;
 use App\Models\FollowUpPlan;
 use App\Models\FollowUpRecord;
 use App\Models\Referral;
@@ -92,14 +93,15 @@ class FollowUpController extends Controller
         return view('follow-up.record', compact('plan'));
     }
 
-    public function storeRecord(StoreFollowUpRecordRequest $request, FollowUpPlan $plan): RedirectResponse
+    public function storeRecord(StoreFollowUpRecordRequest $request, FollowUpPlan $plan, VisitPlanService $visitPlanService): RedirectResponse
     {
         abort_if($plan->record()->exists(), 403, 'บันทึกผลติดตามครั้งนี้ไปแล้ว');
 
         $data = $request->validated();
         $isVisit = $data['method'] === 'home_visit';
+        $milestonePlan = null;
 
-        DB::transaction(function () use ($request, $data, $isVisit, $plan) {
+        DB::transaction(function () use ($request, $data, $isVisit, $plan, $visitPlanService, &$milestonePlan) {
             $vitalSigns = $isVisit ? array_filter([
                 'bp' => $data['vs_bp'] ?? null,
                 'pr' => $data['vs_pr'] ?? null,
@@ -139,7 +141,7 @@ class FollowUpController extends Controller
                 $photoPaths[] = $photo->store('follow-up-photos', 'local');
             }
 
-            FollowUpRecord::create([
+            $record = FollowUpRecord::create([
                 'follow_up_plan_id' => $plan->id,
                 'method' => $data['method'],
                 'performed_by' => Auth::id(),
@@ -156,11 +158,19 @@ class FollowUpController extends Controller
             ]);
 
             $plan->update(['status' => FollowUpPlan::STATUS_DONE]);
+
+            // เคส TKA/UKA: กำหนดนัดครั้งถัดไปตามเกณฑ์ให้ทันที (วันนัดนับจากวันเยี่ยมครั้งที่ 1)
+            $milestonePlan = $visitPlanService->scheduleMilestoneFollowUp($record);
         });
+
+        $message = 'บันทึกผลติดตามเรียบร้อยแล้ว ขั้นตอนถัดไป: ให้ AI วิเคราะห์และยืนยันการตัดสินใจ';
+        if ($milestonePlan) {
+            $message .= ' — ระบบกำหนดนัดครั้งที่ '.$milestonePlan->plan_number.' วันที่ '.\App\Support\ThaiDate::date($milestonePlan->due_date).' ตามเกณฑ์ให้แล้ว';
+        }
 
         return redirect()
             ->route('follow-up-plans.review', $plan)
-            ->with('status', 'บันทึกผลติดตามเรียบร้อยแล้ว ขั้นตอนถัดไป: ให้ AI วิเคราะห์และยืนยันการตัดสินใจ');
+            ->with('status', $message);
     }
 
     public function review(FollowUpPlan $plan): View
@@ -290,6 +300,58 @@ class FollowUpController extends Controller
         return redirect()
             ->route('follow-up-plans.review', $plan)
             ->with('status', 'บันทึกการแก้ไขการตัดสินใจเรียบร้อยแล้ว');
+    }
+
+    /**
+     * ลบ (ยกเลิก) บันทึกผลติดตามที่บันทึกผิด/ซ้ำ — soft delete เก็บประวัติไว้ แล้วคืนนัดนั้นกลับเป็น "รอถึงกำหนด" เพื่อบันทึกใหม่ได้
+     * ทีมเยี่ยมบ้านลบได้เฉพาะที่ยังไม่ผ่านการยืนยันการตัดสินใจ แอดมินลบได้ทุกรายการ (ดู FollowUpRecord::canBeVoidedBy)
+     */
+    public function voidRecord(VoidFollowUpRecordRequest $request, FollowUpPlan $plan): RedirectResponse
+    {
+        abort_unless($plan->record, 404);
+        abort_unless($plan->referral->isVisibleTo(Auth::user()), 403, 'ไม่มีสิทธิ์เข้าถึงใบส่งต่อของหน่วยงานอื่น');
+
+        $record = $plan->record;
+        abort_unless($record->canBeVoidedBy(Auth::user()), 403, 'ลบบันทึกผลนี้ไม่ได้ — ถ้าผ่านการยืนยันการตัดสินใจแล้วต้องให้แอดมินลบ และต้องลบจากครั้งหลังสุดย้อนกลับมาก่อน');
+
+        $referral = $plan->referral;
+
+        DB::transaction(function () use ($request, $record, $plan, $referral) {
+            // เคสที่ถูกปิดจากการตัดสินใจของบันทึกนี้ → คืนนัดที่ถูกยกเลิกไปตอนปิดเคส
+            if ($record->nurse_decision === FollowUpRecord::DECISION_CLOSE) {
+                $referral->followUpPlans()
+                    ->where('plan_number', '>', $plan->plan_number)
+                    ->where('status', FollowUpPlan::STATUS_CANCELLED)
+                    ->update(['status' => FollowUpPlan::STATUS_SCHEDULED]);
+            }
+
+            // นัดที่ระบบสร้างขึ้นจากการตัดสินใจของบันทึกนี้ (สร้างหลังบันทึก และยังไม่มีผลเยี่ยม) → ยกเลิก ไม่ให้เหลือนัดซ้ำ
+            $generated = $record->nextPlan;
+            if ($generated
+                && $generated->status === FollowUpPlan::STATUS_SCHEDULED
+                && ! $generated->record()->exists()
+                && $generated->created_at >= $record->created_at) {
+                $generated->update(['status' => FollowUpPlan::STATUS_CANCELLED]);
+            }
+
+            $record->update([
+                'deleted_by' => Auth::id(),
+                'deletion_reason' => $request->validated('deletion_reason'),
+            ]);
+            $record->delete();
+
+            $plan->update(['status' => FollowUpPlan::STATUS_SCHEDULED]);
+
+            $hasRecords = FollowUpRecord::whereIn('follow_up_plan_id', $referral->followUpPlans()->pluck('id'))->exists();
+            $referral->update([
+                'status' => $hasRecords ? Referral::STATUS_IN_PROGRESS : Referral::STATUS_PLAN_CONFIRMED,
+                'closed_at' => null,
+            ]);
+        });
+
+        return redirect()
+            ->route('referrals.show', $referral)
+            ->with('status', 'ลบบันทึกผลครั้งที่ '.$plan->plan_number.' แล้ว นัดครั้งนี้กลับเป็น "รอถึงกำหนด" — บันทึกผลใหม่ได้');
     }
 
     public function confirmDecision(ConfirmFollowUpDecisionRequest $request, FollowUpPlan $plan, VisitPlanService $visitPlanService): RedirectResponse

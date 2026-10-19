@@ -313,7 +313,15 @@ class Referral extends Model
      */
     public function isTkaUkaCase(): bool
     {
-        return str_contains($this->surgery_history ?? '', 'TKA')
-            || str_contains($this->surgery_history ?? '', 'UKA');
+        $text = $this->surgery_history ?? '';
+
+        // TKA/UKA/TKR และคำไทย "เปลี่ยนข้อเข่า" — พยาบาลหอผู้ป่วยมักพิมพ์ต่างกัน ไม่ได้กดปุ่มลัดทุกครั้ง
+        foreach (['TKA', 'UKA', 'TKR', 'เปลี่ยนข้อเข่า'] as $keyword) {
+            if (mb_stripos($text, $keyword) !== false) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

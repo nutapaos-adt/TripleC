@@ -255,6 +255,32 @@
         </div>
     @endif
 
+    @if ($record->canBeVoidedBy(auth()->user()))
+        <details class="card" style="margin-top:var(--space-4);padding:var(--space-4);border-color:var(--color-risk);">
+            <summary style="cursor:pointer;font-weight:700;color:var(--color-risk);">ลบบันทึกผลนี้ (กรณีบันทึกผิดหรือบันทึกซ้ำ)</summary>
+            <form method="POST" action="{{ route('follow-up-plans.record.void', $plan) }}" style="margin-top:var(--space-4);">
+                @csrf
+                <p style="margin:0 0 var(--space-3);font-size:14px;color:var(--color-neutral-700);">
+                    บันทึกผลครั้งที่ {{ $plan->plan_number }} จะถูกยกเลิกและไม่ถูกนับในรายงาน (ระบบยังเก็บประวัติการลบไว้) นัดครั้งนี้จะกลับเป็น "รอถึงกำหนด" เพื่อบันทึกผลใหม่ได้
+                    @if ($record->isConfirmed()) — การตัดสินใจของพยาบาลที่ยืนยันไว้ในรายการนี้จะถูกยกเลิกด้วย และนัดที่ระบบสร้างต่อจากการตัดสินใจนี้จะถูกยกเลิก @endif
+                </p>
+                <div class="field-group">
+                    <label for="deletion_reason">เหตุผลที่ลบ <span class="req">*</span></label>
+                    <textarea id="deletion_reason" name="deletion_reason" rows="2" required>{{ old('deletion_reason') }}</textarea>
+                </div>
+                <div class="field-group">
+                    <div class="checkbox-row">
+                        <input type="checkbox" id="confirm_delete" name="confirm_delete" value="1" required>
+                        <label for="confirm_delete"><span class="cb-title">ยืนยันการลบ</span><span class="cb-sub">ข้าพเจ้าตรวจสอบแล้วว่าบันทึกผลนี้บันทึกผิดหรือซ้ำจริง</span></label>
+                    </div>
+                </div>
+                <div class="btn-row">
+                    <button type="submit" class="btn btn-secondary" style="border-color:var(--color-risk);color:var(--color-risk);">ลบบันทึกผลนี้</button>
+                </div>
+            </form>
+        </details>
+    @endif
+
     <script>
         (function () {
             var amendCards = document.querySelectorAll('#amendForm .radio-card');

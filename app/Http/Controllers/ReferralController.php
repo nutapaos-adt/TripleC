@@ -293,6 +293,26 @@ class ReferralController extends Controller
         return view('referrals.care-plan-print', compact('referral'));
     }
 
+    /**
+     * สร้างนัดครั้งถัดไปตามเกณฑ์ TKA/UKA ให้เคสที่ยังไม่มีนัด (ปุ่มในหน้ารายละเอียดใบส่งต่อ)
+     */
+    public function createMilestonePlan(Referral $referral, VisitPlanService $visitPlanService): RedirectResponse
+    {
+        $this->authorizeUnitAccess($referral);
+
+        $plan = $visitPlanService->createMissingMilestonePlan($referral);
+
+        if (! $plan) {
+            return redirect()
+                ->route('referrals.show', $referral)
+                ->with('error', 'สร้างนัดตามเกณฑ์ไม่ได้ — ประเภทเคสนี้ยังไม่มีเกณฑ์ milestone ที่ใช้งานอยู่ หรือเยี่ยมครบทุกครั้งตามเกณฑ์แล้ว หรือยังไม่เคยบันทึกผลเยี่ยม (ตรวจเกณฑ์ที่เมนูจัดการประเภทเคส)');
+        }
+
+        return redirect()
+            ->route('referrals.show', $referral)
+            ->with('status', 'สร้างนัดครั้งที่ '.$plan->plan_number.' วันที่ '.\App\Support\ThaiDate::date($plan->due_date).' ตามเกณฑ์แล้ว');
+    }
+
     public function zoneLookup(Request $request, ZoneResolver $zoneResolver): JsonResponse
     {
         $zone = $zoneResolver->resolve($request->query('sub_district'));

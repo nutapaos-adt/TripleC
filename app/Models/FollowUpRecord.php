@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FollowUpRecord extends Model
 {
     use HasFactory;
+    use SoftDeletes;
 
     public const DECISION_REPEAT = 'repeat';
     public const DECISION_REFER = 'refer';
@@ -40,6 +42,8 @@ class FollowUpRecord extends Model
         'decision_edited_by',
         'decision_edited_at',
         'decision_edit_reason',
+        'deleted_by',
+        'deletion_reason',
     ];
 
     protected function casts(): array
@@ -125,6 +129,36 @@ class FollowUpRecord extends Model
     public function decisionEditor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'decision_edited_by');
+    }
+
+    public function deleter(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'deleted_by');
+    }
+
+    /**
+     * ลบ (ยกเลิก) บันทึกผลที่บันทึกผิด/ซ้ำได้เมื่อ: แอดมินลบได้ทุกรายการ / ทีมเยี่ยมบ้านลบได้เฉพาะรายการที่ยังไม่ผ่านการยืนยัน
+     * การตัดสินใจของพยาบาล — และต้องไม่มีผลติดตามครั้งถัดไปของเคสเดียวกันบันทึกไว้แล้ว (ให้ลบจากครั้งหลังสุดย้อนกลับมา)
+     */
+    public function canBeVoidedBy(User $user): bool
+    {
+        if ($this->trashed()) {
+            return false;
+        }
+
+        $allowed = $user->role === User::ROLE_ADMIN
+            || ($user->role === User::ROLE_HOME_VISIT_TEAM && ! $this->isConfirmed());
+
+        if (! $allowed) {
+            return false;
+        }
+
+        $plan = $this->plan;
+
+        return ! $plan->referral->followUpPlans()
+            ->where('plan_number', '>', $plan->plan_number)
+            ->whereHas('record')
+            ->exists();
     }
 
     public function wasDecisionAmended(): bool

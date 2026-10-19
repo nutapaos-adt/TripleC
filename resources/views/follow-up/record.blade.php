@@ -4,7 +4,7 @@
     @php
         $referral = $plan->referral;
         $totalPlans = $referral->caseType?->activeVisitRule()?->fixed_visit_count;
-        $hadTkaUka = str_contains($referral->surgery_history ?? '', 'TKA') || str_contains($referral->surgery_history ?? '', 'UKA');
+        $hadTkaUka = $referral->isTkaUkaCase();
         $isPalliative = $referral->caseType?->slug === 'palliative-care';
         $isRedSeverity = $referral->severity_group === \App\Models\Referral::SEVERITY_RED;
     @endphp
@@ -290,6 +290,12 @@
     </div>
 
     <script>
+        // กันกดบันทึกซ้ำ (ดับเบิลคลิก/เน็ตช้า) ที่ทำให้เกิดบันทึกผลซ้ำ
+        document.getElementById('followupForm').addEventListener('submit', function (e) {
+            var btn = e.target.querySelector('button[type="submit"]');
+            if (btn) { setTimeout(function () { btn.disabled = true; btn.textContent = 'กำลังบันทึก...'; }, 0); }
+        });
+
         (function () {
             function syncMethod() {
                 var isVisit = document.getElementById('methodVisit').checked;

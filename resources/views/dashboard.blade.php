@@ -57,51 +57,56 @@
     <div class="card">
         <div class="card-head">
             <div>
-                <div class="h2">รายการติดตามวันนี้ &amp; เกินกำหนด</div>
-                <div class="sub">เรียงลำดับเคสเกินกำหนดไว้บนสุดตามความสำคัญ</div>
+                <div class="h2">รายการรอเยี่ยมครั้งแรก <span class="caption">({{ $firstVisitTotal }} ราย)</span></div>
+                <div class="sub">ผู้ป่วยที่ยังไม่เคยได้รับการเยี่ยม/โทรติดตาม เรียงตามกำหนดนัด — เยี่ยมก่อนกำหนดได้</div>
             </div>
             <a class="btn btn-secondary btn-sm" href="{{ route('referrals.index') }}">ดูรายการเคสทั้งหมด</a>
         </div>
         <div class="card-body">
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ผู้ป่วย</th>
-                            <th>วิธีติดตาม</th>
-                            <th>วันครบกำหนด</th>
-                            <th>สถานะ</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($upcomingPlans as $plan)
-                            <tr @class(['row-overdue' => $plan->isOverdue()])>
-                                <td>
-                                    <div class="patient-name">{{ $plan->referral->patient->name }}</div>
-                                    <div class="patient-hn">HN {{ $plan->referral->patient->hn }}</div>
-                                </td>
-                                <td>
-                                    <span class="chip chip-method">{{ $plan->method === 'home_visit' ? 'เยี่ยมบ้าน' : 'โทรติดตาม' }}</span>
-                                </td>
-                                <td class="due-date">{{ \App\Support\ThaiDate::date($plan->due_date) }}</td>
-                                <td>
-                                    @if ($plan->isOverdue())
-                                        <span class="chip chip-overdue">เกินกำหนด {{ $plan->due_date->diffInDays(today()) }} วัน</span>
-                                    @else
-                                        <span class="chip chip-today">วันนี้</span>
-                                    @endif
-                                </td>
-                                <td><a href="{{ route('follow-up-plans.record.create', $plan) }}" class="btn btn-primary btn-sm">เริ่มติดตาม</a></td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" style="text-align:center;color:var(--color-neutral-500);padding:var(--space-8) 0;">ไม่มีเคสที่ต้องติดตามวันนี้</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+            @include('partials.dashboard-plan-table', ['plans' => $firstVisitPlans, 'empty' => 'ไม่มีเคสที่รอเยี่ยมครั้งแรก'])
+            @if ($firstVisitTotal > $firstVisitPlans->count())
+                <p class="caption" style="margin:var(--space-3) 0 0;">แสดง {{ $firstVisitPlans->count() }} รายแรกจากทั้งหมด {{ $firstVisitTotal }} ราย</p>
+            @endif
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-head">
+            <div>
+                <div class="h2">รายการติดตามต่อเนื่อง <span class="caption">({{ $continuingTotal }} ราย)</span></div>
+                <div class="sub">นัดครั้งที่ 2 เป็นต้นไป และบ้านสีแดงในเขตที่ควรเยี่ยมต่อเนื่อง</div>
             </div>
+        </div>
+        <div class="card-body">
+            @include('partials.dashboard-plan-table', ['plans' => $continuingPlans, 'empty' => 'ไม่มีเคสที่รอติดตามต่อเนื่อง', 'showPlanNumber' => true])
+            @if ($continuingTotal > $continuingPlans->count())
+                <p class="caption" style="margin:var(--space-3) 0 0;">แสดง {{ $continuingPlans->count() }} รายแรกจากทั้งหมด {{ $continuingTotal }} ราย</p>
+            @endif
+
+            @if ($redContinuingReferrals->isNotEmpty())
+                <div class="section-title" style="margin-top:var(--space-6);"><span class="h3">บ้านสีแดงในเขต — ควรเยี่ยมต่อเนื่อง แต่ยังไม่มีนัดถัดไป ({{ $redContinuingReferrals->count() }} ราย)</span></div>
+                <p class="caption" style="margin:0 0 var(--space-3);">เคยได้รับการเยี่ยมแล้ว แต่ยังไม่มีนัดครั้งถัดไป — เปิดผลเยี่ยมล่าสุดเพื่อให้พยาบาลยืนยันการตัดสินใจ (ติดตามซ้ำ ระบบจะนัดต่อเดือนละครั้ง) หรือเลือกวันนัดเอง</p>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr><th>ผู้ป่วย</th><th>เยี่ยมล่าสุด</th><th></th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($redContinuingReferrals as $referral)
+                                @php $last = $referral->last_visited_plan; @endphp
+                                <tr>
+                                    <td>
+                                        <div class="patient-name">{{ $referral->patient->name }}</div>
+                                        <div class="patient-hn">HN {{ $referral->patient->hn }} <span class="chip chip-severity-red" style="margin-left:4px;">บ้านสีแดง</span></div>
+                                    </td>
+                                    <td class="due-date">ครั้งที่ {{ $last->plan_number }} — {{ \App\Support\ThaiDate::date($last->record->visited_at) }}</td>
+                                    <td><a href="{{ route('follow-up-plans.review', $last) }}" class="btn btn-secondary btn-sm">ดูผลล่าสุด / ตัดสินใจ</a></td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
         </div>
     </div>
 

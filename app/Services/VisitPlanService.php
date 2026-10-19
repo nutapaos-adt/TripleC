@@ -185,6 +185,47 @@ class VisitPlanService
     }
 
     /**
+     * เคส milestone_based (TKA/UKA): สร้างนัดครั้งถัดไปตามเกณฑ์ให้ทันทีที่ "บันทึกผลเยี่ยม" ไม่ต้องรอพยาบาลยืนยันการตัดสินใจ
+     * — วันนัดเป็น milestone คงที่นับจากวันเยี่ยมครั้งที่ 1 จริง ไม่ขึ้นกับการวิเคราะห์ใดๆ ถ้าพยาบาลตัดสินใจ "ปิดเคส"
+     * ภายหลัง นัดนี้จะถูกยกเลิกพร้อมนัดอื่นที่เหลือ (cancelRemainingPlans) เคสประเภทอื่นไม่ทำอะไร
+     */
+    public function scheduleMilestoneFollowUp(FollowUpRecord $record): ?FollowUpPlan
+    {
+        $rule = $this->resolveEffectiveRule($record->plan->referral);
+
+        if (! $rule || $rule->rule_type !== VisitRule::TYPE_MILESTONE_BASED) {
+            return null;
+        }
+
+        return $this->generateNextPlan($record);
+    }
+
+    /**
+     * สร้างนัดตามเกณฑ์ให้เคส TKA/UKA ที่ยังไม่มีนัดครั้งถัดไป (เช่น เคสที่บันทึกผลไว้ก่อนระบบสร้างนัดอัตโนมัติ)
+     * ใช้ผลเยี่ยมล่าสุดเป็นฐาน คืน null ถ้าไม่เข้าเงื่อนไข (ไม่ใช่ milestone, มีนัดรออยู่แล้ว, ยังไม่เคยเยี่ยม, หรือครบทุก milestone แล้ว)
+     */
+    public function createMissingMilestonePlan(Referral $referral): ?FollowUpPlan
+    {
+        $rule = $this->resolveEffectiveRule($referral);
+
+        if (! $rule || $rule->rule_type !== VisitRule::TYPE_MILESTONE_BASED) {
+            return null;
+        }
+
+        if ($referral->followUpPlans()->where('status', FollowUpPlan::STATUS_SCHEDULED)->exists()) {
+            return null;
+        }
+
+        $lastVisited = $referral->followUpPlans()->whereHas('record')->orderByDesc('plan_number')->first();
+
+        if (! $lastVisited) {
+            return null;
+        }
+
+        return $this->generateMilestoneBasedNextPlan($referral, $lastVisited, $rule);
+    }
+
+    /**
      * สร้างนัดครั้งถัดไปตามกติกา (ไม่รวมกรณีมีนัดรออยู่แล้ว และไม่รวมวันที่พยาบาลเลือกเอง)
      */
     protected function createRuleBasedNextPlan(FollowUpRecord $record, FollowUpPlan $plan, Referral $referral): ?FollowUpPlan
