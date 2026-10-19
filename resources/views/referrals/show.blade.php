@@ -330,18 +330,20 @@
                                 <td>
                                     <span class="chip {{ match(true) {
                                         $plan->status === 'done' => 'chip-done',
+                                        $plan->status === 'cancelled' => 'chip-neutral',
                                         $plan->isOverdue() => 'chip-overdue',
                                         default => 'chip-today',
                                     } }}">
                                         {{ match(true) {
                                             $plan->status === 'done' => 'เยี่ยมแล้ว',
+                                            $plan->status === 'cancelled' => 'ยกเลิกแล้ว',
                                             $plan->isOverdue() => 'เกินกำหนด',
                                             default => 'รอถึงกำหนด',
                                         } }}
                                     </span>
                                 </td>
                                 <td>
-                                    @if ($plan->status !== 'done')
+                                    @if (! in_array($plan->status, ['done', 'cancelled'], true))
                                         <a href="{{ route('follow-up-plans.record.create', $plan) }}" style="color:var(--color-primary-700);font-weight:600;">เริ่มติดตาม →</a>
                                     @elseif ($plan->record && ! $plan->record->isConfirmed())
                                         <a href="{{ route('follow-up-plans.review', $plan) }}" style="color:var(--color-warning);font-weight:600;">รอวิเคราะห์/ยืนยัน →</a>
@@ -357,6 +359,12 @@
                                                 <button type="submit" class="btn btn-primary btn-sm">บันทึกวันนัดใหม่</button>
                                             </form>
                                         </details>
+                                        @unless ($plan->record)
+                                            <form method="POST" action="{{ route('follow-up-plans.cancel', $plan) }}" style="margin-top:4px;" onsubmit="return confirm('ยกเลิกนัดครั้งที่ {{ $plan->plan_number }} ใช่หรือไม่?');">
+                                                @csrf
+                                                <button type="submit" style="background:none;border:0;padding:0;cursor:pointer;color:var(--color-risk);font-size:13px;">ยกเลิกนัดนี้</button>
+                                            </form>
+                                        @endunless
                                     @endif
                                 </td>
                             </tr>

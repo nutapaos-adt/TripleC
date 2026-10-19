@@ -249,4 +249,45 @@ class VoidRecordAndMilestoneTest extends TestCase
         $this->assertSame([$red->id], $response->viewData('redContinuingReferrals')->pluck('id')->all());
         $response->assertSee('รายการรอเยี่ยมครั้งแรก')->assertSee('รายการติดตามต่อเนื่อง')->assertSee('ควรเยี่ยมต่อเนื่อง');
     }
+
+    public function test_voiding_a_duplicate_tka_record_also_cancels_the_milestone_plan_it_generated(): void
+    {
+        // กรณีจริง: บันทึกผลซ้ำที่ครั้งที่ 2 ทำให้ระบบสร้างครั้งที่ 3 ตามเกณฑ์ — ลบบันทึกซ้ำแล้วครั้งที่ 3 ต้องไม่ค้าง
+        $referral = $this->orthoReferral();
+        $plan1 = $this->plan($referral, 1, '2026-10-20');
+        $this->record($plan1, '2026-10-14 14:32', ['nurse_decision' => 'repeat', 'confirmed_at' => now(), 'confirmed_by' => $this->team()->id]);
+        $plan2 = $this->plan($referral, 2, '2027-01-12');
+        $team = $this->team();
+
+        $this->actingAs($team)->post(route('follow-up-plans.record.store', $plan2), [
+            'method' => 'phone_call', 'raw_notes' => 'บันทึกซ้ำ', 'visited_at' => '2026-10-16 10:00',
+        ])->assertRedirect();
+        $plan3 = FollowUpPlan::where('referral_id', $referral->id)->where('plan_number', 3)->firstOrFail();
+        $this->assertSame('scheduled', $plan3->status);
+
+        $this->actingAs($team)->post(route('follow-up-plans.record.void', $plan2), ['deletion_reason' => 'บันทึกซ้ำ', 'confirm_delete' => '1'])
+            ->assertRedirect();
+
+        $this->assertSame('cancelled', $plan3->fresh()->status);
+        $this->assertSame('scheduled', $plan2->fresh()->status);
+        $this->assertSame('scheduled', FollowUpPlan::where('referral_id', $referral->id)->where('plan_number', 2)->value('status'));
+    }
+
+    public function test_a_pending_plan_can_be_cancelled_but_not_a_visited_one(): void
+    {
+        $referral = $this->referral(CaseType::create(['name' => 'อายุรกรรม', 'slug' => 'med']), ['status' => Referral::STATUS_IN_PROGRESS]);
+        $plan1 = $this->plan($referral, 1, '2026-10-20');
+        $this->record($plan1, '2026-10-10 09:00');
+        $plan2 = $this->plan($referral, 2, '2026-11-20');
+        $team = $this->team();
+
+        $this->actingAs($team)->post(route('follow-up-plans.cancel', $plan1))->assertForbidden();
+        $this->actingAs($team)->post(route('follow-up-plans.cancel', $plan2))->assertRedirect();
+        $this->assertSame('cancelled', $plan2->fresh()->status);
+
+        $this->actingAs($team)->get(route('referrals.show', $referral))->assertOk()->assertSee('ยกเลิกแล้ว');
+
+        $ward = User::factory()->create(['role' => User::ROLE_WARD_STAFF]);
+        $this->actingAs($ward)->post(route('follow-up-plans.cancel', $plan2))->assertForbidden();
+    }
 }

@@ -63,6 +63,8 @@ Route::middleware('auth')->group(function () {
         ->middleware('role:home_visit_team,admin')->name('follow-up-plans.record.void');
     Route::post('/referrals/{referral}/milestone-plan', [ReferralController::class, 'createMilestonePlan'])
         ->middleware('role:home_visit_team,admin')->name('referrals.milestone-plan');
+    Route::post('/follow-up-plans/{plan}/cancel', [FollowUpController::class, 'cancelPlan'])
+        ->middleware('role:home_visit_team,admin')->name('follow-up-plans.cancel');
     Route::post('/follow-up-plans/{plan}/reschedule', [FollowUpController::class, 'reschedule'])
         ->middleware('role:home_visit_team,admin')->name('follow-up-plans.reschedule');
 

@@ -317,21 +317,22 @@ class FollowUpController extends Controller
         $referral = $plan->referral;
 
         DB::transaction(function () use ($request, $record, $plan, $referral) {
+            // นัดครั้งถัดๆ ไปที่ระบบสร้างขึ้นหลังจากบันทึกนี้ (ทั้งจากการตัดสินใจ และจากเกณฑ์ TKA/UKA ที่สร้างให้ตอนบันทึกผล)
+            // และยังไม่มีผลเยี่ยม → ยกเลิก ไม่ให้เหลือนัดค้างจากบันทึกที่ลบไปแล้ว
+            // (นัดที่สร้างไว้ล่วงหน้าก่อนบันทึก เช่น fixed_count จะไม่ถูกแตะ — เทียบจากเวลาที่สร้างนัด)
+            $referral->followUpPlans()
+                ->where('plan_number', '>', $plan->plan_number)
+                ->where('status', FollowUpPlan::STATUS_SCHEDULED)
+                ->where('created_at', '>=', $record->created_at)
+                ->whereDoesntHave('record')
+                ->update(['status' => FollowUpPlan::STATUS_CANCELLED]);
+
             // เคสที่ถูกปิดจากการตัดสินใจของบันทึกนี้ → คืนนัดที่ถูกยกเลิกไปตอนปิดเคส
             if ($record->nurse_decision === FollowUpRecord::DECISION_CLOSE) {
                 $referral->followUpPlans()
                     ->where('plan_number', '>', $plan->plan_number)
                     ->where('status', FollowUpPlan::STATUS_CANCELLED)
                     ->update(['status' => FollowUpPlan::STATUS_SCHEDULED]);
-            }
-
-            // นัดที่ระบบสร้างขึ้นจากการตัดสินใจของบันทึกนี้ (สร้างหลังบันทึก และยังไม่มีผลเยี่ยม) → ยกเลิก ไม่ให้เหลือนัดซ้ำ
-            $generated = $record->nextPlan;
-            if ($generated
-                && $generated->status === FollowUpPlan::STATUS_SCHEDULED
-                && ! $generated->record()->exists()
-                && $generated->created_at >= $record->created_at) {
-                $generated->update(['status' => FollowUpPlan::STATUS_CANCELLED]);
             }
 
             $record->update([
@@ -352,6 +353,21 @@ class FollowUpController extends Controller
         return redirect()
             ->route('referrals.show', $referral)
             ->with('status', 'ลบบันทึกผลครั้งที่ '.$plan->plan_number.' แล้ว นัดครั้งนี้กลับเป็น "รอถึงกำหนด" — บันทึกผลใหม่ได้');
+    }
+
+    /**
+     * ยกเลิกนัดที่ยังไม่ได้ติดตามและไม่ต้องการแล้ว (เช่น นัดซ้ำ/นัดที่เหลือค้าง) — เก็บแถวไว้ แสดงเป็น "ยกเลิกแล้ว"
+     */
+    public function cancelPlan(FollowUpPlan $plan): RedirectResponse
+    {
+        abort_unless($plan->referral->isVisibleTo(Auth::user()), 403, 'ไม่มีสิทธิ์เข้าถึงใบส่งต่อของหน่วยงานอื่น');
+        abort_unless($plan->status === FollowUpPlan::STATUS_SCHEDULED && ! $plan->record()->exists(), 403, 'ยกเลิกได้เฉพาะนัดที่ยังไม่ได้ติดตาม');
+
+        $plan->update(['status' => FollowUpPlan::STATUS_CANCELLED]);
+
+        return redirect()
+            ->route('referrals.show', $plan->referral)
+            ->with('status', 'ยกเลิกนัดครั้งที่ '.$plan->plan_number.' เรียบร้อยแล้ว');
     }
 
     public function confirmDecision(ConfirmFollowUpDecisionRequest $request, FollowUpPlan $plan, VisitPlanService $visitPlanService): RedirectResponse
