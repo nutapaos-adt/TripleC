@@ -88,7 +88,8 @@ class VisitReportService
                 ->whereBetween('visited_at', [$start, $end])
                 ->get();
 
-            if ($records->isEmpty()) {
+            // เคสที่ยังไม่มีผลเยี่ยมก็ยังสแกนจากข้อมูลตอนส่งต่อ (เช่น มาด้วยน้ำตาลต่ำ) ถ้าไม่มีข้อมูลทั้งสองอย่างจึงข้ามไป
+            if ($records->isEmpty() && $this->aiService->dmCopdIntakeText($referral) === '') {
                 continue;
             }
 
@@ -121,9 +122,12 @@ class VisitReportService
      */
     protected function dmCopdCacheKey(array $case, Carbon $month): string
     {
-        $fingerprint = md5($case['records']->pluck('raw_notes')->implode("\n").'|'.$case['referral']->underlying_disease);
+        $fingerprint = md5(
+            $case['records']->pluck('raw_notes')->implode("\n").'|'.$case['referral']->underlying_disease
+            .'|'.$this->aiService->dmCopdIntakeText($case['referral'])
+        );
 
-        return 'dm_copd_scan:v2:'.$case['referral']->id.':'.$month->format('Y-m').':'.$fingerprint;
+        return 'dm_copd_scan:v3:'.$case['referral']->id.':'.$month->format('Y-m').':'.$fingerprint;
     }
 
     /**

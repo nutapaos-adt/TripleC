@@ -87,7 +87,8 @@ class AiService
     public function summarizeDmCopdComplication(Referral $referral, \Illuminate\Support\Collection $records): array
     {
         $prompt = $this->buildDmCopdPrompt($referral, $records);
-        $notesText = $records->map(fn (FollowUpRecord $r) => (string) $r->raw_notes)->implode("\n");
+        // หลักฐานต้องปรากฏในข้อความที่ส่งให้โมเดลอ่านจริง: บันทึกผลเยี่ยม + ข้อมูลตอนส่งต่อ (การวินิจฉัย/อาการก่อนกลับบ้าน)
+        $notesText = $records->map(fn (FollowUpRecord $r) => (string) $r->raw_notes)->implode("\n")."\n".$this->dmCopdIntakeText($referral);
 
         $result = $this->parseJsonResponse($this->callOllama($prompt), [
             'has_complication' => false,
@@ -112,6 +113,18 @@ class AiService
         }
 
         return $result;
+    }
+
+    /**
+     * ข้อมูลตอนส่งต่อจากหอผู้ป่วยที่ใช้ประกอบการสแกน DM/COPD — การวินิจฉัยและอาการก่อนกลับบ้าน/ประเด็นที่ต้องติดตาม
+     * (เช่น "มาด้วยน้ำตาลต่ำ" ซึ่งเป็นอุบัติการณ์ที่เกิดก่อนทีมเยี่ยมบ้านไปเยี่ยม จึงไม่อยู่ในบันทึกผลเยี่ยม)
+     */
+    public function dmCopdIntakeText(Referral $referral): string
+    {
+        return trim(implode("\n", array_filter([
+            $referral->diagnosis ? 'การวินิจฉัย: '.$referral->diagnosis : null,
+            $referral->raw_notes ? 'อาการก่อนกลับบ้าน/ประเด็นที่หอผู้ป่วยฝากติดตาม: '.$referral->raw_notes : null,
+        ])));
     }
 
     /**
@@ -149,7 +162,9 @@ class AiService
             ->map(fn (FollowUpRecord $r) => '- '.($r->raw_notes ?: '-'))
             ->implode("\n");
 
-        $glossaryText = $this->glossary()->promptSection($underlyingDisease, $notesText);
+        $intakeText = $this->dmCopdIntakeText($referral) ?: '-';
+
+        $glossaryText = $this->glossary()->promptSection($underlyingDisease, $notesText."\n".$intakeText);
 
         $diseaseLower = mb_strtolower($underlyingDisease);
         $hasDm = str_contains($diseaseLower, 'dm');
@@ -175,6 +190,11 @@ class AiService
             โรคเป้าหมายที่ต้องดูเท่านั้น และตัวอย่างภาวะที่นับว่าเกี่ยวข้อง:
             {$targetText}
 
+            ข้อมูลตอนส่งต่อจากหอผู้ป่วย (เหตุที่ผู้ป่วยเข้ารักษาและอาการก่อนกลับบ้าน):
+            """
+            {$intakeText}
+            """
+
             ผลการเยี่ยม/โทรติดตามในเดือนนี้:
             """
             {$notesText}
@@ -188,7 +208,9 @@ class AiService
             3. ห้ามนับเหตุการณ์หรือโรคอื่นที่ไม่ใช่ภาวะแทรกซ้อนของโรคเป้าหมาย เช่น พลัดตกหกล้ม แผลกดทับ ปัญหาผู้ดูแล การย้ายที่อยู่หรือส่งไปสถานดูแล/บ้านพักคนชรา ความดันโลหิตสูง (HT) โรคหัวใจ ไขมันในเลือด
                แม้บันทึกจะพูดถึงเหตุการณ์เหล่านั้น และแม้ผู้ป่วยจะมีโรคเหล่านั้นเป็นโรคประจำตัวด้วย ก็ไม่ใช่ภาวะแทรกซ้อนของ {$targetNames}
             4. ถ้าบันทึกไม่มีหลักฐานชัดเจนของภาวะแทรกซ้อนที่เกี่ยวข้อง ให้ตอบ has_complication เป็น false และ summary เป็น null ห้ามเดาหรือตีความเกินกว่าที่เขียนไว้
-            5. ถ้าตอบ true ช่อง summary ต้องระบุชื่อภาวะที่พบอย่างเจาะจง และบอกว่าเกี่ยวข้องกับโรคใด (เช่น "น้ำตาลในเลือดต่ำและซึม (DM)") ห้ามเขียนกว้างๆ เช่น "พบภาวะแทรกซ้อน"
+            5. ให้ดูทั้ง "ข้อมูลตอนส่งต่อ" และ "ผลการเยี่ยม" — ถ้าข้อมูลตอนส่งต่อระบุว่าผู้ป่วยเข้ารักษา/มาโรงพยาบาลด้วยภาวะที่เกี่ยวกับโรคเป้าหมายโดยตรง
+               (เช่น มาด้วยน้ำตาลในเลือดต่ำ hypoglycemia, DKA, หอบกำเริบ) ให้นับเป็นภาวะแทรกซ้อนที่พบ และคัดลอกหลักฐานจากข้อความนั้น (การวินิจฉัยโรคประจำตัวอย่างเดียว เช่น "DM" ไม่ถือเป็นภาวะแทรกซ้อน)
+            6. ถ้าตอบ true ช่อง summary ต้องระบุชื่อภาวะที่พบอย่างเจาะจง และบอกว่าเกี่ยวข้องกับโรคใด (เช่น "น้ำตาลในเลือดต่ำและซึม (DM)") ห้ามเขียนกว้างๆ เช่น "พบภาวะแทรกซ้อน"
                และช่อง evidence ต้องคัดลอกข้อความสั้นๆ จากบันทึกที่ยืนยันภาวะนั้นมาตรงตามตัวอักษร (ห้ามเรียบเรียงใหม่)
 
             ตัวอย่างรูปแบบคำตอบ (เป็นแค่ตัวอย่างรูปแบบ ห้ามนำเนื้อหานี้ไปใช้ตอบ — ต้องใช้บันทึกจริงด้านบนเท่านั้น):
