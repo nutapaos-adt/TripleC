@@ -51,7 +51,7 @@ class MonthlyReportReconciliationTest extends TestCase
         FollowUpPlan::create(['referral_id' => $referral->id, 'plan_number' => 1, 'method' => 'home_visit', 'due_date' => $due, 'status' => 'scheduled']);
     }
 
-    public function test_sent_equals_visited_plus_waiting_plus_unclassified_in_every_row(): void
+    public function test_sent_equals_visited_plus_waiting_in_every_row(): void
     {
         // เยี่ยมแล้ว: ด่วนทัน (3 วัน), ทั่วไปทัน 14 วัน (7), 30 วัน (20), เกิน 30 วัน (40) — ส่งต่อทั้งหมดในเดือน ก.ย.-ต.ค.
         $this->visited($this->referral('2026-10-10 09:00', 'in_area', 'red'), '2026-10-13 09:00');
@@ -73,24 +73,26 @@ class MonthlyReportReconciliationTest extends TestCase
         foreach (['in_area', 'out_area', 'combined'] as $row) {
             $this->assertSame(
                 $t[$row]['total_referred'],
-                $t[$row]['visited_actual'] + $t[$row]['waiting'] + $t[$row]['unclassified'],
+                $t[$row]['visited_actual'] + $t[$row]['waiting'],
                 "แถว {$row} ต้องกระทบยอดได้"
             );
-            $this->assertSame($t[$row]['visited_actual'], $t[$row]['urgent']['total'] + $t[$row]['general']['total']);
+            // เยี่ยมจริง = ด่วน + ทั่วไป + Palliative (คอลัมน์ unclassified นับเฉพาะที่เยี่ยมแล้ว)
+            $this->assertSame($t[$row]['visited_actual'], $t[$row]['urgent']['total'] + $t[$row]['general']['total'] + $t[$row]['unclassified']);
         }
 
         $c = $t['combined'];
         $this->assertSame(10, $c['total_referred']);
-        $this->assertSame(4, $c['visited_actual']);
-        $this->assertSame(4, $c['waiting']);
-        $this->assertSame(2, $c['unclassified']);
+        $this->assertSame(5, $c['visited_actual']);
+        $this->assertSame(5, $c['waiting']);
+        $this->assertSame(1, $c['unclassified']);
         $this->assertSame(1, $c['urgent']['on_time']);
         $this->assertSame(1, $c['general']['within_14']);
         $this->assertSame(1, $c['general']['within_30']);
         $this->assertSame(1, $c['general']['over_30']);
 
-        // KPI "ยังไม่ได้เยี่ยม" นับทุกรายที่ยังไม่มีผลเยี่ยมครั้งแรก = รอเยี่ยม 4 + ไม่ระบุกลุ่มที่ยังไม่ได้เยี่ยม 1
+        // KPI "ยังไม่ได้เยี่ยม" นับทุกรายที่ยังไม่มีผลเยี่ยมครั้งแรก = = รอเยี่ยมทั้งหมด (ช่อง KPI เท่ากับคอลัมน์ "รอเยี่ยมทั้งหมด")
         $this->assertSame(5, $report['not_yet_visited_count']);
+        $this->assertSame($c['waiting'], $report['not_yet_visited_count']);
         $this->assertSame(3, $report['not_yet_visited_in_area']);
         $this->assertSame(2, $report['not_yet_visited_out_area']);
     }

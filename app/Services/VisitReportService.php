@@ -468,12 +468,13 @@ class VisitReportService
     }
 
     /**
-     * ตารางความทันเวลา×เขต ของรายงานประจำเดือน §1 — ผลรวมกระทบยอดกับ "จำนวนการส่งเยี่ยม" ได้เสมอ:
-     *   จำนวนการส่งเยี่ยม = เยี่ยมจริง + รอเยี่ยม + ไม่ระบุกลุ่ม/Palliative
-     * - เยี่ยมจริง: เฉพาะเคสที่มีผลเยี่ยม/โทรครั้งแรกบันทึกไว้ (แบ่งตามกลุ่มบ้านสี ด่วน = บ้านแดง / ทั่วไป = เหลือง+เขียว)
-     *   นับวันจากวันที่ส่งต่อ (created_at) ถึงวันที่เยี่ยมจริง: ด่วน ≤5 วัน = ทัน, ทั่วไป ≤14 / ≤30 / เกิน 30 วัน
-     * - รอเยี่ยม: เคสที่ระบุกลุ่มบ้านสีแล้วแต่ยังไม่มีผลเยี่ยมครั้งแรก (รวมที่ยังรอยืนยันแผน และที่นัดเดือนนี้/เดือนหน้า)
-     * - ไม่ระบุกลุ่ม/Palliative: ไม่มีเกณฑ์วันตายตัวให้จัดว่าทัน/ไม่ทัน จึงแยกไว้ช่องเดียว (ทั้งที่เยี่ยมแล้วและยังไม่เยี่ยม)
+     * ตารางความทันเวลา×เขต ของรายงานประจำเดือน §1 — กระทบยอดกับ "จำนวนการส่งเยี่ยม" ได้เสมอ:
+     *   จำนวนการส่งเยี่ยม = จำนวนเยี่ยมจริง + รอเยี่ยมทั้งหมด
+     *   จำนวนเยี่ยมจริง = ด่วน (ทัน 5 วัน + ไม่ทัน) + ทั่วไป (14 + 30 + เกิน 30 วัน) + Palliative
+     * - เยี่ยมจริง: ทุกเคสที่มีผลเยี่ยม/โทรครั้งแรกบันทึกไว้ นับวันจากวันที่ส่งต่อ (created_at) ถึงวันที่เยี่ยมจริง:
+     *   ด่วน (บ้านแดง) ≤5 วัน = ทัน, ทั่วไป (เหลือง+เขียว) ≤14 / ≤30 / เกิน 30 วัน
+     * - Palliative (key unclassified): เยี่ยมแล้วแต่ไม่มีเกณฑ์วันตายตัว (Palliative และใบส่งต่อเดิมที่ไม่ระบุกลุ่ม) จัดทัน/ไม่ทันไม่ได้
+     * - รอเยี่ยมทั้งหมด: ทุกเคสที่ยังไม่มีผลเยี่ยมครั้งแรก (ทุกกลุ่ม รวมที่ยังรอยืนยันแผน มีนัดเดือนนี้ และเดือนหน้า)
      *
      * @param  Collection<int, Referral>  $referrals
      * @return array<string, array{total_referred: int, visited_actual: int, waiting: int, unclassified: int, urgent: array{on_time: int, late: int, total: int}, general: array{within_14: int, within_30: int, over_30: int, total: int}}>
@@ -513,18 +514,9 @@ class VisitReportService
         foreach ($referrals as $referral) {
             $zoneKey = $referral->zone === 'in_area' ? 'in_area' : 'out_area';
 
-            if (! array_key_exists($referral->severity_group, Referral::SEVERITY_FIRST_VISIT_DEADLINE_DAYS)) {
-                // Palliative หรือยังไม่ระบุกลุ่ม — ไม่มีเกณฑ์วันตายตัว
-                foreach ([$zoneKey, 'combined'] as $target) {
-                    $rows[$target]['unclassified']++;
-                }
-
-                continue;
-            }
-
-            $isUrgent = $referral->severity_group === Referral::SEVERITY_RED;
             $visitedAt = $firstPlans->get($referral->id)?->record?->visited_at;
 
+            // ยังไม่ได้เยี่ยม → "รอเยี่ยมทั้งหมด" (ทุกกลุ่ม รวม Palliative และเคสที่ยังไม่ระบุกลุ่ม)
             if (! $visitedAt) {
                 foreach ([$zoneKey, 'combined'] as $target) {
                     $rows[$target]['waiting']++;
@@ -532,6 +524,19 @@ class VisitReportService
 
                 continue;
             }
+
+            if (! array_key_exists($referral->severity_group, Referral::SEVERITY_FIRST_VISIT_DEADLINE_DAYS)) {
+                // เยี่ยมแล้วแต่เป็น Palliative (หรือยังไม่ระบุกลุ่ม) — ไม่มีเกณฑ์วันตายตัว จัดทัน/ไม่ทันไม่ได้ นับเป็นเยี่ยมจริง
+                // แยกไว้ในคอลัมน์ Palliative
+                foreach ([$zoneKey, 'combined'] as $target) {
+                    $rows[$target]['unclassified']++;
+                    $rows[$target]['visited_actual']++;
+                }
+
+                continue;
+            }
+
+            $isUrgent = $referral->severity_group === Referral::SEVERITY_RED;
 
             $days = $referral->created_at->diffInDays($visitedAt);
 
