@@ -370,6 +370,20 @@
                     <div class="h2">6. ทะเบียนตอบกลับเยี่ยมบ้าน ประจำเดือน {{ $monthLabel }}</div>
                 </div>
                 <div class="card-body">
+                    <style>
+                        /* ทะเบียนตอบกลับ: 1 เคส = 1 กล่อง แบ่ง 3 คอลัมน์ในแถวเดียว (ข้อมูลผู้ป่วย | ประเด็นที่ต้องการติดตาม | ผลการเยี่ยม) */
+                        .case-cols { display: grid; grid-template-columns: 1fr 1fr 1.3fr; gap: 10px; align-items: stretch; }
+                        .case-col { border: 1px solid var(--color-neutral-200); border-radius: 8px; padding: 10px 12px; background: #fff; min-width: 0; }
+                        .case-col .col-title { display: block; font-size: 11px; font-weight: 800; color: var(--color-primary-700); letter-spacing: .02em; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid var(--color-neutral-200); }
+                        .case-col .kv { font-size: 12.5px; margin-bottom: 5px; overflow-wrap: anywhere; }
+                        .case-col .kv .l { display: block; font-size: 10.5px; font-weight: 700; color: var(--color-neutral-500); }
+                        .case-col .kv.allergy-yes .v { color: var(--color-risk); font-weight: 700; }
+                        .case-col .txt { font-size: 12.5px; white-space: pre-line; overflow-wrap: anywhere; }
+                        .case-zone { font-weight: 700; }
+                        .case-zone.in { background: var(--color-primary-100); color: var(--color-primary-800); }
+                        .case-zone.out { background: var(--color-warning-tint); color: var(--color-warning); }
+                        @media (max-width: 900px) { .case-cols { grid-template-columns: 1fr; } }
+                    </style>
                     @forelse ($report['case_log'] as $row)
                         <div class="case-card">
                             <div class="case-head">
@@ -381,6 +395,7 @@
                                     @endif
                                 </div>
                                 <div class="case-badges">
+                                    <span class="badge case-zone {{ $row['zone'] === 'in_area' ? 'in' : 'out' }}">{{ $row['zone'] === 'in_area' ? 'ในเขต' : 'นอกเขต' }}</span>
                                     <span class="badge badge-ward">{{ $row['ward_name'] }}</span>
                                     @if ($row['on_time'])
                                         <span class="badge badge-ontime">ทันเวลา</span>
@@ -393,19 +408,27 @@
                                 กำหนดเยี่ยม {{ \App\Support\ThaiDate::date($row['due_date']) ?? '—' }}
                                 &middot; เยี่ยมจริง {{ \App\Support\ThaiDate::date($row['visited_at']) ?? '—' }}
                             </div>
-                            <div class="case-dx">
-                                <span class="l">วินิจฉัย/โรคประจำตัว:</span> {{ $row['diagnosis'] ?? '—' }}
-                                @if ($row['underlying_disease']) &middot; {{ $row['underlying_disease'] }} @endif
-                            </div>
-                            @if ($row['ward_concern'])
-                                <div class="case-block">
-                                    <span class="l">ประเด็นที่หอผู้ป่วยต้องการติดตาม</span>
-                                    <ul><li style="white-space:pre-line;">{{ $row['ward_concern'] }}</li></ul>
+                            <div class="case-cols">
+                                <div class="case-col">
+                                    <span class="col-title">ข้อมูลผู้ป่วย</span>
+                                    <div class="kv"><span class="l">การวินิจฉัย</span><span class="v">{{ $row['diagnosis'] ?: '—' }}</span></div>
+                                    <div class="kv"><span class="l">โรคประจำตัว</span><span class="v">{{ $row['underlying_disease'] ?: '—' }}</span></div>
+                                    @if ($row['surgery_history'])
+                                        <div class="kv"><span class="l">การผ่าตัด</span><span class="v">{{ $row['surgery_history'] }}@if ($row['surgery_date']) &middot; วันที่ผ่าตัด {{ \App\Support\ThaiDate::date($row['surgery_date']) }}@endif</span></div>
+                                    @endif
+                                    @if (! empty($row['equipment']))
+                                        <div class="kv"><span class="l">อุปกรณ์ของผู้ป่วย</span><span class="v">{{ implode(', ', $row['equipment']) }}</span></div>
+                                    @endif
+                                    <div class="kv {{ $row['drug_allergy_is_yes'] ? 'allergy-yes' : '' }}"><span class="l">ประวัติแพ้ยา</span><span class="v">{{ $row['drug_allergy'] ?? 'ยังไม่ได้สอบถาม' }}</span></div>
                                 </div>
-                            @endif
-                            <div class="case-block">
-                                <span class="l">ผลการเยี่ยม</span>
-                                <ul><li style="white-space:pre-line;">{{ $row['visit_result'] ?? 'ยังไม่มีผลการเยี่ยม' }}</li></ul>
+                                <div class="case-col">
+                                    <span class="col-title">ประเด็นที่ต้องการติดตาม</span>
+                                    <div class="txt">{{ $row['ward_concern'] ?: '—' }}</div>
+                                </div>
+                                <div class="case-col">
+                                    <span class="col-title">ผลการเยี่ยม</span>
+                                    <div class="txt">{{ $row['visit_result'] ?: 'ยังไม่มีผลการเยี่ยม' }}</div>
+                                </div>
                             </div>
                         </div>
                     @empty

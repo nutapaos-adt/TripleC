@@ -147,5 +147,10 @@ class MonthlyReportReconciliationTest extends TestCase
         $page = $this->actingAs(User::factory()->create(['role' => User::ROLE_HOME_VISIT_TEAM]))
             ->get(route('reports.monthly', ['month' => '2026-10']))->assertOk();
         $page->assertDontSee('ยังไม่มีผลการเยี่ยม')->assertDontSee('ยังไม่ได้เยี่ยม</span>', false);
+
+        // การ์ดรายเคสแบ่ง 3 คอลัมน์ และมีแท็กเขตมุมขวาบน
+        $this->assertSame('in_area', $report['case_log'][0]['zone']);
+        $page->assertSee('ข้อมูลผู้ป่วย')->assertSee('ประเด็นที่ต้องการติดตาม')->assertSee('ผลการเยี่ยม')
+            ->assertSee('case-zone in', false)->assertSee('ในเขต');
     }
 }
