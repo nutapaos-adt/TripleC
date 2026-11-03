@@ -103,6 +103,7 @@
                         .rpt-table .rpt-group { text-align: center; border-bottom: 1px solid var(--color-neutral-300); color: var(--color-neutral-700); }
                         .rpt-table th.rpt-key { background: var(--color-primary-100); color: var(--color-primary-800); font-size: 13px; font-weight: 800; }
                         .rpt-table td.rpt-key { background: var(--color-primary-50); font-weight: 800; font-size: 16px; color: var(--color-neutral-900); }
+                        .rpt-table th.rpt-sub, .rpt-table td.rpt-sub { font-weight: 700; border-left: 1px dashed var(--color-neutral-300); }
                         .rpt-table tr.rpt-total td { background: var(--color-neutral-100); font-weight: 700; }
                         .rpt-table tr.rpt-total td.rpt-key { background: var(--color-primary-100); font-size: 17px; }
                     </style>
@@ -113,17 +114,19 @@
                                     <th rowspan="2" class="rpt-key">ประเภท</th>
                                     <th rowspan="2" class="rpt-key">จำนวนการส่งเยี่ยม</th>
                                     <th rowspan="2" class="rpt-key">จำนวนเยี่ยมจริง</th>
-                                    <th colspan="2" class="rpt-group">เยี่ยมด่วน</th>
-                                    <th colspan="3" class="rpt-group">เยี่ยมทั่วไป</th>
+                                    <th colspan="3" class="rpt-group">เยี่ยมด่วน</th>
+                                    <th colspan="4" class="rpt-group">เยี่ยมทั่วไป</th>
                                     <th rowspan="2">Palliative</th>
                                     <th rowspan="2" class="rpt-key">รอเยี่ยมทั้งหมด</th>
                                 </tr>
                                 <tr>
                                     <th>ทันใน 5 วัน</th>
                                     <th>ไม่ทัน</th>
+                                    <th class="rpt-sub">รวม</th>
                                     <th>ทันใน 14 วัน</th>
                                     <th>ทันใน 30 วัน</th>
                                     <th>เกิน 30 วัน</th>
+                                    <th class="rpt-sub">รวม</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -134,9 +137,11 @@
                                         <td class="rpt-key">{{ $t[$zoneKey]['visited_actual'] }}</td>
                                         <td>{{ $t[$zoneKey]['urgent']['on_time'] }}</td>
                                         <td>{{ $t[$zoneKey]['urgent']['late'] }}</td>
+                                        <td class="rpt-sub">{{ $t[$zoneKey]['urgent']['total'] }}</td>
                                         <td>{{ $t[$zoneKey]['general']['within_14'] }}</td>
                                         <td>{{ $t[$zoneKey]['general']['within_30'] }}</td>
                                         <td>{{ $t[$zoneKey]['general']['over_30'] }}</td>
+                                        <td class="rpt-sub">{{ $t[$zoneKey]['general']['total'] }}</td>
                                         <td>{{ $t[$zoneKey]['unclassified'] }}</td>
                                         <td class="rpt-key">{{ $t[$zoneKey]['waiting'] }}</td>
                                     </tr>
@@ -147,9 +152,11 @@
                                         <td class="rpt-key">{{ $t['combined']['visited_actual'] }}</td>
                                         <td>{{ $t['combined']['urgent']['on_time'] }}</td>
                                         <td>{{ $t['combined']['urgent']['late'] }}</td>
+                                        <td class="rpt-sub">{{ $t['combined']['urgent']['total'] }}</td>
                                         <td>{{ $t['combined']['general']['within_14'] }}</td>
                                         <td>{{ $t['combined']['general']['within_30'] }}</td>
                                         <td>{{ $t['combined']['general']['over_30'] }}</td>
+                                        <td class="rpt-sub">{{ $t['combined']['general']['total'] }}</td>
                                         <td>{{ $t['combined']['unclassified'] }}</td>
                                         <td class="rpt-key">{{ $t['combined']['waiting'] }}</td>
                                 </tr>
@@ -159,7 +166,7 @@
 
                     <div class="caption" style="margin-top:var(--space-3);display:flex;flex-direction:column;gap:4px;">
                         <p><b>ตรวจยอด:</b> จำนวนการส่งเยี่ยม = จำนวนเยี่ยมจริง + รอเยี่ยมทั้งหมด ในทุกแถว</p>
-                        <p>จำนวนเยี่ยมจริง = เยี่ยมด่วน (ทันใน 5 วัน + ไม่ทัน) + เยี่ยมทั่วไป (ทันใน 14 วัน + ทันใน 30 วัน + เกิน 30 วัน) + Palliative นับเฉพาะเคสที่มีผลเยี่ยม/โทรครั้งแรกบันทึกไว้แล้ว</p>
+                        <p>จำนวนเยี่ยมจริง = รวมเยี่ยมด่วน (ทันใน 5 วัน + ไม่ทัน) + รวมเยี่ยมทั่วไป (ทันใน 14 วัน + ทันใน 30 วัน + เกิน 30 วัน) + Palliative นับเฉพาะเคสที่มีผลเยี่ยม/โทรครั้งแรกบันทึกไว้แล้ว</p>
                         <p>เยี่ยมด่วน = บ้านแดง (ทันใน 5 วัน / ไม่ทัน), เยี่ยมทั่วไป = บ้านเหลืองและเขียว (ทันใน 14 วัน / 30 วัน / เกิน 30 วัน) ทุกช่วงนับวันจากวันที่ส่งต่อถึงวันที่เยี่ยมจริง</p>
                         <p>Palliative = เคสกลุ่ม 4 Palliative Care ที่เยี่ยมแล้ว ซึ่งไม่มีเกณฑ์จำนวนวันตายตัว (ใช้คะแนน PPS กำหนดรอบเยี่ยม) จึงจัดทัน/ไม่ทันไม่ได้ (รวมใบส่งต่อเดิมที่สร้างก่อนระบบบังคับเลือกกลุ่มความรุนแรง)</p>
                         <p>รอเยี่ยมทั้งหมด = ทุกเคสที่ยังไม่ได้รับการเยี่ยม/โทรครั้งแรก ไม่ว่ากลุ่มใด รวมทั้งที่ยังรอยืนยันแผน มีนัดภายในเดือนนี้ และมีนัดเดือนหน้า (เท่ากับช่อง "ยังไม่ได้รับการเยี่ยม/ยืนยันแผน" ด้านบน)</p>
