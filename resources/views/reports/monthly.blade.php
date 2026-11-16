@@ -324,7 +324,7 @@
                                     <td style="text-align:right;">{{ $trend['target_percent'] }}</td>
                                     @foreach ($trend['months'] as $point)
                                         <td style="text-align:right;{{ $point['in_area_percent'] !== null && $point['in_area_percent'] < $trend['target_percent'] ? 'color:var(--color-risk);font-weight:600;' : '' }}">
-                                            {{ $point['is_future'] ? '–' : ($point['in_area_percent'] !== null ? $point['in_area_percent'] : 'ไม่มี case') }}
+                                            {{ $point['is_future'] ? '–' : ($point['in_area_percent'] !== null ? $point['in_area_percent'] : 'ไม่มีผลประเมินในระบบ') }}
                                         </td>
                                     @endforeach
                                     <td style="text-align:right;">{{ $trend['in_area_average_percent'] ?? '–' }}</td>
@@ -334,7 +334,7 @@
                                     <td style="text-align:right;">{{ $trend['target_percent'] }}</td>
                                     @foreach ($trend['months'] as $point)
                                         <td style="text-align:right;{{ $point['palliative_percent'] !== null && $point['palliative_percent'] < $trend['target_percent'] ? 'color:var(--color-risk);font-weight:600;' : '' }}">
-                                            {{ $point['is_future'] ? '–' : ($point['palliative_percent'] !== null ? $point['palliative_percent'] : 'ไม่มี case') }}
+                                            {{ $point['is_future'] ? '–' : ($point['palliative_percent'] !== null ? $point['palliative_percent'] : 'ไม่มีผลประเมินในระบบ') }}
                                         </td>
                                     @endforeach
                                     <td style="text-align:right;">{{ $trend['palliative_average_percent'] ?? '–' }}</td>
