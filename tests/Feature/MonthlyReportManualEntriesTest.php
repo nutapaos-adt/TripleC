@@ -75,6 +75,22 @@ class MonthlyReportManualEntriesTest extends TestCase
             ->assertOk()->assertSee('* ค่าที่กรอกเอง', false)->assertSee('95*', false);
     }
 
+    public function test_the_satisfaction_table_stops_at_the_selected_month_and_the_average_ignores_later_months(): void
+    {
+        SatisfactionManualScore::create(['report_month' => '2026-10-01', 'audience' => 'in_area', 'percent' => 90]);
+        SatisfactionManualScore::create(['report_month' => '2026-11-01', 'audience' => 'in_area', 'percent' => 70]);
+
+        $october = $this->trend('2026-10');
+        $nov = collect($october['months'])->firstWhere('month', '2026-11');
+        $this->assertTrue($nov['is_future']);
+        $this->assertNull($nov['in_area_percent']);
+        $this->assertSame(90, $october['in_area_average_percent']);
+
+        $november = $this->trend('2026-11');
+        $this->assertFalse(collect($november['months'])->firstWhere('month', '2026-11')['is_future']);
+        $this->assertSame(80, $november['in_area_average_percent']);
+    }
+
     public function test_real_surveys_take_precedence_over_a_manual_value(): void
     {
         $referral = $this->dmReferral();

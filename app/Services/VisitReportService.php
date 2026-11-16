@@ -840,11 +840,13 @@ class VisitReportService
             ->get()
             ->keyBy(fn (SatisfactionManualScore $m) => Carbon::parse($m->report_month)->format('Y-m').'|'.$m->audience);
         $usedManual = [];
+        $lastShownMonth = $month->copy()->startOfMonth()->min(now()->startOfMonth());
 
         for ($i = 0; $i < 12; $i++) {
             $periodMonth = $fiscalStart->copy()->addMonths($i);
 
-            if ($periodMonth->startOfMonth()->gt(now()->startOfMonth())) {
+            // แสดงถึงเดือนที่เลือกในรายงานเท่านั้น (รายงานเดือน ต.ค. ไม่โชว์/ไม่เฉลี่ยข้อมูล พ.ย. เป็นต้นไป) และไม่เกินเดือนปัจจุบัน
+            if ($periodMonth->startOfMonth()->gt($lastShownMonth)) {
                 $months[] = [
                     'month' => $periodMonth->format('Y-m'), 'in_area_percent' => null, 'palliative_percent' => null,
                     'in_area_manual' => false, 'palliative_manual' => false, 'is_future' => true,
