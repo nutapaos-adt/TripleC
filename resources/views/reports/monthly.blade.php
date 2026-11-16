@@ -19,6 +19,12 @@
             .case-col { display: table-cell !important; vertical-align: top; width: 30%; }
             .case-col:last-child { width: 40%; }
             .case-head, .case-dates { break-after: avoid; page-break-after: avoid; }
+            /* การ์ดที่ข้อความยาวมาก (case-long, ประมาณเกินครึ่งหน้า): ตารางแถวเดียวที่สูงเกือบเต็มหน้าจะไม่ยอมแตกข้ามหน้า
+               Chrome จึงทิ้งหัวการ์ดไว้หน้าว่างแล้วดันเนื้อหาไปหน้าถัดไป → ให้เรียง 3 กล่องต่อกันในแนวตั้งและไหลต่อข้ามหน้าได้ตามบรรทัด */
+            .case-card.case-long { break-inside: auto; page-break-inside: auto; }
+            .case-card.case-long .case-cols { display: block !important; margin: 0; width: auto; }
+            .case-card.case-long .case-col { display: block !important; width: auto; margin-bottom: 6px; }
+            .case-card.case-long .case-col:last-child { width: auto; margin-bottom: 0; }
 
             /* ส่วนที่ 5 ภาพ: ขึ้นหน้าใหม่ และให้ 6 ภาพ (3 คอลัมน์ x 2 แถว) พอดีหน้าเดียว */
             .report-photos { break-before: page; page-break-before: always; }
@@ -546,7 +552,10 @@
                         @media screen and (max-width: 900px) { .case-cols { grid-template-columns: 1fr; } }
                     </style>
                     @forelse ($report['case_log'] as $row)
-                        <div class="case-card">
+                        @php
+                            $caseLong = max(mb_strlen((string) $row['ward_concern']), mb_strlen((string) $row['visit_result']), mb_strlen((string) $row['diagnosis'])) > 900;
+                        @endphp
+                        <div class="case-card {{ $caseLong ? 'case-long' : '' }}">
                             <div class="case-head">
                                 <div class="case-head-left">
                                     <span class="case-no">{{ $loop->iteration }}</span>
