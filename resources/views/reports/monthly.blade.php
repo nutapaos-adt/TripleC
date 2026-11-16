@@ -14,6 +14,23 @@
             * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .case-card, .case-col, .rpt-table tr, .kpi-tile { break-inside: avoid; page-break-inside: avoid; }
             .case-cols { display: grid !important; grid-template-columns: 1fr 1fr 1.3fr !important; }
+
+            /* ส่วนที่ 1 (ช่องสรุป + ตาราง + หมายเหตุ) ต้องจบในหน้าเดียว ไม่ให้ตารางขาดไปหน้าถัดไป: ย่อช่องไฟ/ขนาดตัวเลขเฉพาะตอนพิมพ์ */
+            .report-wrap { padding: 0 !important; gap: 10px !important; max-width: none !important; }
+            .report-wrap .page-head { margin: 0 !important; }
+            .report-sec1 { break-inside: avoid; page-break-inside: avoid; }
+            /* การ์ดส่วนอื่นก็ไม่ขาดกลางหน้า ยกเว้นทะเบียนเคส (ยาวหลายหน้า ให้ตัดตามการ์ดรายเคสแทน) */
+            .report-wrap > .card:not(.report-long) { break-inside: avoid; page-break-inside: avoid; }
+            .report-sec1 .card-head { padding: 8px 14px !important; }
+            .report-sec1 .card-body { padding: 8px 14px !important; }
+            .report-sec1 .kpi-grid { gap: 8px !important; }
+            .report-sec1 .kpi-tile { padding: 6px 12px !important; min-height: 0 !important; gap: 0 !important; }
+            .report-sec1 .kpi-tile .kpi-value { font-size: 26px !important; line-height: 30px !important; }
+            .report-sec1 .kpi-tile.span-tall .kpi-value { font-size: 44px !important; line-height: 48px !important; }
+            .report-sec1 .table-wrap { margin-top: 8px !important; }
+            .report-sec1 .rpt-table th, .report-sec1 .rpt-table td { padding: 4px 8px !important; font-size: 12px !important; }
+            .report-sec1 .rpt-table td.rpt-key { font-size: 14px !important; }
+            .report-sec1 .rpt-table tr.rpt-total td.rpt-key { font-size: 15px !important; }
         }
     </style>
 </head>
@@ -34,7 +51,7 @@
         <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">พิมพ์รายงานนี้</button>
     </div>
 
-    <div style="max-width:1180px;margin:0 auto;padding:var(--space-6);display:flex;flex-direction:column;gap:var(--space-6);">
+    <div class="report-wrap" style="max-width:1180px;margin:0 auto;padding:var(--space-6);display:flex;flex-direction:column;gap:var(--space-6);">
 
         <div class="page-head">
             <h1 class="h1">แบบฟอร์มสรุปผลงานเยี่ยมบ้านประจำเดือน {{ $monthLabel }}</h1>
@@ -51,7 +68,7 @@
         @else
 
             {{-- ============ Section 1: KPI + timeliness ============ --}}
-            <div class="card">
+            <div class="card report-sec1">
                 <div class="card-head">
                     <div class="h2">1. สรุปจำนวนการส่งเยี่ยมและความทันเวลา</div>
                 </div>
@@ -371,7 +388,7 @@
             </div>
 
             {{-- ============ Section 6: case log ============ --}}
-            <div class="card">
+            <div class="card report-long">
                 <div class="card-head">
                     <div class="h2">6. ทะเบียนตอบกลับเยี่ยมบ้าน ประจำเดือน {{ $monthLabel }}</div>
                 </div>
