@@ -146,6 +146,8 @@ class MonthlyReportReconciliationTest extends TestCase
 
         $page = $this->actingAs(User::factory()->create(['role' => User::ROLE_HOME_VISIT_TEAM]))
             ->get(route('reports.monthly', ['month' => '2026-10']))->assertOk();
+        // ส่วน DM/COPD ขอ AI ทีละเคสด้วย POST — ต้องมี csrf-token ในหน้านี้ ไม่งั้นทุกเคสตอบ 419
+        $page->assertSee('<meta name="csrf-token"', false);
         $page->assertDontSee('ยังไม่มีผลการเยี่ยม')->assertDontSee('ยังไม่ได้เยี่ยม</span>', false);
 
         // การ์ดรายเคสแบ่ง 3 คอลัมน์ และมีแท็กเขตมุมขวาบน
