@@ -12,15 +12,26 @@
             @page { size: A4 landscape; margin: 10mm; }
             /* พิมพ์ให้เหมือนหน้าจอ: คงสีพื้น/ป้าย และไม่ตัดการ์ดรายเคสคาบสองหน้า */
             * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .case-card, .case-col, .rpt-table tr, .kpi-tile { break-inside: avoid; page-break-inside: avoid; }
-            .case-cols { display: grid !important; grid-template-columns: 1fr 1fr 1.3fr !important; }
+            .rpt-table tr, .kpi-tile { break-inside: avoid; page-break-inside: avoid; }
+            /* การ์ดรายเคสที่ข้อความยาวเกินหนึ่งหน้า ห้ามตั้ง break-inside: avoid (Chrome จะดันทั้งก้อนไปหน้าใหม่แล้วเหลือหน้าว่าง)
+               จึงปล่อยให้ตัดหน้าได้ และใช้ตาราง 3 เซลล์แทน grid เพราะตัดข้ามหน้าได้เสถียรกว่า; หัวการ์ดต้องไม่ถูกทิ้งไว้ท้ายหน้าตามลำพัง */
+            .case-cols { display: table !important; table-layout: fixed; border-spacing: 10px 0; margin: 0 -10px; width: calc(100% + 20px); }
+            .case-col { display: table-cell !important; vertical-align: top; width: 30%; }
+            .case-col:last-child { width: 40%; }
+            .case-head, .case-dates { break-after: avoid; page-break-after: avoid; }
+
+            /* ส่วนที่ 5 ภาพ: ขึ้นหน้าใหม่ และให้ 6 ภาพ (3 คอลัมน์ x 2 แถว) พอดีหน้าเดียว */
+            .report-photos { break-before: page; page-break-before: always; }
+            .report-photos .photo-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 8px !important; }
+            .report-photos .photo-tile { break-inside: avoid; page-break-inside: avoid; gap: 2px !important; }
+            .report-photos .photo-tile img { aspect-ratio: auto !important; height: 58mm; object-fit: contain !important; background: #fff; }
 
             /* ส่วนที่ 1 (ช่องสรุป + ตาราง + หมายเหตุ) ต้องจบในหน้าเดียว ไม่ให้ตารางขาดไปหน้าถัดไป: ย่อช่องไฟ/ขนาดตัวเลขเฉพาะตอนพิมพ์ */
             .report-wrap { padding: 0 !important; gap: 10px !important; max-width: none !important; }
             .report-wrap .page-head { margin: 0 !important; }
             .report-sec1 { break-inside: avoid; page-break-inside: avoid; }
             /* การ์ดส่วนอื่นก็ไม่ขาดกลางหน้า ยกเว้นทะเบียนเคส (ยาวหลายหน้า ให้ตัดตามการ์ดรายเคสแทน) */
-            .report-wrap > .card:not(.report-long) { break-inside: avoid; page-break-inside: avoid; }
+            .report-wrap > .card:not(.report-long):not(.report-photos) { break-inside: avoid; page-break-inside: avoid; }
             .report-sec1 .card-head { padding: 8px 14px !important; }
             .report-sec1 .card-body { padding: 8px 14px !important; }
             .report-sec1 .kpi-grid { gap: 8px !important; }
@@ -472,7 +483,7 @@
             </div>
 
             {{-- ============ Section 5: photo gallery ============ --}}
-            <div class="card">
+            <div class="card report-photos">
                 <div class="card-head">
                     <div class="h2">5. ภาพการปฏิบัติงาน</div>
                 </div>
