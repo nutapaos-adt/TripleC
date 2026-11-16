@@ -63,6 +63,30 @@ class MonthlyReportAsyncDmCopdTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_short_name_is_title_first_name_and_first_letter_of_surname(): void
+    {
+        $this->assertSame('นาย รักชาติ ย.', VisitReportService::shortName('นายรักชาติ ยิ่งยง'));
+        $this->assertSame('นาย รักชาติ ย.', VisitReportService::shortName('นาย  รักชาติ   ยิ่งยง'));
+        $this->assertSame('นางสาว สมใจ ด.', VisitReportService::shortName('นางสาวสมใจ ดีมาก'));
+        $this->assertSame('น.ส. สมใจ ด.', VisitReportService::shortName('น.ส. สมใจ ดีมาก'));
+        $this->assertSame('นาย รักชาติ', VisitReportService::shortName('นายรักชาติ'));
+        $this->assertSame('', VisitReportService::shortName(''));
+    }
+
+    public function test_analysis_result_flags_whether_a_complication_was_found_so_the_page_can_hide_negatives(): void
+    {
+        Http::fake(['*' => Http::response(['response' => '{"findings":[],"has_complication":false,"summary":null,"evidence":null}'])]);
+        $referral = $this->dmCopdReferral('COPD', 'หายใจปกติ SpO2 97%');
+        $url = route('reports.monthly.dm-copd.analyze', ['referral' => $referral->id, 'month' => '2026-10']);
+
+        $this->actingAs($this->team())->postJson($url)->assertOk()
+            ->assertJson(['processed' => true, 'has_complication' => false]);
+
+        $this->actingAs($this->team())->getJson(route('reports.monthly.dm-copd', ['month' => '2026-10']))
+            ->assertJsonPath('cases.0.result.has_complication', false)
+            ->assertJsonPath('cases.0.patient_name', 'ผู้ป่วยทดสอบ');
+    }
+
     public function test_a_dm_copd_case_not_yet_visited_is_not_listed(): void
     {
         Http::fake();

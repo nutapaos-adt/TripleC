@@ -265,9 +265,10 @@
             <div class="card">
                 <div class="card-head">
                     <div class="h2">3. ภาวะแทรกซ้อน/อุบัติการณ์ โรค DM และ COPD ประจำเดือน {{ $monthLabel }}</div>
-                    <div class="sub">สร้างโดย AI สแกนบันทึกผลการเยี่ยมของเคสที่มีโรคประจำตัวเป็น DM หรือ COPD เท่านั้น — เป็นข้อมูลประกอบเท่านั้น ไม่ใช่การตัดสินใจทางคลินิก</div>
+                    <div class="sub">สร้างโดย AI สแกนบันทึกผลการติดตามที่ไปเยี่ยมบ้านแล้วของเคสที่มีโรคประจำตัวเป็น DM หรือ COPD แสดงเฉพาะเคสที่พบภาวะแทรกซ้อน — เป็นข้อมูลประกอบเท่านั้น ไม่ใช่การตัดสินใจทางคลินิก</div>
                 </div>
                 <div class="card-body">
+                    <p id="dmCopdProgress" class="caption no-print" style="margin-bottom:var(--space-2);"></p>
                     <div class="table-wrap">
                         <table>
                             <thead>
@@ -480,27 +481,50 @@
                 cell.innerHTML = (result.processed === false ? '<span class="chip chip-warning">AI ประมวลผลไม่สำเร็จ</span> ' : '') + esc(result.summary);
             }
 
+            // ประมวลผลสำเร็จแล้วไม่พบภาวะแทรกซ้อน = ไม่ต้องแสดงในรายงาน (ที่ล้มเหลวยังแสดงไว้เพื่อให้รู้ว่าต้องลองใหม่)
+            function isHidden(result) {
+                return result.processed !== false && result.has_complication === false;
+            }
+
+            var progress = document.getElementById('dmCopdProgress');
+            var total = 0, done = 0, found = 0;
+            function updateProgress() {
+                if (!progress) return;
+                progress.textContent = done < total
+                    ? 'AI กำลังตรวจบันทึกผลเยี่ยม ' + done + '/' + total + ' เคส (เคสแรกอาจใช้เวลา 1–2 นาทีต่อเคส — ผลที่ตรวจแล้วจะถูกจดจำไว้ ไม่ต้องรอหน้านี้) · พบภาวะแทรกซ้อน ' + found + ' เคส'
+                    : 'ตรวจครบ ' + total + ' เคส · พบภาวะแทรกซ้อน ' + found + ' เคส';
+            }
+            function finishIfEmpty() {
+                if (!body.children.length) { message('ไม่พบภาวะแทรกซ้อนจากบันทึกผลการเยี่ยมของเคส DM/COPD ในเดือนนี้'); }
+            }
+
             fetch(casesUrl, { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
                 .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
                 .then(function (data) {
                     if (!data.cases.length) { message('ไม่พบเคสที่เข้าเงื่อนไขในกลุ่มผู้ป่วย DM/COPD ในเดือนนี้'); return; }
 
                     body.innerHTML = '';
+                    total = data.cases.length;
                     var pending = [];
                     data.cases.forEach(function (c) {
+                        if (c.result && isHidden(c.result)) { done++; return; }
                         var tr = document.createElement('tr');
                         tr.innerHTML = '<td>' + esc(c.patient_name) + '</td>'
                             + '<td><span class="chip ' + (c.disease_tag === 'DM/COPD' ? 'chip-risk' : 'chip-warning') + '">' + esc(c.disease_tag) + '</span></td>'
                             + '<td></td>';
                         var cell = tr.lastChild;
                         if (c.result) {
+                            done++; found++;
                             fillSummary(cell, c.result);
                         } else {
-                            cell.innerHTML = '<span class="caption">กำลังให้ AI สรุป… (ครั้งแรกอาจใช้เวลา 1–2 นาทีต่อเคส ไม่ต้องรอหน้านี้ — ผลจะถูกจดจำไว้)</span>';
-                            pending.push({ c: c, cell: cell });
+                            tr.className = 'no-print';
+                            cell.innerHTML = '<span class="caption">กำลังให้ AI ตรวจ…</span>';
+                            pending.push({ c: c, cell: cell, tr: tr });
                         }
                         body.appendChild(tr);
                     });
+                    updateProgress();
+                    finishIfEmpty();
 
                     // ทำทีละเคสตามลำดับ ไม่ยิงพร้อมกัน (เครื่อง AI ที่แผนกประมวลผลได้ทีละคำขอ)
                     return pending.reduce(function (chain, item) {
@@ -511,9 +535,20 @@
                                 credentials: 'same-origin'
                             })
                                 .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
-                                .then(function (result) { fillSummary(item.cell, result); })
                                 .catch(function () {
-                                    fillSummary(item.cell, { processed: false, summary: 'ไม่สามารถประมวลผลได้ — โหลดหน้านี้ใหม่เพื่อลองอีกครั้ง' });
+                                    return { processed: false, summary: 'ไม่สามารถประมวลผลได้ — โหลดหน้านี้ใหม่เพื่อลองอีกครั้ง' };
+                                })
+                                .then(function (result) {
+                                    done++;
+                                    if (isHidden(result)) {
+                                        item.tr.remove();
+                                    } else {
+                                        if (result.processed !== false) found++;
+                                        item.tr.className = '';
+                                        fillSummary(item.cell, result);
+                                    }
+                                    updateProgress();
+                                    finishIfEmpty();
                                 });
                         });
                     }, Promise.resolve());

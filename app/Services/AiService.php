@@ -90,7 +90,8 @@ class AiService
         // หลักฐานต้องปรากฏในบันทึกผลเยี่ยม/โทรติดตามที่ส่งให้โมเดลอ่านจริงเท่านั้น
         $notesText = $records->map(fn (FollowUpRecord $r) => (string) $r->raw_notes)->implode("\n");
 
-        $result = $this->parseJsonResponse($this->callOllama($prompt), [
+        // จำกัดความยาวคำตอบ (JSON สั้นๆ) และใช้ temperature 0 ให้ตอบเร็วและคงที่ — ตัวสแกนนี้ไม่ต้องการความหลากหลายของคำตอบ
+        $result = $this->parseJsonResponse($this->callOllama($prompt, ['num_predict' => 500, 'temperature' => 0]), [
             'has_complication' => false,
             'summary' => null,
             'evidence' => null,
@@ -116,7 +117,7 @@ class AiService
     }
 
     /**
-     * หลักฐานที่โมเดลคัดลอกมา (อาจคั่นหลายท่อนด้วย , ; หรือขึ้นบรรทัดใหม่) ต้องมีอย่างน้อย 1 ท่อนที่ยาวพอ (>= 6 ตัวอักษร)
+     * หลักฐานที่โมเดลคัดลอกมา (อาจคั่นหลายท่อนด้วย , ; ช่องว่าง หรือขึ้นบรรทัดใหม่) ต้องมีอย่างน้อย 1 ท่อนที่ยาวพอ (>= 6 ตัวอักษร; ถ้าแยกตามช่องว่างต้อง >= 8)
      * และปรากฏอยู่ในบันทึกจริง (เทียบโดยตัดช่องว่าง/เครื่องหมายวรรคตอน และไม่สนตัวพิมพ์เล็กใหญ่)
      */
     protected function evidenceFoundInNotes(string $evidence, string $notesText): bool
@@ -128,6 +129,16 @@ class AiService
             $piece = $normalize($piece);
 
             if (mb_strlen($piece) >= 6 && str_contains($notes, $piece)) {
+                return true;
+            }
+        }
+
+        // โมเดลมักต่อหลายวลีเข้าด้วยกันโดยตัดคำเชื่อมออก (เช่น "ซึม น้ำตาลปลายนิ้ว 48" จากบันทึก "ซึมลง น้ำตาลปลายนิ้ว 48")
+        // จึงลองแยกตามช่องว่างอีกชั้น แต่ต้องยาวกว่า (>= 8 ตัวอักษร) กันคำสั้นๆ ทั่วไปอย่าง "น้ำตาล" ไปตรงกับบันทึกโดยบังเอิญ
+        foreach (preg_split('/[\s,;\/]+/u', $evidence) ?: [] as $word) {
+            $word = $normalize($word);
+
+            if (mb_strlen($word) >= 8 && str_contains($notes, $word)) {
                 return true;
             }
         }
@@ -184,7 +195,7 @@ class AiService
             {$glossaryText}
 
             กฎที่ต้องทำตามอย่างเคร่งครัด:
-            1. ช่อง findings ให้ทำก่อนช่องอื่น: ไล่อ่านบันทึกทีละบรรทัด แล้วจดทุกอาการ/เหตุการณ์ที่บันทึกไว้สั้นๆ ข้อละ 1 รายการ
+            1. ช่อง findings ให้ทำก่อนช่องอื่น: ไล่อ่านบันทึกทีละบรรทัด แล้วจดอาการ/เหตุการณ์ที่บันทึกไว้ ข้อละไม่เกิน 5 คำ รวมไม่เกิน 6 ข้อ
             2. นับเป็นภาวะแทรกซ้อนเฉพาะที่เกี่ยวกับโรคเป้าหมายข้างต้นโดยตรงเท่านั้น
             3. ห้ามนับเหตุการณ์หรือโรคอื่นที่ไม่ใช่ภาวะแทรกซ้อนของโรคเป้าหมาย เช่น พลัดตกหกล้ม แผลกดทับ ปัญหาผู้ดูแล การย้ายที่อยู่หรือส่งไปสถานดูแล/บ้านพักคนชรา ความดันโลหิตสูง (HT) โรคหัวใจ ไขมันในเลือด
                แม้บันทึกจะพูดถึงเหตุการณ์เหล่านั้น และแม้ผู้ป่วยจะมีโรคเหล่านั้นเป็นโรคประจำตัวด้วย ก็ไม่ใช่ภาวะแทรกซ้อนของ {$targetNames}
@@ -385,7 +396,10 @@ class AiService
         return MedicalGlossary::fromConfig();
     }
 
-    protected function callOllama(string $prompt): string
+    /**
+     * @param  array<string, mixed>  $options  ตัวเลือกของโมเดล (เช่น num_predict จำกัดความยาวคำตอบ) — ไม่ส่งมา = ใช้ค่าเริ่มต้นของ Ollama
+     */
+    protected function callOllama(string $prompt, array $options = []): string
     {
         $config = config('ai.ollama');
 
@@ -405,7 +419,7 @@ class AiService
                     // long notes on a cold model. We still read the whole body before returning.
                     'stream' => true,
                     'keep_alive' => $config['keep_alive'],
-                ]);
+                ] + ($options ? ['options' => $options] : []));
         } catch (\Throwable $e) {
             Log::error('Ollama connection failed', ['message' => $e->getMessage()]);
 

@@ -53,6 +53,18 @@ class AiServiceDmCopdScanTest extends TestCase
         $this->assertArrayNotHasKey('findings', $result);
     }
 
+    public function test_evidence_joined_with_spaces_and_missing_a_connecting_word_is_still_verified(): void
+    {
+        // กรณีจริงจากการทดสอบกับ Ollama: บันทึก "ซึมลง" แต่โมเดลคัดลอกเป็น "ซึม น้ำตาลปลายนิ้ว 48"
+        $result = $this->scan('DM', 'เยี่ยมบ้าน ผู้ป่วยซึมลง น้ำตาลปลายนิ้ว 48 ญาติให้ดื่มน้ำหวานแล้วดีขึ้น', [
+            'has_complication' => true,
+            'summary' => 'น้ำตาลในเลือดต่ำและซึม (DM)',
+            'evidence' => 'ซึม น้ำตาลปลายนิ้ว 48',
+        ]);
+
+        $this->assertTrue($result['has_complication']);
+    }
+
     public function test_a_claim_with_evidence_not_in_the_notes_is_dropped(): void
     {
         // กรณีจริงที่ผิด: บันทึกพูดถึงพลัดตกเตียง/แผลกดทับ/ส่งสถานดูแล แต่โมเดลรายงานว่าเป็นภาวะแทรกซ้อน COPD

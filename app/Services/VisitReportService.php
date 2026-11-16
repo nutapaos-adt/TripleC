@@ -103,17 +103,40 @@ class VisitReportService
                 default => '-',
             };
 
-            $initial = $referral->patient ? mb_substr($referral->patient->name, 0, 1) : '';
-
             $cases->push([
                 'referral' => $referral,
                 'records' => $records,
-                'patient_name' => 'ผู้ป่วย #'.$referral->id.' ('.$initial.'.)',
+                'patient_name' => self::shortName((string) $referral->patient?->name) ?: 'ผู้ป่วย #'.$referral->id,
                 'disease_tag' => $diseaseTag,
             ]);
         }
 
         return $cases;
+    }
+
+    /**
+     * ชื่อแบบย่อสำหรับรายงาน: "นายรักชาติ ยิ่งยง" → "นาย รักชาติ ย." (คำนำหน้า + ชื่อ + อักษรแรกของนามสกุล)
+     * ถ้ามีคำเดียว (ไม่มีนามสกุล) คืนเฉพาะคำนำหน้า + ชื่อ
+     */
+    public static function shortName(string $fullName): string
+    {
+        $name = trim(preg_replace('/\s+/u', ' ', $fullName));
+
+        if ($name === '') {
+            return '';
+        }
+
+        $title = '';
+        if (preg_match('/^(นางสาว|เด็กชาย|เด็กหญิง|น\.ส\.|ด\.ช\.|ด\.ญ\.|นาย|นาง|น\.ส|ด\.ช|ด\.ญ)\s*(.*)$/u', $name, $m)) {
+            $title = $m[1];
+            $name = trim($m[2]);
+        }
+
+        $parts = explode(' ', $name);
+        $given = $parts[0];
+        $initial = count($parts) > 1 ? mb_substr(end($parts), 0, 1).'.' : '';
+
+        return trim(implode(' ', array_filter([$title, $given, $initial])));
     }
 
     /**
@@ -126,7 +149,7 @@ class VisitReportService
             $case['records']->pluck('raw_notes')->implode("\n").'|'.$case['referral']->underlying_disease
         );
 
-        return 'dm_copd_scan:v4:'.$case['referral']->id.':'.$month->format('Y-m').':'.$fingerprint;
+        return 'dm_copd_scan:v5:'.$case['referral']->id.':'.$month->format('Y-m').':'.$fingerprint;
     }
 
     /**
@@ -154,9 +177,11 @@ class VisitReportService
         }
 
         $processed = true;
+        $hasComplication = false;
 
         try {
             $analysis = $this->aiService->summarizeDmCopdComplication($case['referral'], $case['records']);
+            $hasComplication = (bool) ($analysis['has_complication'] ?? false);
 
             if ($analysis['parse_error'] ?? false) {
                 // AI ตอบกลับมาแปลเป็น JSON ไม่ได้ — ต้องไม่แสดงเป็น "ไม่พบภาวะแทรกซ้อน" (ผลลบปลอม)
@@ -182,7 +207,8 @@ class VisitReportService
             $processed = false;
         }
 
-        $result = ['summary' => $summary, 'processed' => $processed];
+        // has_complication=false + processed=true คือ "ตรวจแล้วไม่พบ" — หน้ารายงานจะไม่แสดงเคสนั้น
+        $result = ['summary' => $summary, 'processed' => $processed, 'has_complication' => $processed && $hasComplication];
 
         if ($processed) {
             Cache::put($this->dmCopdCacheKey($case, $month), $result, now()->addDays(60));
