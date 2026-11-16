@@ -19,12 +19,17 @@
             .case-col { display: table-cell !important; vertical-align: top; width: 30%; }
             .case-col:last-child { width: 40%; }
             .case-head, .case-dates { break-after: avoid; page-break-after: avoid; }
-            /* การ์ดที่ข้อความยาวมาก (case-long, ประมาณเกินครึ่งหน้า): ตารางแถวเดียวที่สูงเกือบเต็มหน้าจะไม่ยอมแตกข้ามหน้า
-               Chrome จึงทิ้งหัวการ์ดไว้หน้าว่างแล้วดันเนื้อหาไปหน้าถัดไป → ให้เรียง 3 กล่องต่อกันในแนวตั้งและไหลต่อข้ามหน้าได้ตามบรรทัด */
-            .case-card.case-long { break-inside: auto; page-break-inside: auto; }
-            .case-card.case-long .case-cols { display: block !important; margin: 0; width: auto; }
-            .case-card.case-long .case-col { display: block !important; width: auto; margin-bottom: 6px; }
-            .case-card.case-long .case-col:last-child { width: auto; margin-bottom: 0; }
+            /* เคสที่ข้อความยาว (case-long, เกิน ~900 ตัวอักษร): ตอนพิมพ์ซ่อนการ์ดปกติ แล้วใช้ตารางจริง (.case-print-table)
+               ที่ตัดข้ามหน้าได้ตามบรรทัดและซ้ำหัวตาราง (ชื่อผู้ป่วย + ชื่อคอลัมน์) ทุกหน้า — เลี่ยงอาการ Chrome ทิ้งหัวการ์ดไว้หน้าว่าง */
+            .case-card.case-long { display: none !important; }
+            .case-print-table { display: table !important; width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 0; border: 1px solid var(--color-neutral-200); border-radius: 12px; margin-bottom: 16px; }
+            .case-print-table thead { display: table-header-group; }
+            .case-print-table .cpt-head { text-align: left; font-weight: normal; padding: 12px 16px 2px; }
+            .case-print-table .cpt-titles th { text-align: left; padding: 4px 10px; font-size: 11px; font-weight: 800; color: var(--color-primary-700); }
+            .case-print-table .cpt-titles th:nth-child(1), .case-print-table .cpt-titles th:nth-child(2) { width: 30%; }
+            .case-print-table .cpt-titles th:nth-child(3) { width: 40%; }
+            .case-print-table td { vertical-align: top; padding: 0 10px 12px; }
+            .case-print-table .case-col { display: block !important; width: auto !important; }
 
             /* ส่วนที่ 5 ภาพ: ขึ้นหน้าใหม่ และให้ 6 ภาพ (3 คอลัมน์ x 2 แถว) พอดีหน้าเดียว */
             .report-photos { break-before: page; page-break-before: always; }
@@ -545,6 +550,7 @@
                         .case-col .kv .l { display: block; font-size: 10.5px; font-weight: 700; color: var(--color-neutral-500); }
                         .case-col .kv.allergy-yes .v { color: var(--color-risk); font-weight: 700; }
                         .case-col .txt { font-size: 12.5px; white-space: pre-line; overflow-wrap: anywhere; }
+                        .case-print-table { display: none; }
                         .case-zone { font-weight: 700; }
                         .case-zone.in { background: var(--color-primary-100); color: var(--color-primary-800); }
                         .case-zone.out { background: var(--color-warning-tint); color: var(--color-warning); }
@@ -556,40 +562,11 @@
                             $caseLong = max(mb_strlen((string) $row['ward_concern']), mb_strlen((string) $row['visit_result']), mb_strlen((string) $row['diagnosis'])) > 900;
                         @endphp
                         <div class="case-card {{ $caseLong ? 'case-long' : '' }}">
-                            <div class="case-head">
-                                <div class="case-head-left">
-                                    <span class="case-no">{{ $loop->iteration }}</span>
-                                    <span class="case-name">{{ $row['patient_name'] }}</span>
-                                    @if ($row['patient_age'] !== null)
-                                        <span class="case-age">อายุ {{ $row['patient_age'] }} ปี</span>
-                                    @endif
-                                </div>
-                                <div class="case-badges">
-                                    <span class="badge case-zone {{ $row['zone'] === 'in_area' ? 'in' : 'out' }}">{{ $row['zone'] === 'in_area' ? 'ในเขต' : 'นอกเขต' }}</span>
-                                    <span class="badge badge-ward">{{ $row['ward_name'] }}</span>
-                                    @if ($row['on_time'])
-                                        <span class="badge badge-ontime">ทันเวลา</span>
-                                    @else
-                                        <span class="badge badge-late">ล่าช้า</span>
-                                    @endif
-                                </div>
-                            </div>
-                            <div class="case-dates">
-                                กำหนดเยี่ยม {{ \App\Support\ThaiDate::date($row['due_date']) ?? '—' }}
-                                &middot; เยี่ยมจริง {{ \App\Support\ThaiDate::date($row['visited_at']) ?? '—' }}
-                            </div>
+                            @include('reports.partials.case-head', ['row' => $row, 'n' => $loop->iteration])
                             <div class="case-cols">
                                 <div class="case-col">
                                     <span class="col-title">ข้อมูลผู้ป่วย</span>
-                                    <div class="kv"><span class="l">การวินิจฉัย</span><span class="v">{{ $row['diagnosis'] ?: '—' }}</span></div>
-                                    <div class="kv"><span class="l">โรคประจำตัว</span><span class="v">{{ $row['underlying_disease'] ?: '—' }}</span></div>
-                                    @if ($row['surgery_history'])
-                                        <div class="kv"><span class="l">การผ่าตัด</span><span class="v">{{ $row['surgery_history'] }}@if ($row['surgery_date']) &middot; วันที่ผ่าตัด {{ \App\Support\ThaiDate::date($row['surgery_date']) }}@endif</span></div>
-                                    @endif
-                                    @if (! empty($row['equipment']))
-                                        <div class="kv"><span class="l">อุปกรณ์ของผู้ป่วย</span><span class="v">{{ implode(', ', $row['equipment']) }}</span></div>
-                                    @endif
-                                    <div class="kv {{ $row['drug_allergy_is_yes'] ? 'allergy-yes' : '' }}"><span class="l">ประวัติแพ้ยา</span><span class="v">{{ $row['drug_allergy'] ?? 'ยังไม่ได้สอบถาม' }}</span></div>
+                                    @include('reports.partials.case-patient', ['row' => $row])
                                 </div>
                                 <div class="case-col">
                                     <span class="col-title">ประเด็นที่ต้องการติดตาม</span>
@@ -601,6 +578,23 @@
                                 </div>
                             </div>
                         </div>
+                        @if ($caseLong)
+                            {{-- เคสยาว: ตอนพิมพ์ใช้ตารางจริง เพื่อให้หัวตาราง (ชื่อผู้ป่วย + ชื่อคอลัมน์) ซ้ำทุกหน้าที่ตารางต่อไป --}}
+                            <table class="case-print-table">
+                                <colgroup><col style="width:30%"><col style="width:30%"><col style="width:40%"></colgroup>
+                                <thead>
+                                    <tr><th colspan="3" class="cpt-head">@include('reports.partials.case-head', ['row' => $row, 'n' => $loop->iteration])</th></tr>
+                                    <tr class="cpt-titles"><th>ข้อมูลผู้ป่วย</th><th>ประเด็นที่ต้องการติดตาม</th><th>ผลการเยี่ยม</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><div class="case-col">@include('reports.partials.case-patient', ['row' => $row])</div></td>
+                                        <td><div class="case-col"><div class="txt">{{ $row['ward_concern'] ?: '—' }}</div></div></td>
+                                        <td><div class="case-col"><div class="txt">{{ $row['visit_result'] ?: 'ยังไม่มีผลการเยี่ยม' }}</div></div></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        @endif
                     @empty
                         <div class="empty-note">ยังไม่มีเคสที่ได้รับการเยี่ยมในเดือนนี้</div>
                     @endforelse
