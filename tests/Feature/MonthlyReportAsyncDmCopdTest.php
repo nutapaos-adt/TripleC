@@ -69,7 +69,10 @@ class MonthlyReportAsyncDmCopdTest extends TestCase
         $this->assertSame('นาย รักชาติ ย.', VisitReportService::shortName('นาย  รักชาติ   ยิ่งยง'));
         $this->assertSame('นางสาว สมใจ ด.', VisitReportService::shortName('นางสาวสมใจ ดีมาก'));
         $this->assertSame('น.ส. สมใจ ด.', VisitReportService::shortName('น.ส. สมใจ ดีมาก'));
-        $this->assertSame('นาย รักชาติ', VisitReportService::shortName('นายรักชาติ'));
+        $this->assertSame('พ.ท. เฉลิม พ.', VisitReportService::shortName('พ.ท.เฉลิม พิทักษ์'));
+        $this->assertSame('ร.ต.อ. สมชาย ก.', VisitReportService::shortName('ร.ต.อ. สมชาย กล้าหาญ'));
+        $this->assertSame('นพ. ธนา ส.', VisitReportService::shortName('นพ.ธนา สุขดี'));
+        $this->assertSame('นาย รักชาติ',VisitReportService::shortName('นายรักชาติ'));
         $this->assertSame('', VisitReportService::shortName(''));
     }
 
@@ -85,6 +88,21 @@ class MonthlyReportAsyncDmCopdTest extends TestCase
         $this->actingAs($this->team())->getJson(route('reports.monthly.dm-copd', ['month' => '2026-10']))
             ->assertJsonPath('cases.0.result.has_complication', false)
             ->assertJsonPath('cases.0.patient_name', 'ผู้ป่วยทดสอบ');
+    }
+
+    public function test_a_case_already_being_scanned_is_not_sent_to_the_ai_again(): void
+    {
+        Http::fake();
+        $referral = $this->dmCopdReferral('DM', 'แผลหายดี');
+        $lock = \Illuminate\Support\Facades\Cache::lock('dm_copd_scan_running:'.$referral->id, 60);
+        $this->assertTrue($lock->get());
+
+        $this->actingAs($this->team())
+            ->postJson(route('reports.monthly.dm-copd.analyze', ['referral' => $referral->id, 'month' => '2026-10']))
+            ->assertOk()->assertJson(['processed' => false]);
+
+        Http::assertNothingSent();
+        $lock->release();
     }
 
     public function test_a_dm_copd_case_not_yet_visited_is_not_listed(): void

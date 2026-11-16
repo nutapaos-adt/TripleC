@@ -127,7 +127,8 @@ class VisitReportService
         }
 
         $title = '';
-        if (preg_match('/^(นางสาว|เด็กชาย|เด็กหญิง|น\.ส\.|ด\.ช\.|ด\.ญ\.|นาย|นาง|น\.ส|ด\.ช|ด\.ญ)\s*(.*)$/u', $name, $m)) {
+        // คำนำหน้า: คำเต็ม (นาย/นาง/นางสาว/เด็กชาย/เด็กหญิง/ว่าที่…) หรือตัวย่อที่มีจุด เช่น น.ส. ด.ช. พ.ท. ร.ต.อ. นพ. พญ. ภก.
+        if (preg_match('/^((?:ว่าที่\s*)?(?:นางสาว|เด็กชาย|เด็กหญิง|นาย|นาง|(?:[ก-ฮ]{1,3}\.)+))\s*(.*)$/u', $name, $m)) {
             $title = $m[1];
             $name = trim($m[2]);
         }
@@ -176,6 +177,40 @@ class VisitReportService
             return $cached;
         }
 
+        // เครื่อง AI ประมวลผลได้ทีละคำขอ — ถ้าเปิด/รีโหลดหน้ารายงานซ้ำ คำขอเดิมจะต่อคิวซ้อนกันจนช้ามาก
+        // จึงล็อกต่อเคส: ถ้าเคสนี้กำลังถูกตรวจอยู่แล้ว ไม่สั่ง AI ซ้ำ (ล็อกหมดอายุเองใน 3 นาที กันค้างถ้ากระบวนการเดิมตาย)
+        $lock = null;
+        try {
+            $lock = Cache::lock('dm_copd_scan_running:'.$case['referral']->id, 180);
+
+            if (! $lock->get()) {
+                return [
+                    'summary' => 'AI กำลังตรวจเคสนี้อยู่จากหน้ารายงานอื่นที่เปิดค้างไว้ — รอสักครู่แล้วโหลดหน้านี้ใหม่',
+                    'processed' => false,
+                    'has_complication' => false,
+                ];
+            }
+        } catch (\Throwable $e) {
+            report($e); // แคชไม่รองรับล็อก — ทำงานต่อโดยไม่ล็อก
+            $lock = null;
+        }
+
+        try {
+            if ($cached = $this->cachedDmCopdResult($case, $month)) {
+                return $cached;
+            }
+
+            return $this->analyzeDmCopdCase($case, $month);
+        } finally {
+            $lock?->release();
+        }
+    }
+
+    /**
+     * @return array{summary: string, processed: bool, has_complication: bool}
+     */
+    protected function analyzeDmCopdCase(array $case, Carbon $month): array
+    {
         $processed = true;
         $hasComplication = false;
 
