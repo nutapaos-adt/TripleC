@@ -22,12 +22,15 @@
             /* เคสที่ข้อความยาว (case-long, เกิน ~900 ตัวอักษร): ตอนพิมพ์ซ่อนการ์ดปกติ แล้วใช้ตารางจริง (.case-print-table)
                ที่ตัดข้ามหน้าได้ตามบรรทัดและซ้ำหัวตาราง (ชื่อผู้ป่วย + ชื่อคอลัมน์) ทุกหน้า — เลี่ยงอาการ Chrome ทิ้งหัวการ์ดไว้หน้าว่าง */
             .case-card.case-long { display: none !important; }
-            .case-print-table { display: table !important; width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 0; border: 1px solid var(--color-neutral-200); border-radius: 12px; margin-bottom: 16px; }
+            .case-print { display: block !important; border: 1px solid var(--color-neutral-200); border-radius: 12px; margin-bottom: 16px; }
+            .case-print .cp-top { position: relative; z-index: 2; background: #fff; border-radius: 12px 12px 0 0; padding-top: 12px; }
+            .case-print .cp-top .case-head, .case-print .cp-top .case-dates { margin-left: 16px; margin-right: 16px; }
+            .cp-titles { display: grid; grid-template-columns: 30% 30% 40%; height: 6mm; align-items: center; }
+            .cp-titles span { padding: 0 10px; font-size: 11px; font-weight: 800; color: var(--color-primary-700); white-space: nowrap; }
+            .case-print-table { display: table !important; width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 0; margin-top: -15mm; }
             .case-print-table thead { display: table-header-group; }
-            .case-print-table .cpt-head { text-align: left; font-weight: normal; padding: 12px 16px 2px; }
-            .case-print-table .cpt-titles th { text-align: left; padding: 4px 10px; font-size: 11px; font-weight: 800; color: var(--color-primary-700); }
-            .case-print-table .cpt-titles th:nth-child(1), .case-print-table .cpt-titles th:nth-child(2) { width: 30%; }
-            .case-print-table .cpt-titles th:nth-child(3) { width: 40%; }
+            .case-print-table .cpt-th { padding: 0; height: 15mm; text-align: left; font-weight: normal; vertical-align: top; background: #fff; }
+            .case-print-table .cpt-name { height: 9mm; display: flex; align-items: center; gap: 8px; padding: 0 16px; }
             .case-print-table td { vertical-align: top; padding: 0 10px 12px; }
             .case-print-table .case-col { display: block !important; width: auto !important; }
 
@@ -550,7 +553,7 @@
                         .case-col .kv .l { display: block; font-size: 10.5px; font-weight: 700; color: var(--color-neutral-500); }
                         .case-col .kv.allergy-yes .v { color: var(--color-risk); font-weight: 700; }
                         .case-col .txt { font-size: 12.5px; white-space: pre-line; overflow-wrap: anywhere; }
-                        .case-print-table { display: none; }
+                        .case-print { display: none; }
                         .case-zone { font-weight: 700; }
                         .case-zone.in { background: var(--color-primary-100); color: var(--color-primary-800); }
                         .case-zone.out { background: var(--color-warning-tint); color: var(--color-warning); }
@@ -579,21 +582,29 @@
                             </div>
                         </div>
                         @if ($caseLong)
-                            {{-- เคสยาว: ตอนพิมพ์ใช้ตารางจริง เพื่อให้หัวตาราง (ชื่อผู้ป่วย + ชื่อคอลัมน์) ซ้ำทุกหน้าที่ตารางต่อไป --}}
-                            <table class="case-print-table">
-                                <colgroup><col style="width:30%"><col style="width:30%"><col style="width:40%"></colgroup>
-                                <thead>
-                                    <tr><th colspan="3" class="cpt-head">@include('reports.partials.case-head', ['row' => $row, 'n' => $loop->iteration])</th></tr>
-                                    <tr class="cpt-titles"><th>ข้อมูลผู้ป่วย</th><th>ประเด็นที่ต้องการติดตาม</th><th>ผลการเยี่ยม</th></tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td><div class="case-col">@include('reports.partials.case-patient', ['row' => $row])</div></td>
-                                        <td><div class="case-col"><div class="txt">{{ $row['ward_concern'] ?: '—' }}</div></div></td>
-                                        <td><div class="case-col"><div class="txt">{{ $row['visit_result'] ?: 'ยังไม่มีผลการเยี่ยม' }}</div></div></td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                            {{-- เคสยาว: ตอนพิมพ์ใช้ตารางจริง (หัวตารางซ้ำเองทุกหน้า) — หัวบนสุด .cp-top เป็นหัวปกติและทึบ ทับหัวตารางของหน้าแรกไว้ ส่วนหน้าถัดไปจะเห็นหัวตารางที่มี "(ต่อ)" --}}
+                            <div class="case-print">
+                                <div class="cp-top">
+                                    @include('reports.partials.case-head', ['row' => $row, 'n' => $loop->iteration])
+                                    <div class="cp-titles"><span>ข้อมูลผู้ป่วย</span><span>ประเด็นที่ต้องการติดตาม</span><span>ผลการเยี่ยม</span></div>
+                                </div>
+                                <table class="case-print-table">
+                                    <colgroup><col style="width:30%"><col style="width:30%"><col style="width:40%"></colgroup>
+                                    <thead>
+                                        <tr><th class="cpt-th" colspan="3">
+                                            <div class="cpt-name"><span class="case-no">{{ $loop->iteration }}</span><span class="case-name">{{ $row['patient_name'] }}</span></div>
+                                            <div class="cp-titles"><span>ข้อมูลผู้ป่วย (ต่อ)</span><span>ประเด็นที่ต้องการติดตาม (ต่อ)</span><span>ผลการเยี่ยม (ต่อ)</span></div>
+                                        </th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><div class="case-col">@include('reports.partials.case-patient', ['row' => $row])</div></td>
+                                            <td><div class="case-col"><div class="txt">{{ $row['ward_concern'] ?: '—' }}</div></div></td>
+                                            <td><div class="case-col"><div class="txt">{{ $row['visit_result'] ?: 'ยังไม่มีผลการเยี่ยม' }}</div></div></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         @endif
                     @empty
                         <div class="empty-note">ยังไม่มีเคสที่ได้รับการเยี่ยมในเดือนนี้</div>
