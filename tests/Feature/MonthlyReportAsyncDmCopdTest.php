@@ -63,6 +63,16 @@ class MonthlyReportAsyncDmCopdTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_a_dm_copd_case_not_yet_visited_is_not_listed(): void
+    {
+        Http::fake();
+        $this->dmCopdReferral('DM', 'แผลหายดี');
+        FollowUpRecord::query()->delete();
+
+        $this->actingAs($this->team())->getJson(route('reports.monthly.dm-copd', ['month' => '2026-10']))
+            ->assertOk()->assertJsonCount(0, 'cases');
+    }
+
     public function test_cases_endpoint_lists_cases_fast_and_the_analysis_is_cached_after_the_first_call(): void
     {
         Http::fake(['*' => Http::response(['response' => '{"findings":[],"has_complication":false,"summary":null,"evidence":null}'])]);

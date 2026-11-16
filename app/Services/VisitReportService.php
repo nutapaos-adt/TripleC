@@ -59,7 +59,7 @@ class VisitReportService
     }
 
     /**
-     * เคสที่มีโรคประจำตัว DM หรือ COPD และมีผลเยี่ยม/โทรที่มีข้อความบันทึกในเดือนนั้น — ยังไม่เรียก AI (เร็ว)
+     * เคสที่มีโรคประจำตัว DM หรือ COPD และมีผลเยี่ยม/โทรติดตามที่มีข้อความบันทึกในเดือนนั้น (เยี่ยมแล้วเท่านั้น) — ยังไม่เรียก AI (เร็ว)
      * หน้ารายงานใช้แสดงรายชื่อทันที แล้วค่อยให้ AI สรุปทีละเคสแบบเบื้องหลัง (ดู dmCopdCaseResult)
      *
      * @return Collection<int, array{referral: Referral, records: Collection<int, FollowUpRecord>, patient_name: string, disease_tag: string}>
@@ -88,8 +88,8 @@ class VisitReportService
                 ->whereBetween('visited_at', [$start, $end])
                 ->get();
 
-            // เคสที่ยังไม่มีผลเยี่ยมก็ยังสแกนจากข้อมูลตอนส่งต่อ (เช่น มาด้วยน้ำตาลต่ำ) ถ้าไม่มีข้อมูลทั้งสองอย่างจึงข้ามไป
-            if ($records->isEmpty() && $this->aiService->dmCopdIntakeText($referral) === '') {
+            // ดักจับภาวะแทรกซ้อนจาก "ผลการติดตามที่ไปเยี่ยมบ้านแล้ว" เท่านั้น — เคสที่ยังไม่มีผลเยี่ยมไม่เข้าเกณฑ์
+            if ($records->isEmpty()) {
                 continue;
             }
 
@@ -124,10 +124,9 @@ class VisitReportService
     {
         $fingerprint = md5(
             $case['records']->pluck('raw_notes')->implode("\n").'|'.$case['referral']->underlying_disease
-            .'|'.$this->aiService->dmCopdIntakeText($case['referral'])
         );
 
-        return 'dm_copd_scan:v3:'.$case['referral']->id.':'.$month->format('Y-m').':'.$fingerprint;
+        return 'dm_copd_scan:v4:'.$case['referral']->id.':'.$month->format('Y-m').':'.$fingerprint;
     }
 
     /**

@@ -67,9 +67,9 @@ class AiServiceDmCopdScanTest extends TestCase
         $this->assertNull($result['evidence']);
     }
 
-    public function test_an_incident_in_the_referral_intake_info_counts_and_is_verified_against_it(): void
+    public function test_only_the_visit_results_are_scanned_and_referral_intake_info_is_not_evidence(): void
     {
-        // "มาด้วยน้ำตาลต่ำ" อยู่ในข้อมูลตอนส่งต่อ ไม่ใช่ในบันทึกผลเยี่ยม — ต้องถูกส่งให้โมเดลอ่านและใช้เป็นหลักฐานได้
+        // "มาด้วยน้ำตาลต่ำ" อยู่ในข้อมูลตอนส่งต่อ ไม่ใช่ผลการติดตามที่ไปเยี่ยมบ้าน — ต้องไม่ถูกส่งให้โมเดล และใช้เป็นหลักฐานไม่ได้
         Http::fake(['*' => Http::response(['response' => json_encode([
             'has_complication' => true,
             'summary' => 'น้ำตาลในเลือดต่ำ (DM)',
@@ -81,8 +81,9 @@ class AiServiceDmCopdScanTest extends TestCase
             collect([new FollowUpRecord(['raw_notes' => 'กินยาครบ น้ำตาล 125'])]),
         );
 
-        $this->assertTrue($result['has_complication']);
-        Http::assertSent(fn (Request $r) => str_contains($r['prompt'], 'การวินิจฉัย: Hypoglycemia') && str_contains($r['prompt'], 'มาด้วยน้ำตาลในเลือดต่ำ'));
+        $this->assertFalse($result['has_complication']);
+        Http::assertSent(fn (Request $r) => str_contains($r['prompt'], 'กินยาครบ น้ำตาล 125')
+            && ! str_contains($r['prompt'], 'Hypoglycemia') && ! str_contains($r['prompt'], 'มาด้วยน้ำตาลในเลือดต่ำ'));
     }
 
     public function test_a_claim_without_any_evidence_is_dropped_and_a_negative_answer_is_untouched(): void
