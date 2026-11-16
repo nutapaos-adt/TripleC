@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\DmCopdHiddenCase;
 use App\Models\FollowUpPlan;
 use App\Models\FollowUpRecord;
 use App\Models\Referral;
+use App\Models\SatisfactionManualScore;
 use App\Models\SatisfactionSurvey;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -78,9 +80,16 @@ class VisitReportService
             ->with('patient')
             ->get();
 
+        // เคสที่ผู้ใช้เลือกลบออกจากรายงานเดือนนี้แล้ว ไม่แสดงและไม่ส่งให้ AI ตรวจ (ประหยัดเวลา)
+        $hiddenIds = DmCopdHiddenCase::query()->where('report_month', $start->toDateString())->pluck('referral_id')->all();
+
         $cases = collect();
 
         foreach ($referrals as $referral) {
+            if (in_array($referral->id, $hiddenIds, true)) {
+                continue;
+            }
+
             $records = FollowUpRecord::query()
                 ->whereHas('plan', fn ($q) => $q->where('referral_id', $referral->id))
                 ->whereNotNull('raw_notes')
@@ -112,6 +121,35 @@ class VisitReportService
         }
 
         return $cases;
+    }
+
+    /**
+     * เคสที่ผู้ใช้ลบออกจากส่วนที่ 3 ของรายงานเดือนนี้ (ให้กู้คืนได้) — ชื่อแบบย่อ + กลุ่มโรค
+     *
+     * @return array<int, array{referral_id: int, patient_name: string, disease_tag: string}>
+     */
+    public function hiddenDmCopdCases(Carbon $month): array
+    {
+        return DmCopdHiddenCase::query()
+            ->where('report_month', $month->copy()->startOfMonth()->toDateString())
+            ->with('referral.patient')
+            ->get()
+            ->map(function (DmCopdHiddenCase $hidden) {
+                $referral = $hidden->referral;
+                $disease = mb_strtolower((string) $referral?->underlying_disease);
+
+                return [
+                    'referral_id' => $hidden->referral_id,
+                    'patient_name' => self::shortName((string) $referral?->patient?->name) ?: 'ผู้ป่วย #'.$hidden->referral_id,
+                    'disease_tag' => match (true) {
+                        str_contains($disease, 'dm') && str_contains($disease, 'copd') => 'DM/COPD',
+                        str_contains($disease, 'dm') => 'DM',
+                        str_contains($disease, 'copd') => 'COPD',
+                        default => '-',
+                    },
+                ];
+            })
+            ->all();
     }
 
     /**
@@ -795,11 +833,22 @@ class VisitReportService
         $inAreaScores = [];
         $palliativeScores = [];
 
+        // ร้อยละที่ผู้ใช้กรอกเอง (ใช้เฉพาะเดือนที่ไม่มีแบบประเมินในระบบ) key = 'Y-m|audience'
+        $manualScores = SatisfactionManualScore::query()
+            ->with('enteredBy')
+            ->whereBetween('report_month', [$fiscalStart->toDateString(), $fiscalStart->copy()->addMonths(11)->toDateString()])
+            ->get()
+            ->keyBy(fn (SatisfactionManualScore $m) => Carbon::parse($m->report_month)->format('Y-m').'|'.$m->audience);
+        $usedManual = [];
+
         for ($i = 0; $i < 12; $i++) {
             $periodMonth = $fiscalStart->copy()->addMonths($i);
 
             if ($periodMonth->startOfMonth()->gt(now()->startOfMonth())) {
-                $months[] = ['month' => $periodMonth->format('Y-m'), 'in_area_percent' => null, 'palliative_percent' => null, 'is_future' => true];
+                $months[] = [
+                    'month' => $periodMonth->format('Y-m'), 'in_area_percent' => null, 'palliative_percent' => null,
+                    'in_area_manual' => false, 'palliative_manual' => false, 'is_future' => true,
+                ];
 
                 continue;
             }
@@ -820,6 +869,20 @@ class VisitReportService
                 $surveys->filter(fn (SatisfactionSurvey $s) => $s->referral?->severity_group === Referral::SEVERITY_PALLIATIVE)
             );
 
+            // เดือนที่ไม่มีแบบประเมินในระบบ ใช้ค่าที่ผู้ใช้กรอกเอง (แปลงร้อยละกลับเป็นคะแนนเต็ม 5 เพื่อรวมในค่าเฉลี่ยทั้งปี)
+            $inAreaManual = $palliativeManual = false;
+            $key = $periodMonth->format('Y-m');
+            if ($inAreaAverage === null && ($manual = $manualScores->get($key.'|'.SatisfactionManualScore::AUDIENCE_IN_AREA))) {
+                $inAreaAverage = $manual->percent / 100 * 5;
+                $inAreaManual = true;
+                $usedManual[] = $manual;
+            }
+            if ($palliativeAverage === null && ($manual = $manualScores->get($key.'|'.SatisfactionManualScore::AUDIENCE_PALLIATIVE))) {
+                $palliativeAverage = $manual->percent / 100 * 5;
+                $palliativeManual = true;
+                $usedManual[] = $manual;
+            }
+
             if ($inAreaAverage !== null) {
                 $inAreaScores[] = $inAreaAverage;
             }
@@ -831,6 +894,8 @@ class VisitReportService
                 'month' => $periodMonth->format('Y-m'),
                 'in_area_percent' => $inAreaAverage !== null ? (int) round($inAreaAverage / 5 * 100) : null,
                 'palliative_percent' => $palliativeAverage !== null ? (int) round($palliativeAverage / 5 * 100) : null,
+                'in_area_manual' => $inAreaManual,
+                'palliative_manual' => $palliativeManual,
                 'is_future' => false,
             ];
         }
@@ -839,6 +904,12 @@ class VisitReportService
             'target_percent' => $targetPercent,
             'fiscal_year_be' => $fiscalYearStartYear + 1 + 543,
             'months' => $months,
+            // เดือนที่ยังไม่มีข้อมูลในระบบและกรอกเองได้ (ไม่ใช่เดือนอนาคต) / รายการที่กรอกเองและกำลังถูกใช้อยู่ (ให้ลบได้)
+            'manual_entries' => collect($usedManual)->map(fn (SatisfactionManualScore $m) => [
+                'id' => $m->id, 'month' => Carbon::parse($m->report_month)->format('Y-m'), 'audience' => $m->audience,
+                'percent' => $m->percent, 'note' => $m->note, 'by' => $m->enteredBy?->name,
+            ])->all(),
+            'fiscal_start' => $fiscalStart->format('Y-m'),
             'in_area_average_percent' => count($inAreaScores) ? (int) round(array_sum($inAreaScores) / count($inAreaScores) / 5 * 100) : null,
             'palliative_average_percent' => count($palliativeScores) ? (int) round(array_sum($palliativeScores) / count($palliativeScores) / 5 * 100) : null,
         ];

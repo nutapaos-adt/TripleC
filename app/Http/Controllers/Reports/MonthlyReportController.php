@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Reports;
 
 use App\Http\Controllers\Controller;
+use App\Models\DmCopdManualEntry;
 use App\Models\MonthlyReportPhoto;
+use App\Models\User;
 use App\Services\VisitReportService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -49,6 +51,12 @@ class MonthlyReportController extends Controller
             // ส่วนที่ 3 (ภาวะแทรกซ้อน DM/COPD) ให้ AI สรุปทีละเคสแบบเบื้องหลัง ไม่รอตอนโหลดหน้า (ช้า)
             'dmCopdCasesUrl' => route('reports.monthly.dm-copd', ['month' => $monthValue]),
             'dmCopdAnalyzeUrl' => route('reports.monthly.dm-copd.analyze', ['referral' => '__ID__', 'month' => $monthValue]),
+            // ส่วนที่ 3: รายการที่เพิ่มเอง / เคสที่ลบออก (กู้คืนได้) / สิทธิ์แก้ไข (ward_staff ดูได้อย่างเดียว)
+            'dmCopdHideUrl' => route('reports.monthly.dm-copd.hide', ['referral' => '__ID__', 'month' => $monthValue]),
+            'dmCopdManual' => DmCopdManualEntry::query()->with('creator')
+                ->where('report_month', $month->toDateString())->orderBy('id')->get(),
+            'dmCopdHidden' => $reportService->hiddenDmCopdCases($month),
+            'canEditReport' => in_array(Auth::user()?->role, [User::ROLE_HOME_VISIT_TEAM, User::ROLE_ADMIN], true),
             'photos' => $photos,
         ]);
     }

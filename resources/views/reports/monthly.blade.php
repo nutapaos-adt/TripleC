@@ -294,8 +294,74 @@
                             <tbody id="dmCopdBody">
                                 <tr><td colspan="3" style="text-align:center;color:var(--color-neutral-500);">กำลังโหลดรายชื่อเคส…</td></tr>
                             </tbody>
+                            @if ($dmCopdManual->isNotEmpty())
+                                <tbody id="dmCopdManualBody">
+                                    @foreach ($dmCopdManual as $entry)
+                                        <tr>
+                                            <td>{{ $entry->patient_label }}</td>
+                                            <td><span class="chip {{ $entry->disease_tag === 'DM/COPD' ? 'chip-risk' : 'chip-warning' }}">{{ $entry->disease_tag }}</span></td>
+                                            <td>
+                                                <span class="chip chip-method">เพิ่มเอง</span>
+                                                {{ $entry->summary }}
+                                                @if ($canEditReport)
+                                                    <form method="POST" action="{{ route('reports.monthly.dm-copd-manual.destroy', $entry) }}" class="no-print" style="display:inline;" onsubmit="return confirm('ลบรายการที่เพิ่มเองนี้?');">
+                                                        @csrf @method('DELETE')
+                                                        <input type="hidden" name="month" value="{{ $monthValue }}">
+                                                        <button type="submit" class="btn btn-secondary btn-sm" style="margin-left:8px;">ลบ</button>
+                                                    </form>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            @endif
                         </table>
                     </div>
+
+                    @if ($canEditReport)
+                        <details class="no-print" style="margin-top:var(--space-3);">
+                            <summary style="cursor:pointer;font-weight:700;">+ เพิ่มรายการเอง (กรณี AI ตรวจไม่พบหรือไม่มีข้อมูลในระบบ)</summary>
+                            <form method="POST" action="{{ route('reports.monthly.dm-copd-manual.store') }}" class="field-grid" style="margin-top:var(--space-3);">
+                                @csrf
+                                <input type="hidden" name="month" value="{{ $monthValue }}">
+                                <div class="field">
+                                    <label for="dmcopd-label">ชื่อผู้ป่วย (ตามรูปแบบในตาราง)</label>
+                                    <input id="dmcopd-label" type="text" name="patient_label" maxlength="150" placeholder="เช่น นาย รักชาติ ย." required>
+                                </div>
+                                <div class="field">
+                                    <label for="dmcopd-tag">กลุ่มโรค</label>
+                                    <select id="dmcopd-tag" name="disease_tag" required>
+                                        @foreach (\App\Models\DmCopdManualEntry::TAGS as $tag)
+                                            <option value="{{ $tag }}">{{ $tag }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="field" style="grid-column:1 / -1;">
+                                    <label for="dmcopd-summary">ภาวะแทรกซ้อน/อุบัติการณ์ที่พบ</label>
+                                    <textarea id="dmcopd-summary" name="summary" rows="2" maxlength="1000" required></textarea>
+                                </div>
+                                <div><button type="submit" class="btn btn-primary btn-sm">เพิ่มรายการ</button></div>
+                            </form>
+                        </details>
+
+                        @if (count($dmCopdHidden))
+                            <details class="no-print" style="margin-top:var(--space-3);">
+                                <summary style="cursor:pointer;font-weight:700;">เคสที่ลบออกจากรายงานนี้ ({{ count($dmCopdHidden) }}) — กู้คืนได้</summary>
+                                <ul style="margin:var(--space-2) 0 0;padding-left:var(--space-5);">
+                                    @foreach ($dmCopdHidden as $hidden)
+                                        <li style="margin-bottom:4px;">
+                                            {{ $hidden['patient_name'] }} <span class="chip chip-warning">{{ $hidden['disease_tag'] }}</span>
+                                            <form method="POST" action="{{ route('reports.monthly.dm-copd.restore', $hidden['referral_id']) }}" style="display:inline;">
+                                                @csrf
+                                                <input type="hidden" name="month" value="{{ $monthValue }}">
+                                                <button type="submit" class="btn btn-secondary btn-sm" style="margin-left:8px;">กู้คืน</button>
+                                            </form>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </details>
+                        @endif
+                    @endif
                 </div>
             </div>
 
@@ -324,7 +390,7 @@
                                     <td style="text-align:right;">{{ $trend['target_percent'] }}</td>
                                     @foreach ($trend['months'] as $point)
                                         <td style="text-align:right;{{ $point['in_area_percent'] !== null && $point['in_area_percent'] < $trend['target_percent'] ? 'color:var(--color-risk);font-weight:600;' : '' }}">
-                                            {{ $point['is_future'] ? '–' : ($point['in_area_percent'] !== null ? $point['in_area_percent'] : 'ไม่มีผลประเมินในระบบ') }}
+                                            {{ $point['is_future'] ? '–' : ($point['in_area_percent'] !== null ? $point['in_area_percent'] : 'ไม่มีผลประเมินในระบบ') }}{{ $point['in_area_manual'] ? '*' : '' }}
                                         </td>
                                     @endforeach
                                     <td style="text-align:right;">{{ $trend['in_area_average_percent'] ?? '–' }}</td>
@@ -334,7 +400,7 @@
                                     <td style="text-align:right;">{{ $trend['target_percent'] }}</td>
                                     @foreach ($trend['months'] as $point)
                                         <td style="text-align:right;{{ $point['palliative_percent'] !== null && $point['palliative_percent'] < $trend['target_percent'] ? 'color:var(--color-risk);font-weight:600;' : '' }}">
-                                            {{ $point['is_future'] ? '–' : ($point['palliative_percent'] !== null ? $point['palliative_percent'] : 'ไม่มีผลประเมินในระบบ') }}
+                                            {{ $point['is_future'] ? '–' : ($point['palliative_percent'] !== null ? $point['palliative_percent'] : 'ไม่มีผลประเมินในระบบ') }}{{ $point['palliative_manual'] ? '*' : '' }}
                                         </td>
                                     @endforeach
                                     <td style="text-align:right;">{{ $trend['palliative_average_percent'] ?? '–' }}</td>
@@ -342,6 +408,66 @@
                             </tbody>
                         </table>
                     </div>
+
+                    @if (count($trend['manual_entries']))
+                        <p class="caption" style="margin-top:var(--space-2);">
+                            * ค่าที่กรอกเอง (เดือนที่ไม่มีแบบประเมินในระบบ):
+                            @foreach ($trend['manual_entries'] as $m)
+                                {{ \App\Http\Controllers\Reports\MonthlyReportController::monthShortLabel(\Illuminate\Support\Carbon::createFromFormat('Y-m-d', $m['month'].'-01')) }}
+                                {{ $m['audience'] === 'in_area' ? 'ในเขต' : 'ประคับประคอง' }} = {{ $m['percent'] }}
+                                @if ($m['note']) ({{ $m['note'] }}) @endif
+                                @if ($m['by']) โดย {{ $m['by'] }} @endif
+                                @if ($canEditReport)
+                                    <form method="POST" action="{{ route('reports.monthly.satisfaction-manual.destroy', $m['id']) }}" class="no-print" style="display:inline;" onsubmit="return confirm('ลบค่าที่กรอกเองนี้?');">
+                                        @csrf @method('DELETE')
+                                        <input type="hidden" name="return_month" value="{{ $monthValue }}">
+                                        <button type="submit" class="btn btn-secondary btn-sm" style="margin:0 8px 0 4px;">ลบ</button>
+                                    </form>
+                                @endif
+                                @if (! $loop->last) ; @endif
+                            @endforeach
+                        </p>
+                    @endif
+
+                    @if ($canEditReport)
+                        <details class="no-print" style="margin-top:var(--space-3);">
+                            <summary style="cursor:pointer;font-weight:700;">+ กรอกร้อยละเอง (กรณีเดือนนั้นไม่มีแบบประเมินในระบบ)</summary>
+                            <form method="POST" action="{{ route('reports.monthly.satisfaction-manual.store') }}" class="field-grid" style="margin-top:var(--space-3);">
+                                @csrf
+                                <input type="hidden" name="return_month" value="{{ $monthValue }}">
+                                <div class="field">
+                                    <label for="sat-month">เดือน</label>
+                                    <select id="sat-month" name="month" required>
+                                        @foreach ($trend['months'] as $point)
+                                            @continue($point['is_future'])
+                                            <option value="{{ $point['month'] }}" @selected($point['month'] === $monthValue)>
+                                                {{ \App\Http\Controllers\Reports\MonthlyReportController::monthShortLabel(\Illuminate\Support\Carbon::createFromFormat('Y-m-d', $point['month'].'-01')) }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="field">
+                                    <label for="sat-audience">แถว</label>
+                                    <select id="sat-audience" name="audience" required>
+                                        <option value="in_area">ผู้รับบริการในชุมชน (ในเขต)</option>
+                                        <option value="palliative">ผู้ป่วยและญาติ (ประคับประคอง)</option>
+                                    </select>
+                                </div>
+                                <div class="field">
+                                    <label for="sat-percent">ร้อยละ (0–100)</label>
+                                    <input id="sat-percent" type="number" name="percent" min="0" max="100" step="1" required>
+                                </div>
+                                <div class="field">
+                                    <label for="sat-note">หมายเหตุ (ไม่บังคับ — เช่น ที่มาของตัวเลข)</label>
+                                    <input id="sat-note" type="text" name="note" maxlength="255">
+                                </div>
+                                <div>
+                                    <button type="submit" class="btn btn-primary btn-sm">บันทึก</button>
+                                    <span class="caption">ใช้เฉพาะเดือนที่ไม่มีแบบประเมินในระบบ — ถ้าเดือนนั้นมีแบบประเมินจริง ระบบจะใช้ค่าจริงแทน</span>
+                                </div>
+                            </form>
+                        </details>
+                    @endif
                 </div>
             </div>
 
@@ -483,6 +609,8 @@
             if (!body) return;
             var casesUrl = @json($dmCopdCasesUrl);
             var analyzeUrl = @json($dmCopdAnalyzeUrl);
+            var hideUrl = @json($dmCopdHideUrl);
+            var canEdit = @json($canEditReport);
             var csrf = document.querySelector('meta[name="csrf-token"]');
             csrf = csrf ? csrf.getAttribute('content') : '';
 
@@ -499,6 +627,35 @@
             }
 
             // ประมวลผลสำเร็จแล้วไม่พบภาวะแทรกซ้อน = ไม่ต้องแสดงในรายงาน (ที่ล้มเหลวยังแสดงไว้เพื่อให้รู้ว่าต้องลองใหม่)
+            // ปุ่ม "ลบ" ท้ายแถวที่ AI สรุป: เอาเคสนี้ออกจากรายงานเดือนนี้ (ไม่ลบข้อมูลเคสจริง กู้คืนได้จากรายการใต้ตาราง)
+            function addDeleteButton(tr, c, counted) {
+                if (!canEdit) return;
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'btn btn-secondary btn-sm no-print';
+                btn.style.marginLeft = '8px';
+                btn.textContent = 'ลบ';
+                btn.addEventListener('click', function () {
+                    if (!confirm('ลบรายการของ ' + c.patient_name + ' ออกจากรายงานเดือนนี้? (กู้คืนได้ภายหลัง)')) return;
+                    btn.disabled = true;
+                    fetch(hideUrl.replace('__ID__', c.referral_id), {
+                        method: 'POST',
+                        headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrf },
+                        credentials: 'same-origin'
+                    })
+                        .then(function (r) { if (!r.ok) throw new Error(r.status); })
+                        .then(function () {
+                            tr.remove();
+                            if (counted) { found--; }
+                            total--; done--;
+                            updateProgress();
+                            finishIfEmpty();
+                        })
+                        .catch(function () { btn.disabled = false; alert('ลบไม่สำเร็จ กรุณาลองใหม่'); });
+                });
+                tr.lastChild.appendChild(btn);
+            }
+
             function isHidden(result) {
                 return result.processed !== false && result.has_complication === false;
             }
@@ -533,6 +690,7 @@
                         if (c.result) {
                             done++; found++;
                             fillSummary(cell, c.result);
+                            addDeleteButton(tr, c, true);
                         } else {
                             tr.className = 'no-print';
                             cell.innerHTML = '<span class="caption">กำลังให้ AI ตรวจ…</span>';
@@ -563,6 +721,7 @@
                                         if (result.processed !== false) found++;
                                         item.tr.className = '';
                                         fillSummary(item.cell, result);
+                                        addDeleteButton(item.tr, item.c, result.processed !== false);
                                     }
                                     updateProgress();
                                     finishIfEmpty();

@@ -8,6 +8,7 @@ use App\Http\Controllers\FollowUpController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReferralController;
 use App\Http\Controllers\Reports\MonthlyReportController;
+use App\Http\Controllers\Reports\MonthlyReportManualController;
 use App\Http\Controllers\Reports\VisitSummaryController;
 use App\Http\Controllers\SatisfactionSurveyController;
 use App\Http\Controllers\WardController;
@@ -74,6 +75,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports/monthly', [MonthlyReportController::class, 'show'])->name('reports.monthly');
     Route::get('/reports/monthly/dm-copd', [MonthlyReportController::class, 'dmCopdCases'])->name('reports.monthly.dm-copd');
     Route::post('/reports/monthly/dm-copd/{referral}', [MonthlyReportController::class, 'dmCopdAnalyze'])->whereNumber('referral')->name('reports.monthly.dm-copd.analyze');
+    Route::middleware('role:home_visit_team,admin')->prefix('/reports/monthly')->name('reports.monthly.')->group(function () {
+        Route::post('/satisfaction-manual', [MonthlyReportManualController::class, 'storeSatisfaction'])->name('satisfaction-manual.store');
+        Route::delete('/satisfaction-manual/{score}', [MonthlyReportManualController::class, 'destroySatisfaction'])->whereNumber('score')->name('satisfaction-manual.destroy');
+        Route::post('/dm-copd-manual', [MonthlyReportManualController::class, 'storeDmCopd'])->name('dm-copd-manual.store');
+        Route::delete('/dm-copd-manual/{entry}', [MonthlyReportManualController::class, 'destroyDmCopd'])->whereNumber('entry')->name('dm-copd-manual.destroy');
+        Route::post('/dm-copd/{referral}/hide', [MonthlyReportManualController::class, 'hideDmCopd'])->whereNumber('referral')->name('dm-copd.hide');
+        Route::post('/dm-copd/{referral}/restore', [MonthlyReportManualController::class, 'restoreDmCopd'])->whereNumber('referral')->name('dm-copd.restore');
+    });
     Route::post('/reports/monthly/photos', [MonthlyReportController::class, 'storePhoto'])->name('reports.monthly.photos.store');
     Route::get('/reports/monthly/photos/{photo}', [MonthlyReportController::class, 'showPhoto'])->name('reports.monthly.photos.show');
     Route::delete('/reports/monthly/photos/{photo}', [MonthlyReportController::class, 'destroyPhoto'])->name('reports.monthly.photos.destroy');
