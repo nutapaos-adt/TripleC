@@ -9,6 +9,10 @@
         /* page-specific print rule — landscape A4 for a wide tabular report (not a design-system-wide rule) */
         @media print {
             @page { size: A4 landscape; margin: 10mm; }
+            /* พิมพ์ให้เหมือนหน้าจอ: คงสีพื้น/ป้าย และไม่ตัดการ์ดรายเคสคาบสองหน้า */
+            * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .case-card, .case-col, .rpt-table tr, .kpi-tile { break-inside: avoid; page-break-inside: avoid; }
+            .case-cols { display: grid !important; grid-template-columns: 1fr 1fr 1.3fr !important; }
         }
     </style>
 </head>
@@ -55,7 +59,7 @@
                     <style>
                         /* ช่อง "ยังไม่ได้รับการเยี่ยม" สูง 2 แถวทางขวา (บนจอเล็กกลับเป็นกล่องปกติ) */
                         .kpi-tile.span-tall { grid-column: 4; grid-row: 1 / span 2; justify-content: center; }
-                        @media (max-width: 1024px) { .kpi-tile.span-tall { grid-column: auto; grid-row: auto; } }
+                        @media screen and (max-width: 1024px) { .kpi-tile.span-tall { grid-column: auto; grid-row: auto; } }
                     </style>
                     <section class="kpi-grid" aria-label="สรุปตัวเลขการส่งเยี่ยมบ้านประจำเดือน">
                         <div class="kpi-tile">
@@ -382,7 +386,8 @@
                         .case-zone { font-weight: 700; }
                         .case-zone.in { background: var(--color-primary-100); color: var(--color-primary-800); }
                         .case-zone.out { background: var(--color-warning-tint); color: var(--color-warning); }
-                        @media (max-width: 900px) { .case-cols { grid-template-columns: 1fr; } }
+                        /* จอเล็กเท่านั้น — ตอนพิมพ์ต้องคง 3 คอลัมน์ (ความกว้างหน้ากระดาษอาจน้อยกว่า 900px) */
+                        @media screen and (max-width: 900px) { .case-cols { grid-template-columns: 1fr; } }
                     </style>
                     @forelse ($report['case_log'] as $row)
                         <div class="case-card">
