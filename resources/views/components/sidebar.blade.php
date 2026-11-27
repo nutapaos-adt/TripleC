@@ -18,7 +18,7 @@
         };
     };
 
-    $item = function (string $label, string $iconName, string|array $routeIs, string $href) use ($icon) {
+    $item = function (string $label, string $iconName, string|array $routeIs, string $href, int $badge = 0) use ($icon) {
         $patterns = is_array($routeIs) ? $routeIs : [$routeIs];
         $active = false;
         foreach ($patterns as $pattern) {
@@ -27,10 +27,16 @@
                 break;
             }
         }
-        return ['label' => $label, 'active' => $active, 'href' => $href, 'svg' => $icon($iconName)];
+        return ['label' => $label, 'active' => $active, 'href' => $href, 'svg' => $icon($iconName), 'badge' => $badge];
     };
 
     $mainItems = [];
+
+    // ตัวเลขงานค้างของทีมเยี่ยมบ้าน (ใบส่งต่อรอยืนยันแผน + ผลเยี่ยมรอยืนยันการตัดสินใจ) — เดิมต้องเปิดหน้านั้นจึงจะรู้ว่ามี
+    $pendingWork = 0;
+    if ($role !== \App\Models\User::ROLE_WARD_STAFF) {
+        $pendingWork = \App\Models\Referral::whereNull('confirmed_at')->count() + \App\Models\FollowUpRecord::awaitingDecision()->count();
+    }
 
     if ($role === \App\Models\User::ROLE_WARD_STAFF) {
         $mainItems = [
@@ -46,7 +52,7 @@
         $mainItems = [
             $item('แดชบอร์ด', 'dashboard', 'dashboard', route('dashboard')),
             $item('รายการเคส', 'list', ['referrals.index', 'referrals.create', 'referrals.show'], route('referrals.index')),
-            $item('วิเคราะห์แผนการพยาบาล', 'clipboard-check', ['care-plan.pending', 'referrals.care-plan*'], route('care-plan.pending')),
+            $item('วิเคราะห์แผนการพยาบาล', 'clipboard-check', ['care-plan.pending', 'referrals.care-plan*'], route('care-plan.pending'), $pendingWork),
             $item('บันทึกการเยี่ยมบ้าน', 'calendar', ['follow-up-plans.index', 'follow-up-plans.record.*', 'follow-up-plans.review'], route('follow-up-plans.index')),
             $item('ติดตามผลการเยี่ยม', 'users', 'ward.visit-results', route('ward.visit-results')),
             $item('สรุปข้อมูลสำคัญงานเยี่ยมบ้าน', 'chart', 'reports.visit-summary', route('reports.visit-summary')),
@@ -77,6 +83,9 @@
             <a class="nav-item @if($navItem['active']) active @endif" href="{{ $navItem['href'] }}" @if($navItem['active']) aria-current="page" @endif>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">{!! $navItem['svg'] !!}</svg>
                 {{ $navItem['label'] }}
+                @if (! empty($navItem['badge']))
+                    <span style="margin-left:auto;min-width:20px;padding:1px 7px;border-radius:999px;background:var(--color-warning);color:#fff;font-size:11px;font-weight:800;text-align:center;" title="งานที่รอพยาบาลตรวจสอบ/ยืนยัน">{{ $navItem['badge'] }}</span>
+                @endif
             </a>
         @endforeach
     </nav>

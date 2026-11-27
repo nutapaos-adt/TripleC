@@ -64,6 +64,16 @@ class FollowUpRecord extends Model
         ];
     }
 
+    /**
+     * ผลเยี่ยม/โทรที่บันทึกแล้วแต่พยาบาลยังไม่ยืนยันการตัดสินใจ ของเคสที่ยังไม่ปิด (soft delete ถูกกรองให้อัตโนมัติ)
+     * — ใช้ร่วมกันที่หน้าวิเคราะห์แผน ตัวเลขเตือนที่เมนู แบนเนอร์แดชบอร์ด และปุ่ม "ไปเคสถัดไป"
+     */
+    public function scopeAwaitingDecision(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->whereNull('confirmed_at')
+            ->whereHas('plan.referral', fn ($q) => $q->where('status', '!=', Referral::STATUS_CLOSED));
+    }
+
     public function bmi(): ?float
     {
         if (! $this->weight_kg || ! $this->height_cm) {

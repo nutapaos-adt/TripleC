@@ -56,8 +56,26 @@
                                         {{ $referral->zone === 'in_area' ? 'ในเขต' : 'นอกเขต' }}
                                     </span>
                                 </td>
-                                <td class="due-date">{{ \App\Support\ThaiDate::date($referral->created_at) }}</td>
-                                <td><span class="chip chip-warning">รอตรวจสอบแผน</span></td>
+                                @php
+                                    $sentDays = (int) floor($referral->created_at->diffInDays(now()));
+                                    $deadlineDays = \App\Models\Referral::SEVERITY_FIRST_VISIT_DEADLINE_DAYS[$referral->severity_group] ?? null;
+                                    $daysLeft = $deadlineDays !== null ? $deadlineDays - $sentDays : null;
+                                @endphp
+                                <td class="due-date">
+                                    {{ \App\Support\ThaiDate::date($referral->created_at) }}
+                                    <div class="caption">ส่งมา {{ $sentDays <= 0 ? 'วันนี้' : $sentDays.' วัน' }}</div>
+                                </td>
+                                <td>
+                                    <span class="chip chip-warning">รอตรวจสอบแผน</span>
+                                    @if ($referral->severityLabel())
+                                        <span class="chip {{ $referral->severityChipClass() }}" style="margin-left:4px;">{{ \Illuminate\Support\Str::before($referral->severityLabel(), ' (') }}</span>
+                                    @endif
+                                    @if ($daysLeft !== null)
+                                        <div class="caption" style="margin-top:4px;color:{{ $daysLeft <= 2 ? 'var(--color-risk)' : 'inherit' }};">
+                                            {{ $daysLeft < 0 ? 'เกินเส้นตายเยี่ยมครั้งแรก '.abs($daysLeft).' วัน' : 'เส้นตายเยี่ยมครั้งแรกอีก '.$daysLeft.' วัน' }}
+                                        </div>
+                                    @endif
+                                </td>
                                 <td>
                                     <a href="{{ route('referrals.care-plan', $referral) }}" class="btn btn-primary btn-sm">ตรวจสอบแผน</a>
                                 </td>

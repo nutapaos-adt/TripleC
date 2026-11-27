@@ -93,7 +93,15 @@ class DashboardController extends Controller
 
         $pendingReviewCount = Referral::where('status', Referral::STATUS_PENDING_REVIEW)->count();
 
+        // ผลเยี่ยมที่บันทึกแล้วแต่ยังรอพยาบาลยืนยันการตัดสินใจ (เคสที่ไม่มีนัดล่วงหน้าจะไม่มีนัดถัดไปจนกว่าจะยืนยัน) และเก่าสุดรอมากี่วัน
+        $pendingDecisionCount = FollowUpRecord::awaitingDecision()->count();
+        $oldestPendingDecision = $pendingDecisionCount > 0
+            ? FollowUpRecord::awaitingDecision()->orderBy('visited_at')->first()
+            : null;
+
         return view('dashboard', compact(
+            'pendingDecisionCount',
+            'oldestPendingDecision',
             'monthValue',
             'monthOptions',
             'monthLabel',

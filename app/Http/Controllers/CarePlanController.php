@@ -23,9 +23,7 @@ class CarePlanController extends Controller
         $beforeQuery = Referral::query()->whereNull('confirmed_at');
 
         // ผลเยี่ยมที่ยังไม่ผ่านการยืนยันการตัดสินใจ ของเคสที่ยังไม่ปิด (soft delete ถูกกรองให้อัตโนมัติ)
-        $afterBase = fn () => FollowUpRecord::query()
-            ->whereNull('confirmed_at')
-            ->whereHas('plan.referral', fn ($q) => $q->where('status', '!=', Referral::STATUS_CLOSED));
+        $afterBase = fn () => FollowUpRecord::awaitingDecision();
 
         $counts = [
             'before' => (clone $beforeQuery)->count(),
@@ -38,7 +36,12 @@ class CarePlanController extends Controller
         $records = null;
 
         if ($tab === 'before') {
-            $referrals = $beforeQuery->with(['patient', 'caseType'])->latest()->paginate(20)->withQueryString();
+            // บ้านสีแดงขึ้นก่อน (เส้นตายเยี่ยมครั้งแรกสั้นสุด) แล้วเรียงเก่าสุดก่อน — เดิมเรียงใหม่สุดก่อน เคสเร่งด่วนจึงจมอยู่ท้ายรายการ
+            $referrals = $beforeQuery->with(['patient', 'caseType'])
+                ->orderByRaw('CASE WHEN severity_group = ? THEN 0 ELSE 1 END', [Referral::SEVERITY_RED])
+                ->oldest()
+                ->paginate(20)
+                ->withQueryString();
         } else {
             $records = $afterBase()
                 ->when($filter === 'not_analyzed', fn ($q) => $q->whereNull('ai_analysis'))

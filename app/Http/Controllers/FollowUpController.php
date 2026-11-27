@@ -9,9 +9,10 @@ use App\Http\Requests\VoidFollowUpRecordRequest;
 use App\Models\FollowUpPlan;
 use App\Models\FollowUpRecord;
 use App\Models\Referral;
-use App\Services\AiService;
+use App\Services\FollowUpAnalysisRunner;
 use App\Services\VisitPlanService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -100,8 +101,9 @@ class FollowUpController extends Controller
         $data = $request->validated();
         $isVisit = $data['method'] === 'home_visit';
         $milestonePlan = null;
+        $recordId = null;
 
-        DB::transaction(function () use ($request, $data, $isVisit, $plan, $visitPlanService, &$milestonePlan) {
+        DB::transaction(function () use ($request, $data, $isVisit, $plan, $visitPlanService, &$milestonePlan, &$recordId) {
             $vitalSigns = $isVisit ? array_filter([
                 'bp' => $data['vs_bp'] ?? null,
                 'pr' => $data['vs_pr'] ?? null,
@@ -158,12 +160,19 @@ class FollowUpController extends Controller
             ]);
 
             $plan->update(['status' => FollowUpPlan::STATUS_DONE]);
+            $recordId = $record->id;
 
             // เคส TKA/UKA: กำหนดนัดครั้งถัดไปตามเกณฑ์ให้ทันที (วันนัดนับจากวันเยี่ยมครั้งที่ 1)
             $milestonePlan = $visitPlanService->scheduleMilestoneFollowUp($record);
         });
 
-        $message = 'บันทึกผลติดตามเรียบร้อยแล้ว ขั้นตอนถัดไป: ให้ AI วิเคราะห์และยืนยันการตัดสินใจ';
+        // ให้ AI วิเคราะห์เบื้องหลังต่อทันทีหลังส่งหน้าตอบกลับ — พยาบาลไม่ต้องกดและไม่ต้องรอ ผลเป็นเพียงร่างให้พยาบาลยืนยัน
+        // (ถ้าเซิร์ฟเวอร์ไม่รองรับการทำงานหลังตอบ หน้าตัดสินใจจะเริ่มให้เองเมื่อเปิด — ดู review.blade.php)
+        if ($recordId && config('ai.auto_analyze')) {
+            dispatch(fn () => app(FollowUpAnalysisRunner::class)->run(FollowUpRecord::find($recordId)))->afterResponse();
+        }
+
+        $message = 'บันทึกผลติดตามเรียบร้อยแล้ว — ระบบกำลังให้ AI วิเคราะห์ความเสี่ยงให้อัตโนมัติ ตรวจสอบและยืนยันการตัดสินใจได้ในหน้านี้';
         if ($milestonePlan) {
             $message .= ' — ระบบกำหนดนัดครั้งที่ '.$milestonePlan->plan_number.' วันที่ '.\App\Support\ThaiDate::date($milestonePlan->due_date).' ตามเกณฑ์ให้แล้ว';
         }
@@ -184,26 +193,38 @@ class FollowUpController extends Controller
         return view('follow-up.review', compact('plan'));
     }
 
-    public function analyzeRecord(FollowUpPlan $plan, AiService $ai): RedirectResponse
+    /**
+     * ให้ AI วิเคราะห์ผลเยี่ยม — หน้าตัดสินใจเรียกแบบ JSON (เริ่มเองเมื่อยังไม่มีผล / ปุ่มวิเคราะห์ใหม่) ส่วนแบบฟอร์มธรรมดายังใช้ได้
+     * ทำทีละ 1 เคสทั่วระบบ (ดู FollowUpAnalysisRunner) เคสอื่นที่มาพร้อมกันจะอยู่ในคิว
+     */
+    public function analyzeRecord(Request $request, FollowUpPlan $plan, FollowUpAnalysisRunner $runner): RedirectResponse|JsonResponse
     {
         abort_unless($plan->record, 404);
+        abort_unless($plan->referral->isVisibleTo(Auth::user()), 403, 'ไม่มีสิทธิ์เข้าถึงใบส่งต่อของหน่วยงานอื่น');
+        abort_if($plan->record->isConfirmed(), 403, 'ยืนยันการตัดสินใจของนัดนี้ไปแล้ว');
 
-        try {
-            $analysis = $ai->analyzeFollowUpRecord($plan->record);
-        } catch (\Throwable $e) {
-            report($e);
+        $runner->run($plan->record, force: $request->boolean('force'));
+        $status = $runner->status($plan->record);
 
-            return redirect()
-                ->route('follow-up-plans.review', $plan)
-                ->with('error', $e->getMessage());
+        if ($request->expectsJson()) {
+            return response()->json($status);
         }
 
-        $plan->record->update([
-            'ai_analysis' => $analysis,
-            'ai_analysis_generated_at' => now(),
-        ]);
+        $redirect = redirect()->route('follow-up-plans.review', $plan);
 
-        return redirect()->route('follow-up-plans.review', $plan);
+        return match ($status['state']) {
+            'error' => $redirect->with('error', $status['error'] ?? 'เรียกใช้ AI ไม่สำเร็จ กรุณาลองใหม่ หรือตัดสินใจด้วยตนเอง'),
+            'running', 'queued' => $redirect->with('status', 'AI กำลังวิเคราะห์เคสอื่นอยู่ — หน้านี้จะแสดงผลอัตโนมัติเมื่อถึงคิวและวิเคราะห์เสร็จ'),
+            default => $redirect,
+        };
+    }
+
+    public function analysisStatus(FollowUpPlan $plan, FollowUpAnalysisRunner $runner): JsonResponse
+    {
+        abort_unless($plan->record, 404);
+        abort_unless($plan->referral->isVisibleTo(Auth::user()), 403, 'ไม่มีสิทธิ์เข้าถึงใบส่งต่อของหน่วยงานอื่น');
+
+        return response()->json($runner->status($plan->record));
     }
 
     /**
@@ -408,6 +429,27 @@ class FollowUpController extends Controller
                 }
             }
         });
+
+        // "ยืนยันและไปเคสถัดไป" — ไปผลเยี่ยมที่รอยืนยันถัดไปเลย (เก่าสุดก่อน เหมือนลำดับในหน้ารายการ) ไม่ต้องย้อนไปเมนูทุกครั้ง
+        if ($request->boolean('go_next')) {
+            $next = FollowUpRecord::awaitingDecision()
+                ->whereHas('plan.referral', fn ($q) => $q->visibleTo(Auth::user()))
+                ->with('plan')
+                ->orderBy('visited_at')
+                ->first();
+
+            if ($next) {
+                $remaining = FollowUpRecord::awaitingDecision()->whereHas('plan.referral', fn ($q) => $q->visibleTo(Auth::user()))->count();
+
+                return redirect()
+                    ->route('follow-up-plans.review', $next->plan)
+                    ->with('status', 'ยืนยันการตัดสินใจแล้ว — เคสถัดไป (ยังรอยืนยันอีก '.$remaining.' เคส)');
+            }
+
+            return redirect()
+                ->route('care-plan.pending', ['tab' => 'after'])
+                ->with('status', 'ยืนยันการตัดสินใจแล้ว — ไม่มีผลเยี่ยมที่รอยืนยันแล้ว');
+        }
 
         return redirect()
             ->route('referrals.show', $plan->referral)

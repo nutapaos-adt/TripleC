@@ -56,6 +56,49 @@
                         <div class="field-value">{{ $record->pps_score ?? '—' }}</div>
                     </div>
                 @endif
+                @php
+                    $vitals = $record->vital_signs ?? [];
+                    $vitalFlags = \App\Services\VitalSignFlags::flags($vitals);
+                    $vitalLabels = ['bp' => 'BP', 'pr' => 'PR', 'rr' => 'RR', 'temp' => 'Temp', 'spo2' => 'SpO2'];
+                    $vitalUnits = ['bp' => 'mmHg', 'pr' => '/นาที', 'rr' => '/นาที', 'temp' => '°C', 'spo2' => '%'];
+                @endphp
+                @if ($record->general_appearance)
+                    <div class="field full">
+                        <label>ลักษณะทั่วไป</label>
+                        <div class="field-value">{{ $record->general_appearance }}</div>
+                    </div>
+                @endif
+                @if (! empty($vitals))
+                    <div class="field full">
+                        <label>สัญญาณชีพ</label>
+                        <div class="field-value">
+                            @foreach ($vitalLabels as $key => $label)
+                                @if (isset($vitals[$key]) && $vitals[$key] !== '')
+                                    <span style="margin-right:12px;white-space:nowrap;"><strong>{{ $label }}</strong> {{ $vitals[$key] }} <span class="caption">{{ $vitalUnits[$key] }}</span></span>
+                                @endif
+                            @endforeach
+                        </div>
+                        <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+                            @forelse ($vitalFlags as $flag)
+                                <span class="chip {{ $flag['level'] === 'critical' ? 'chip-risk' : 'chip-warning' }}">{{ $flag['text'] }}</span>
+                            @empty
+                                <span class="chip chip-success">สัญญาณชีพอยู่ในเกณฑ์</span>
+                            @endforelse
+                            <span class="caption">ตรวจจากตัวเลขที่กรอก ด้วยเกณฑ์ตายตัวของระบบ (ไม่ใช่ AI) — พิจารณาตามบริบทผู้ป่วยเสมอ</span>
+                        </div>
+                    </div>
+                @endif
+                @if ($record->weight_kg || $record->height_cm || $record->adlTotal() !== null)
+                    <div class="field full">
+                        <label>น้ำหนัก / ส่วนสูง / ADL</label>
+                        <div class="field-value">
+                            @if ($record->weight_kg) น้ำหนัก {{ $record->weight_kg }} กก. @endif
+                            @if ($record->height_cm) · ส่วนสูง {{ $record->height_cm }} ซม. @endif
+                            @if ($record->bmi()) · BMI {{ $record->bmi() }} ({{ $record->bmiCategory() }}) @endif
+                            @if ($record->adlTotal() !== null) · ADL {{ $record->adlTotal() }}/8 @endif
+                        </div>
+                    </div>
+                @endif
                 <div class="field full">
                     <label>อาการ/ปัญหาที่พบ</label>
                     <div class="field-value multiline">{{ $record->raw_notes }}</div>
@@ -94,10 +137,19 @@
     @endif
 
     @if (! $isConfirmed)
-        <form method="POST" action="{{ route('follow-up-plans.analyze', $plan) }}" class="btn-row">
+        {{-- ระบบให้ AI วิเคราะห์ให้เองเบื้องหลังตั้งแต่บันทึกผล — กล่องนี้แสดงความคืบหน้าและโหลดผลให้เองเมื่อเสร็จ (ไม่ต้องกดปุ่ม) --}}
+        <div class="banner" id="aiPanel" @if ($analysis !== null) hidden @endif
+             data-status-url="{{ route('follow-up-plans.analysis-status', $plan) }}" data-analyze-url="{{ route('follow-up-plans.analyze', $plan) }}">
+            <div class="banner-text">
+                <p class="h3" id="aiPanelTitle">AI กำลังวิเคราะห์ผลเยี่ยมให้อัตโนมัติ</p>
+                <p id="aiPanelText">ใช้เวลาราว 1-3 นาที ระหว่างนี้ดูข้อมูลและเลือกการตัดสินใจด้านล่างได้เลย ผลวิเคราะห์จะขึ้นเองเมื่อเสร็จ</p>
+            </div>
+        </div>
+        <form method="POST" action="{{ route('follow-up-plans.analyze', $plan) }}" class="btn-row" id="aiRerunForm">
             @csrf
-            <button type="submit" class="btn btn-secondary">
-                {{ $analysis ? '↻ ให้ AI วิเคราะห์ใหม่' : 'ให้ AI วิเคราะห์ผล' }}
+            <input type="hidden" name="force" value="1">
+            <button type="submit" class="btn btn-secondary btn-sm">
+                {{ $analysis ? '↻ ให้ AI วิเคราะห์ใหม่' : 'ให้ AI วิเคราะห์ตอนนี้' }}
             </button>
         </form>
     @endif
@@ -203,7 +255,11 @@
                                @checked(old('ai_review_confirmed'))>
                         <label for="ai_review_confirmed">
                             <span class="cb-title">ยืนยันความเสี่ยง</span>
-                            <span class="cb-sub">ข้าพเจ้าได้ตรวจสอบผลวิเคราะห์ความเสี่ยงจาก AI ข้างต้นแล้ว และยืนยันว่าตรงกับการประเมินทางคลินิกของข้าพเจ้า</span>
+                            @if ($analysis && ! ($analysis['parse_error'] ?? false))
+                                <span class="cb-sub">ข้าพเจ้าได้ตรวจสอบผลวิเคราะห์ความเสี่ยงจาก AI ข้างต้นแล้ว และยืนยันว่าตรงกับการประเมินทางคลินิกของข้าพเจ้า</span>
+                            @else
+                                <span class="cb-sub">ข้าพเจ้าได้ตรวจสอบผลการเยี่ยมและสัญญาณชีพข้างต้นแล้ว และตัดสินใจตามการประเมินทางคลินิกของข้าพเจ้า (ยังไม่มีผลวิเคราะห์จาก AI)</span>
+                            @endif
                         </label>
                     </div>
                 </div>
@@ -240,8 +296,17 @@
                     <span class="hint">ข้อความเริ่มต้นดึงมาจากคำแนะนำของ AI — สามารถแก้ไขได้ก่อนยืนยัน</span>
                 </div>
 
+                @php
+                    $remainingAfter = \App\Models\FollowUpRecord::awaitingDecision()
+                        ->whereHas('plan.referral', fn ($q) => $q->visibleTo(auth()->user()))
+                        ->where('id', '!=', $record->id)
+                        ->count();
+                @endphp
                 <div class="btn-row">
                     <button type="submit" class="btn btn-primary" id="submitBtn">ยืนยันการตัดสินใจ</button>
+                    @if ($remainingAfter > 0)
+                        <button type="submit" name="go_next" value="1" class="btn btn-secondary" id="submitNextBtn">ยืนยันและไปเคสถัดไป (เหลือ {{ $remainingAfter }})</button>
+                    @endif
                     <a href="{{ route('referrals.show', $plan->referral) }}" class="btn btn-secondary">ยกเลิก</a>
                 </div>
             </form>
@@ -279,6 +344,82 @@
                 </div>
             </form>
         </details>
+    @endif
+
+    @if (! $isConfirmed)
+        <script>
+            // ให้ AI วิเคราะห์เบื้องหลัง: หน้านี้ตามดูสถานะ (และเริ่มให้เองถ้ายังไม่มีใครเริ่ม) แล้วโหลดผลให้เมื่อเสร็จ
+            (function () {
+                var panel = document.getElementById('aiPanel');
+                if (! panel) return;
+                var title = document.getElementById('aiPanelTitle');
+                var text = document.getElementById('aiPanelText');
+                var token = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+                var decisionForm = document.getElementById('decisionForm');
+                var touched = false;
+                if (decisionForm) {
+                    decisionForm.addEventListener('input', function () { touched = true; });
+                    decisionForm.addEventListener('change', function () { touched = true; });
+                }
+                var stopped = false;
+
+                function show(t, msg, extra) {
+                    panel.hidden = false;
+                    title.textContent = t;
+                    text.textContent = msg;
+                    if (extra) { text.appendChild(document.createTextNode(' ')); text.appendChild(extra); }
+                }
+
+                function ready() {
+                    if (! touched) { location.reload(); return; }
+                    var btn = document.createElement('button');
+                    btn.type = 'button'; btn.className = 'btn btn-primary btn-sm'; btn.textContent = 'โหลดผลวิเคราะห์ (ข้อมูลที่เลือกไว้ในฟอร์มจะหายไป)';
+                    btn.onclick = function () { location.reload(); };
+                    show('AI วิเคราะห์เสร็จแล้ว', 'เลือกโหลดผลเมื่อสะดวก', btn);
+                }
+
+                function handle(s) {
+                    if (stopped) return;
+                    if (s.state === 'ready') return ready();
+                    if (s.state === 'error') {
+                        show('AI วิเคราะห์ไม่สำเร็จ', (s.error || 'กรุณากด "ให้ AI วิเคราะห์ใหม่" หรือตัดสินใจด้วยตนเอง') + ' — ยังยืนยันการตัดสินใจได้ตามปกติ');
+                        return;
+                    }
+                    if (s.state === 'queued') {
+                        show('รอคิว AI', 'AI กำลังวิเคราะห์เคสอื่นอยู่ (วิเคราะห์ทีละเคส) จะเริ่มเคสนี้ต่อโดยอัตโนมัติ');
+                        return setTimeout(function () { kick(false); }, 15000);
+                    }
+                    if (s.state === 'running') {
+                        show('AI กำลังวิเคราะห์ผลเยี่ยมให้อัตโนมัติ', 'ใช้เวลาราว 1-3 นาที ระหว่างนี้ดูข้อมูลและเลือกการตัดสินใจด้านล่างได้เลย ผลวิเคราะห์จะขึ้นเองเมื่อเสร็จ');
+                        return setTimeout(poll, 5000);
+                    }
+                    kick(false); // none — ยังไม่มีใครเริ่ม
+                }
+
+                function poll() {
+                    fetch(panel.dataset.statusUrl, { headers: { 'Accept': 'application/json' } })
+                        .then(function (r) { return r.json(); }).then(handle)
+                        .catch(function () { setTimeout(poll, 8000); });
+                }
+
+                function kick(force) {
+                    show('AI กำลังวิเคราะห์ผลเยี่ยมให้อัตโนมัติ', 'ใช้เวลาราว 1-3 นาที ระหว่างนี้ดูข้อมูลและเลือกการตัดสินใจด้านล่างได้เลย ผลวิเคราะห์จะขึ้นเองเมื่อเสร็จ');
+                    fetch(panel.dataset.analyzeUrl, {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: force ? 'force=1' : ''
+                    }).then(function (r) { return r.json(); }).then(handle)
+                      .catch(function () { setTimeout(poll, 8000); }); // เช่น proxy ตัดการเชื่อมต่อระหว่างรอ — ไปตามดูสถานะแทน
+                }
+
+                var rerun = document.getElementById('aiRerunForm');
+                if (rerun) {
+                    rerun.addEventListener('submit', function (e) { e.preventDefault(); stopped = false; kick(true); });
+                }
+
+                if (! panel.hidden) poll();
+            })();
+        </script>
     @endif
 
     <script>

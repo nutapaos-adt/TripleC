@@ -56,6 +56,8 @@ Route::middleware('auth')->group(function () {
         ->name('follow-up-plans.review');
     Route::post('/follow-up-plans/{plan}/analyze', [FollowUpController::class, 'analyzeRecord'])
         ->name('follow-up-plans.analyze');
+    Route::get('/follow-up-plans/{plan}/analysis-status', [FollowUpController::class, 'analysisStatus'])
+        ->name('follow-up-plans.analysis-status');
     Route::post('/follow-up-plans/{plan}/decision', [FollowUpController::class, 'confirmDecision'])
         ->name('follow-up-plans.decision');
     Route::post('/follow-up-plans/{plan}/decision/amend', [FollowUpController::class, 'amendDecision'])

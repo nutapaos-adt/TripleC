@@ -177,8 +177,16 @@
                 <p class="box-footnote">แก้ไขข้อความด้านบนได้ก่อนยืนยัน — พยาบาลต้องตรวจสอบและยืนยันทุกครั้งก่อนเริ่มแผนติดตาม</p>
             </div>
 
+            @php
+                $remainingBefore = in_array(auth()->user()->role, ['home_visit_team', 'admin'], true)
+                    ? \App\Models\Referral::whereNull('confirmed_at')->where('id', '!=', $referral->id)->count()
+                    : 0;
+            @endphp
             <div class="btn-row">
                 <button type="submit" class="btn btn-primary">ยืนยันแผนติดตาม</button>
+                @if ($remainingBefore > 0)
+                    <button type="submit" name="go_next" value="1" class="btn btn-secondary">ยืนยันและไปเคสถัดไป (เหลือ {{ $remainingBefore }})</button>
+                @endif
                 <a href="{{ route('referrals.show', $referral) }}" class="btn btn-secondary">กลับไปหน้าใบส่งต่อ</a>
             </div>
         </form>

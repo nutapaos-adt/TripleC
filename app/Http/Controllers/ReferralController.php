@@ -280,6 +280,25 @@ class ReferralController extends Controller
             ? 'ยืนยันแผนติดตามเรียบร้อยแล้ว สร้างกำหนดการเยี่ยม/โทรครั้งแรกให้อัตโนมัติ'
             : 'ยืนยันแผนติดตามเรียบร้อยแล้ว (ยังไม่มีเกณฑ์จำนวนครั้งเยี่ยมสำหรับประเภทเคสนี้ — กรุณาตั้งค่าที่หน้าแอดมิน)';
 
+        // "ยืนยันและไปเคสถัดไป" — ไปใบส่งต่อที่รอยืนยันแผนถัดไปเลย (บ้านสีแดงก่อน แล้วเก่าสุดก่อน เหมือนลำดับในหน้ารายการ)
+        if ($request->boolean('go_next') && in_array(Auth::user()->role, ['home_visit_team', 'admin'], true)) {
+            $pendingBase = fn () => Referral::whereNull('confirmed_at')->where('id', '!=', $referral->id);
+            $next = $pendingBase()
+                ->orderByRaw('CASE WHEN severity_group = ? THEN 0 ELSE 1 END', [Referral::SEVERITY_RED])
+                ->oldest()
+                ->first();
+
+            if ($next) {
+                return redirect()
+                    ->route('referrals.care-plan', $next)
+                    ->with('status', $status.' — เคสถัดไป (ยังรอตรวจสอบแผนอีก '.$pendingBase()->count().' เคส)');
+            }
+
+            return redirect()
+                ->route('care-plan.pending')
+                ->with('status', $status.' — ไม่มีใบส่งต่อที่รอตรวจสอบแผนแล้ว');
+        }
+
         return redirect()
             ->route('referrals.show', $referral)
             ->with('status', $status);
