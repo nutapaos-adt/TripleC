@@ -3,7 +3,9 @@
 namespace App\Http\Requests;
 
 use App\Models\Referral;
+use App\Services\ClinicalTracerSuggester;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ConfirmCarePlanRequest extends FormRequest
 {
@@ -21,6 +23,12 @@ class ConfirmCarePlanRequest extends FormRequest
             'main_problem' => ['required', 'string'],
             'risk_signals' => ['nullable', 'string'],
             'initial_pps_score' => ['nullable', 'integer', 'min:0', 'max:100'],
+
+            // ตรวจข้อมูลต้นทางซ้ำตอนรับเคส (ส่งมาพร้อม origin_reviewed=1 จากฟอร์มยืนยันแผน; ไม่ส่ง = คงค่าเดิม)
+            'origin_reviewed' => ['nullable', 'boolean'],
+            'zone' => ['required_if:origin_reviewed,1', 'nullable', 'in:in_area,out_area'],
+            'clinical_tracers' => ['nullable', 'array'],
+            'clinical_tracers.*' => ['string', Rule::in(ClinicalTracerSuggester::TRACERS)],
         ];
     }
 
@@ -31,6 +39,7 @@ class ConfirmCarePlanRequest extends FormRequest
             'severity_group' => 'การจำแนกกลุ่มความรุนแรง',
             'patient_type' => 'สรุปสภาพผู้ป่วย',
             'main_problem' => 'ปัญหาสำคัญ',
+            'zone' => 'เขตพื้นที่',
         ];
     }
 

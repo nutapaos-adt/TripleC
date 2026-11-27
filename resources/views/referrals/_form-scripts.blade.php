@@ -1,33 +1,114 @@
 <script>
     (function () {
         const subDistrictInput = document.getElementById('patient_sub_district');
+        const districtInput = document.getElementById('patient_district');
+        const provinceInput = document.getElementById('patient_province');
         const zoneSelect = document.getElementById('zone_select');
         const zoneOverride = document.getElementById('zone_override');
         const zoneHint = document.getElementById('zone_hint');
+        const zoneWarn = document.getElementById('zone_warn');
+        const zoneLabels = { in_area: 'ในเขต', out_area: 'นอกเขต' };
+        let detectedZone = null;
+        let zoneSetByDetection = false; // ค่าในช่องมาจากผลตรวจอัตโนมัติ (ไม่ใช่ที่เจ้าหน้าที่เลือกเอง)
 
+        // ระบบตรวจเขตได้ (และไม่ได้ติ๊ก "ปรับเขตเอง") = เลือกให้และล็อกไว้ · ตรวจไม่ได้ = ปลดล็อกและต้องเลือกเอง (ไม่มีค่าเริ่มต้น "ในเขต")
+        // ไม่ใช้ disabled เพราะฟิลด์ disabled จะไม่ถูกส่งไปพร้อมฟอร์ม — ล็อกด้วย pointer-events แทน
         function syncZoneLock() {
-            // ไม่ใช้ disabled เพราะฟิลด์ disabled จะไม่ถูกส่งไปพร้อมฟอร์ม — ล็อกด้วย pointer-events แทน
-            zoneSelect.style.pointerEvents = zoneOverride.checked ? '' : 'none';
-            zoneSelect.style.background = zoneOverride.checked ? '' : 'var(--color-neutral-200)';
+            const locked = detectedZone !== null && ! zoneOverride.checked;
+            if (locked) {
+                zoneSelect.value = detectedZone;
+                zoneSetByDetection = true;
+            } else if (detectedZone === null && zoneSetByDetection) {
+                // ผลตรวจหายไป (เช่น ล้างตำบล) — ไม่ปล่อยค่าเดิมค้างไว้เงียบๆ ให้เลือกใหม่
+                zoneSelect.value = '';
+                zoneSetByDetection = false;
+            }
+            zoneSelect.style.pointerEvents = locked ? 'none' : '';
+            zoneSelect.style.background = locked ? 'var(--color-neutral-200)' : '';
+            const mismatch = detectedZone !== null && zoneSelect.value !== '' && zoneSelect.value !== detectedZone;
+            zoneWarn.hidden = ! mismatch;
+            if (mismatch) {
+                zoneWarn.textContent = 'ระบบตรวจพบ "' + zoneLabels[detectedZone] + '" แต่คุณเลือก "' + zoneLabels[zoneSelect.value] + '" — ตรวจที่อยู่อีกครั้ง (เขตมีผลกับวิธีติดตาม: ในเขต=เยี่ยมบ้าน, นอกเขต=โทร)';
+            }
         }
         zoneOverride.addEventListener('change', syncZoneLock);
+        zoneSelect.addEventListener('change', function () { zoneSetByDetection = false; syncZoneLock(); });
 
-        subDistrictInput.addEventListener('blur', function () {
-            const subDistrict = subDistrictInput.value.trim();
-            if (! subDistrict) return;
-
-            fetch('{{ route("referrals.zone-lookup") }}?sub_district=' + encodeURIComponent(subDistrict))
+        function lookupZone() {
+            const params = new URLSearchParams({
+                sub_district: subDistrictInput.value.trim(),
+                district: districtInput.value.trim(),
+                province: provinceInput.value.trim(),
+            });
+            fetch('{{ route("referrals.zone-lookup") }}?' + params.toString())
                 .then((res) => res.json())
                 .then((data) => {
-                    zoneHint.textContent = data.label;
-                    if (data.zone && ! zoneOverride.checked) {
-                        zoneSelect.value = data.zone;
-                    }
+                    detectedZone = data.zone || null;
+                    zoneHint.textContent = data.label + (data.reason ? ' (' + data.reason + ')' : '');
+                    zoneHint.style.color = detectedZone ? '' : 'var(--color-warning)';
+                    zoneHint.style.fontWeight = detectedZone ? '' : '700';
+                    syncZoneLock();
                 })
                 .catch(() => {
-                    zoneHint.textContent = 'ตรวจสอบเขตอัตโนมัติไม่สำเร็จ กรุณาเลือกเอง';
+                    detectedZone = null;
+                    zoneHint.textContent = 'ตรวจเขตอัตโนมัติไม่สำเร็จ — กรุณาเลือกเขตเองจากที่อยู่';
+                    syncZoneLock();
                 });
+        }
+        [subDistrictInput, districtInput, provinceInput].forEach(function (input) {
+            input.addEventListener('blur', lookupZone);
+            input.addEventListener('change', lookupZone);
         });
+        lookupZone();
+
+        // เตือนเมื่อการวินิจฉัย/ข้อความมีคำที่เกี่ยวกับ clinical tracer แต่ยังไม่ได้ติ๊ก (ข้อเสนอเท่านั้น — ไม่ติ๊กให้เอง)
+        const diagnosisInput = document.querySelector('input[name="diagnosis"]');
+        const notesInput = document.querySelector('textarea[name="raw_notes"]');
+        const tracerHint = document.getElementById('tracer_hint');
+        const csrfToken = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+        function renderTracerHint(suggestions) {
+            tracerHint.innerHTML = '';
+            const missing = suggestions.filter(function (s) {
+                const box = document.querySelector('.tracer-opt[value="' + s.tracer + '"]');
+                return box && ! box.checked;
+            });
+            tracerHint.hidden = missing.length === 0;
+            missing.forEach(function (s) {
+                const row = document.createElement('div');
+                row.style.cssText = 'display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--color-warning);border-radius:8px;background:var(--color-warning-tint);';
+                const text = document.createElement('span');
+                text.style.fontWeight = '600';
+                text.textContent = 'พบคำว่า "' + s.term + '" ในการวินิจฉัย/ข้อความ — ยังไม่ได้ติ๊ก Clinical tracer: ' + s.tracer;
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'btn btn-secondary btn-sm';
+                btn.textContent = 'ติ๊ก ' + s.tracer + ' ให้';
+                btn.addEventListener('click', function () {
+                    const box = document.querySelector('.tracer-opt[value="' + s.tracer + '"]');
+                    box.checked = true;
+                    box.dispatchEvent(new Event('change', { bubbles: true }));
+                    renderTracerHint(suggestions);
+                });
+                row.appendChild(text);
+                row.appendChild(btn);
+                tracerHint.appendChild(row);
+            });
+        }
+        function lookupTracers() {
+            fetch('{{ route("referrals.tracer-lookup") }}', {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ diagnosis: diagnosisInput ? diagnosisInput.value : '', notes: notesInput ? notesInput.value : '' }),
+            })
+                .then((res) => res.json())
+                .then((data) => { window.__tracerSuggestions = data.suggestions || []; renderTracerHint(window.__tracerSuggestions); })
+                .catch(function () { tracerHint.hidden = true; });
+        }
+        [diagnosisInput, notesInput].forEach(function (el) { if (el) el.addEventListener('blur', lookupTracers); });
+        document.querySelectorAll('.tracer-opt, #tr_none').forEach(function (box) {
+            box.addEventListener('change', function () { renderTracerHint(window.__tracerSuggestions || []); });
+        });
+        lookupTracers();
 
         // สถานะผู้ป่วย → แสดง/ซ่อนหน่วยต้นสังกัด
         const patientStatus = document.getElementById('patient_status');

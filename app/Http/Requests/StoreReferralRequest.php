@@ -33,6 +33,7 @@ class StoreReferralRequest extends FormRequest
             'patient_district' => ['nullable', 'string', 'max:255'],
             'patient_province' => ['nullable', 'string', 'max:255'],
 
+            // ไม่มีค่าเริ่มต้น "ในเขต" — ถ้าระบบตรวจเขตจากตำบลไม่ได้ ต้องเลือกเขตเองอย่างชัดเจน
             'zone' => ['required', 'in:in_area,out_area'],
             'zone_override' => ['nullable', 'boolean'],
             'case_type_id' => ['required', 'exists:case_types,id'],
@@ -111,6 +112,14 @@ class StoreReferralRequest extends FormRequest
             'discharge_vitals.rr' => 'อัตราการหายใจ (RR)',
             'discharge_vitals.temp' => 'อุณหภูมิ (Temp)',
             'discharge_vitals.spo2' => 'SpO2',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'zone.required' => 'กรุณาเลือกเขตพื้นที่ (ระบบตรวจเขตจากตำบลไม่ได้ — กรอกตำบล/อำเภอ/จังหวัดให้ครบ หรือเลือกเขตเองจากที่อยู่)',
+            'zone.in' => 'เขตพื้นที่ไม่ถูกต้อง กรุณาเลือกในเขตหรือนอกเขต',
         ];
     }
 }

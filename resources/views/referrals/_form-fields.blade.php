@@ -162,15 +162,18 @@
     </div>
 
     <div class="field">
-        <label>เขตพื้นที่</label>
-        <select name="zone" id="zone_select" @style(['pointer-events:none;background:var(--color-neutral-200);' => ! old('zone_override', $referral !== null)])>
-            <option value="in_area" @selected(old('zone', $referral?->zone ?? 'in_area') === 'in_area')>ในเขต</option>
+        <label>เขตพื้นที่ <span class="req">*</span></label>
+        {{-- ไม่มีค่าเริ่มต้น "ในเขต": ระบบเลือกให้เมื่อตรวจเขตจากตำบล/อำเภอ/จังหวัดได้ (ล็อกไว้) ตรวจไม่ได้ = ต้องเลือกเองอย่างชัดเจน --}}
+        <select name="zone" id="zone_select" required>
+            <option value="">— เลือกเขต —</option>
+            <option value="in_area" @selected(old('zone', $referral?->zone) === 'in_area')>ในเขต</option>
             <option value="out_area" @selected(old('zone', $referral?->zone) === 'out_area')>นอกเขต</option>
         </select>
-        <p id="zone_hint" class="hint">กรอกตำบล/แขวงด้านล่างเพื่อให้ระบบช่วยตรวจจับเขต</p>
+        <p id="zone_hint" class="hint">กรอกตำบล/อำเภอ/จังหวัดด้านล่าง ระบบจะตรวจเขตให้ — ถ้าตรวจไม่ได้ต้องเลือกเขตเอง</p>
+        <p id="zone_warn" class="hint" style="color:var(--color-risk);font-weight:700;" hidden></p>
         <label style="display:inline-flex;align-items:center;gap:6px;margin-top:6px;font-size:11.5px;color:var(--color-neutral-500);">
-            <input type="checkbox" name="zone_override" value="1" id="zone_override" @checked(old('zone_override', $referral !== null)) style="width:auto;">
-            ปรับเขตเอง (ไม่ใช้ผลตรวจจับอัตโนมัติ)
+            <input type="checkbox" name="zone_override" value="1" id="zone_override" @checked(old('zone_override', false)) style="width:auto;">
+            ปรับเขตเอง (ใช้เมื่อที่อยู่จริงไม่ตรงกับที่ระบบตรวจพบ)
         </label>
     </div>
 </div>
@@ -242,11 +245,11 @@
     </div>
     <div class="field">
         <label>อำเภอ/เขต</label>
-        <input type="text" name="patient_district" value="{{ old('patient_district', $patient?->district) }}">
+        <input type="text" name="patient_district" id="patient_district" value="{{ old('patient_district', $patient?->district) }}">
     </div>
     <div class="field">
         <label>จังหวัด</label>
-        <input type="text" name="patient_province" value="{{ old('patient_province', $patient?->province) }}">
+        <input type="text" name="patient_province" id="patient_province" value="{{ old('patient_province', $patient?->province) }}">
     </div>
 
     <div class="field">
@@ -307,7 +310,8 @@
             <label for="tr_none">ไม่เข้าเงื่อนไข</label>
         </div>
     </div>
-    <span class="hint">ใช้สำหรับติดตามอุบัติการณ์เฉพาะโรคในรายงานสรุปประจำเดือน — เลือกตามการวินิจฉัยจริง ไม่ได้ผูกอัตโนมัติกับช่อง "การวินิจฉัยโรค" ด้านบน</span>
+    <span class="hint">ใช้สำหรับติดตามอุบัติการณ์เฉพาะโรคในรายงานสรุปประจำเดือน — เลือกตามการวินิจฉัยจริง ระบบไม่ติ๊กให้เอง แต่จะเตือนเมื่อพบคำที่เกี่ยวข้องในการวินิจฉัย/ข้อความ (ช่อง "ไม่เข้าเงื่อนไข" ถูกติ๊กไว้ล่วงหน้าเมื่อยังไม่ได้เลือก tracer ใด)</span>
+    <div id="tracer_hint" style="margin-top:var(--space-2);display:flex;flex-direction:column;gap:6px;" hidden></div>
 </div>
 
 @php $selectedCaseType = $caseTypes->firstWhere('id', (int) old('case_type_id', $referral?->case_type_id)); @endphp

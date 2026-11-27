@@ -9,6 +9,7 @@ use App\Models\Patient;
 use App\Models\Referral;
 use App\Models\ReferralAttachment;
 use App\Services\AiService;
+use App\Services\ClinicalTracerSuggester;
 use App\Services\VisitPlanService;
 use App\Services\ZoneResolver;
 use Illuminate\Contracts\View\View;
@@ -133,8 +134,11 @@ class ReferralController extends Controller
 
     private function resolveZone(array $data, ZoneResolver $zoneResolver): string
     {
-        if (empty($data['zone_override'])) {
-            return $zoneResolver->resolve($data['patient_sub_district'] ?? null) ?? $data['zone'];
+        // เขตมาจาก "ตำบล (+อำเภอ/จังหวัด)" ที่ระบบตรวจได้ก่อน — ตรวจไม่ได้เมื่อไหร่ต้องให้เจ้าหน้าที่เลือกเองอย่างชัดเจน (ไม่มีค่าเริ่มต้น "ในเขต")
+        $detected = $zoneResolver->resolve($data['patient_sub_district'] ?? null, $data['patient_district'] ?? null, $data['patient_province'] ?? null);
+
+        if (empty($data['zone_override']) && $detected !== null) {
+            return $detected;
         }
 
         return $data['zone'];
@@ -249,7 +253,11 @@ class ReferralController extends Controller
         $referral->load('patient');
         $caseTypes = CaseType::where('is_active', true)->orderBy('name')->get();
 
-        return view('referrals.care-plan', compact('referral', 'caseTypes'));
+        // ตรวจข้อมูลต้นทางซ้ำให้พยาบาลที่รับเคส: เขตตามที่อยู่ที่กรอก และ tracer ที่ข้อความการวินิจฉัยบ่งชี้ (เป็นข้อเสนอ ไม่ได้ติ๊ก/แก้ให้เอง)
+        $zoneDetection = app(ZoneResolver::class)->detect($referral->patient->sub_district, $referral->patient->district, $referral->patient->province);
+        $tracerSuggestions = app(ClinicalTracerSuggester::class)->suggest($referral->diagnosis, $referral->raw_notes);
+
+        return view('referrals.care-plan', compact('referral', 'caseTypes', 'zoneDetection', 'tracerSuggestions'));
     }
 
     public function confirmCarePlan(ConfirmCarePlanRequest $request, Referral $referral, VisitPlanService $visitPlanService): RedirectResponse
@@ -257,7 +265,18 @@ class ReferralController extends Controller
         $this->authorizeUnitAccess($referral);
         abort_if($referral->isConfirmed(), 403, 'ยืนยันแผนติดตามไปแล้ว ไม่สามารถยืนยันซ้ำได้');
 
+        // พยาบาลที่รับเคสตรวจข้อมูลต้นทางแล้ว (เขต + clinical tracer) — บันทึกค่าที่แก้ และเขตที่ถูกต้องมีผลกับวิธีติดตามครั้งแรก (ในเขต=เยี่ยมบ้าน, นอกเขต=โทร)
+        $reviewedOrigin = [];
+        if ($request->boolean('origin_reviewed')) {
+            $reviewedOrigin = [
+                'zone' => $request->validated('zone'),
+                'clinical_tracers' => array_values($request->validated('clinical_tracers') ?? []),
+            ];
+            $referral->patient->update(['zone' => $reviewedOrigin['zone']]);
+        }
+
         $referral->update([
+            ...$reviewedOrigin,
             'case_type_id' => $request->validated('case_type_id'),
             'severity_group' => $request->validated('severity_group'),
             'initial_pps_score' => $request->validated('initial_pps_score'),
@@ -334,15 +353,28 @@ class ReferralController extends Controller
 
     public function zoneLookup(Request $request, ZoneResolver $zoneResolver): JsonResponse
     {
-        $zone = $zoneResolver->resolve($request->query('sub_district'));
+        $detection = $zoneResolver->detect($request->query('sub_district'), $request->query('district'), $request->query('province'));
 
         return response()->json([
-            'zone' => $zone,
-            'label' => match ($zone) {
+            'zone' => $detection['zone'],
+            'reason' => $detection['reason'],
+            'label' => match ($detection['zone']) {
                 'in_area' => 'ระบบตรวจพบ: อยู่ในเขตรับผิดชอบ',
                 'out_area' => 'ระบบตรวจพบ: อยู่นอกเขตรับผิดชอบ',
-                default => 'ระบบยังไม่สามารถตรวจจับเขตอัตโนมัติได้ กรุณาเลือกเอง',
+                default => 'ระบบตรวจเขตอัตโนมัติไม่ได้ — กรุณาเลือกเขตเองจากที่อยู่',
             },
+        ]);
+    }
+
+    /**
+     * เสนอ clinical tracer จากข้อความการวินิจฉัย/บันทึกอาการที่กำลังพิมพ์ในฟอร์ม (ข้อเสนอเท่านั้น ไม่ได้ติ๊กให้)
+     */
+    public function tracerLookup(Request $request, ClinicalTracerSuggester $suggester): JsonResponse
+    {
+        $found = $suggester->suggest($request->input('diagnosis'), $request->input('notes'));
+
+        return response()->json([
+            'suggestions' => collect($found)->map(fn ($term, $tracer) => ['tracer' => $tracer, 'term' => $term])->values()->all(),
         ]);
     }
 }

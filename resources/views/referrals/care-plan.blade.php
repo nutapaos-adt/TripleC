@@ -114,6 +114,14 @@
                     <label>PPS Score ปัจจุบัน</label>
                     <div class="field-value">{{ $referral->initial_pps_score ?? '—' }}</div>
                 </div>
+                <div class="field">
+                    <label>เขตพื้นที่</label>
+                    <div class="field-value">{{ $referral->zone === 'in_area' ? 'ในเขต' : 'นอกเขต' }}</div>
+                </div>
+                <div class="field">
+                    <label>Clinical tracer</label>
+                    <div class="field-value">{{ ! empty($referral->clinical_tracers) ? implode(', ', $referral->clinical_tracers) : 'ไม่เข้าเงื่อนไข' }}</div>
+                </div>
             </div>
         </div>
 
@@ -124,6 +132,76 @@
     @else
         <form method="POST" action="{{ route('referrals.care-plan.confirm', $referral) }}">
             @csrf
+            <input type="hidden" name="origin_reviewed" value="1">
+
+            {{-- ตรวจข้อมูลต้นทางซ้ำตอนรับเคส: ต้นทางกรอกเขต/tracer ผิดบ่อย — พยาบาลแก้ได้ที่นี่ก่อนยืนยันแผน (เขตมีผลกับวิธีติดตามครั้งแรก) --}}
+            @php
+                $patientRow = $referral->patient;
+                $currentZone = old('zone', $referral->zone);
+                $zoneText = ['in_area' => 'ในเขต', 'out_area' => 'นอกเขต'];
+                $detected = $zoneDetection['zone'] ?? null;
+                $zoneMismatch = $detected !== null && $detected !== $currentZone;
+                $selectedTracers = old('clinical_tracers', $referral->clinical_tracers ?? []);
+                $missingTracers = collect($tracerSuggestions)->reject(fn ($term, $tracer) => in_array($tracer, $selectedTracers, true));
+            @endphp
+            <div class="card">
+                <div class="card-head">
+                    <div>
+                        <div class="h2">ตรวจสอบข้อมูลต้นทาง</div>
+                        <div class="sub">ข้อมูลจากต้นทางอาจคลาดเคลื่อน — ตรวจเขตพื้นที่และ Clinical tracer ให้ถูกต้องก่อนยืนยัน</div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="field-grid">
+                        <div class="field">
+                            <label for="care_plan_zone">เขตพื้นที่</label>
+                            <select name="zone" id="care_plan_zone" required>
+                                <option value="in_area" @selected($currentZone === 'in_area')>ในเขต — เยี่ยมบ้านครั้งแรก</option>
+                                <option value="out_area" @selected($currentZone === 'out_area')>นอกเขต — โทรติดตามครั้งแรก</option>
+                            </select>
+                            <span class="hint">
+                                ที่อยู่ที่ต้นทางกรอก:
+                                {{ $patientRow->address ?: '—' }}
+                                @if ($patientRow->sub_district) ต.{{ $patientRow->sub_district }}@endif
+                                @if ($patientRow->district) อ.{{ $patientRow->district }}@endif
+                                @if ($patientRow->province) จ.{{ $patientRow->province }}@endif
+                            </span>
+                            @if ($zoneMismatch)
+                                <div class="banner" style="background:var(--color-risk-tint);border-color:var(--color-risk);margin-top:var(--space-2);">
+                                    <div class="banner-text"><p style="color:var(--color-risk);"><strong>เขตไม่ตรงกับที่อยู่:</strong> ระบบตรวจพบว่า{{ $zoneText[$detected] }} ({{ $zoneDetection['reason'] }}) แต่ใบส่งต่อระบุ{{ $zoneText[$currentZone] ?? '—' }} — ตรวจที่อยู่แล้วเลือกให้ถูกต้อง</p></div>
+                                </div>
+                            @elseif ($detected === null)
+                                <div class="banner" style="background:var(--color-warning-tint);border-color:var(--color-warning);margin-top:var(--space-2);">
+                                    <div class="banner-text"><p style="color:var(--color-warning);"><strong>ระบบตรวจเขตเองไม่ได้:</strong> {{ $zoneDetection['reason'] }} — ตรวจจากที่อยู่ด้านบนแล้วยืนยันเขตด้วยตัวเอง</p></div>
+                                </div>
+                            @else
+                                <span class="chip chip-success" style="margin-top:6px;">ตรงกับที่ระบบตรวจพบ ({{ $zoneDetection['reason'] }})</span>
+                            @endif
+                        </div>
+
+                        <div class="field">
+                            <label>Clinical tracer (เลือกได้หลายข้อ)</label>
+                            <div style="display:flex;flex-direction:column;gap:6px;">
+                                @foreach (\App\Services\ClinicalTracerSuggester::TRACERS as $tracer)
+                                    <label style="display:flex;align-items:center;gap:8px;font-weight:600;">
+                                        <input type="checkbox" name="clinical_tracers[]" value="{{ $tracer }}" style="width:auto;" @checked(in_array($tracer, $selectedTracers, true))>
+                                        {{ $tracer }}
+                                        @if (isset($tracerSuggestions[$tracer]) && ! in_array($tracer, $selectedTracers, true))
+                                            <span class="chip chip-warning">พบคำว่า "{{ $tracerSuggestions[$tracer] }}" ในการวินิจฉัย/ข้อความ</span>
+                                        @endif
+                                    </label>
+                                @endforeach
+                                <span class="hint">ไม่ติ๊กข้อใด = ไม่เข้าเงื่อนไข tracer</span>
+                            </div>
+                            @if ($missingTracers->isNotEmpty())
+                                <div class="banner" style="background:var(--color-warning-tint);border-color:var(--color-warning);margin-top:var(--space-2);">
+                                    <div class="banner-text"><p style="color:var(--color-warning);"><strong>ตรวจสอบ tracer:</strong> การวินิจฉัย "{{ $referral->diagnosis ?: '—' }}" มีคำที่เกี่ยวกับ {{ $missingTracers->keys()->implode(', ') }} แต่ต้นทางยังไม่ได้ติ๊ก — ตรวจแล้วติ๊กให้ตรงกับผู้ป่วยจริง (ระบบไม่ติ๊กให้เอง)</p></div>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <div class="ai-box">
                 <div class="box-label">
