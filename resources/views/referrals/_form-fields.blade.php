@@ -237,7 +237,8 @@
 
     <div class="field full" style="grid-column:1 / -1;">
         <label>ที่อยู่</label>
-        <input type="text" name="patient_address" value="{{ old('patient_address', $patient?->address) }}">
+        <input type="text" name="patient_address" id="patient_address" value="{{ old('patient_address', $patient?->address) }}" placeholder="เช่น 12/3 หมู่ 1 ถ.สายตัวอย่าง">
+        <span class="hint">ระบุหมู่ให้ชัด เช่น "หมู่ 1" หรือ "ม.1" — ระบบใช้ตรวจว่าอยู่ในเขตรับผิดชอบหรือไม่ (เขตกำหนดเป็นรายหมู่)</span>
     </div>
     <div class="field">
         <label>ตำบล/แขวง</label>

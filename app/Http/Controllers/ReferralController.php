@@ -135,7 +135,7 @@ class ReferralController extends Controller
     private function resolveZone(array $data, ZoneResolver $zoneResolver): string
     {
         // เขตมาจาก "ตำบล (+อำเภอ/จังหวัด)" ที่ระบบตรวจได้ก่อน — ตรวจไม่ได้เมื่อไหร่ต้องให้เจ้าหน้าที่เลือกเองอย่างชัดเจน (ไม่มีค่าเริ่มต้น "ในเขต")
-        $detected = $zoneResolver->resolve($data['patient_sub_district'] ?? null, $data['patient_district'] ?? null, $data['patient_province'] ?? null);
+        $detected = $zoneResolver->resolve($data['patient_sub_district'] ?? null, $data['patient_district'] ?? null, $data['patient_province'] ?? null, $data['patient_address'] ?? null);
 
         if (empty($data['zone_override']) && $detected !== null) {
             return $detected;
@@ -254,7 +254,7 @@ class ReferralController extends Controller
         $caseTypes = CaseType::where('is_active', true)->orderBy('name')->get();
 
         // ตรวจข้อมูลต้นทางซ้ำให้พยาบาลที่รับเคส: เขตตามที่อยู่ที่กรอก และ tracer ที่ข้อความการวินิจฉัยบ่งชี้ (เป็นข้อเสนอ ไม่ได้ติ๊ก/แก้ให้เอง)
-        $zoneDetection = app(ZoneResolver::class)->detect($referral->patient->sub_district, $referral->patient->district, $referral->patient->province);
+        $zoneDetection = app(ZoneResolver::class)->detect($referral->patient->sub_district, $referral->patient->district, $referral->patient->province, $referral->patient->address);
         $tracerSuggestions = app(ClinicalTracerSuggester::class)->suggest($referral->diagnosis, $referral->raw_notes);
 
         return view('referrals.care-plan', compact('referral', 'caseTypes', 'zoneDetection', 'tracerSuggestions'));
@@ -353,7 +353,7 @@ class ReferralController extends Controller
 
     public function zoneLookup(Request $request, ZoneResolver $zoneResolver): JsonResponse
     {
-        $detection = $zoneResolver->detect($request->query('sub_district'), $request->query('district'), $request->query('province'));
+        $detection = $zoneResolver->detect($request->query('sub_district'), $request->query('district'), $request->query('province'), $request->query('address'));
 
         return response()->json([
             'zone' => $detection['zone'],

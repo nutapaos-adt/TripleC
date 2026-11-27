@@ -3,6 +3,7 @@
         const subDistrictInput = document.getElementById('patient_sub_district');
         const districtInput = document.getElementById('patient_district');
         const provinceInput = document.getElementById('patient_province');
+        const addressInput = document.getElementById('patient_address');
         const zoneSelect = document.getElementById('zone_select');
         const zoneOverride = document.getElementById('zone_override');
         const zoneHint = document.getElementById('zone_hint');
@@ -34,15 +35,19 @@
         zoneOverride.addEventListener('change', syncZoneLock);
         zoneSelect.addEventListener('change', function () { zoneSetByDetection = false; syncZoneLock(); });
 
+        let zoneLookupSeq = 0; // ใช้ผลของคำขอล่าสุดเท่านั้น (เน็ตช้า คำตอบเก่าอาจมาถึงทีหลัง)
         function lookupZone() {
+            const seq = ++zoneLookupSeq;
             const params = new URLSearchParams({
                 sub_district: subDistrictInput.value.trim(),
                 district: districtInput.value.trim(),
                 province: provinceInput.value.trim(),
+                address: addressInput.value.trim(),
             });
             fetch('{{ route("referrals.zone-lookup") }}?' + params.toString())
                 .then((res) => res.json())
                 .then((data) => {
+                    if (seq !== zoneLookupSeq) return;
                     detectedZone = data.zone || null;
                     zoneHint.textContent = data.label + (data.reason ? ' (' + data.reason + ')' : '');
                     zoneHint.style.color = detectedZone ? '' : 'var(--color-warning)';
@@ -50,12 +55,13 @@
                     syncZoneLock();
                 })
                 .catch(() => {
+                    if (seq !== zoneLookupSeq) return;
                     detectedZone = null;
                     zoneHint.textContent = 'ตรวจเขตอัตโนมัติไม่สำเร็จ — กรุณาเลือกเขตเองจากที่อยู่';
                     syncZoneLock();
                 });
         }
-        [subDistrictInput, districtInput, provinceInput].forEach(function (input) {
+        [subDistrictInput, districtInput, provinceInput, addressInput].forEach(function (input) {
             input.addEventListener('blur', lookupZone);
             input.addEventListener('change', lookupZone);
         });

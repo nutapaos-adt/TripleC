@@ -24,6 +24,99 @@ class ReferralOriginDataTest extends TestCase
     {
         parent::setUp();
         Carbon::setTestNow('2026-11-30 10:00:00');
+        // ไม่ให้ผลเทสต์ขึ้นกับค่าเขตจริงใน config/catchment.php — แต่ละเทสต์ตั้งค่าเขตของตัวเอง
+        config(['catchment.in_area_sub_districts' => [], 'catchment.in_area_rules' => [], 'catchment.in_area_provinces' => [], 'catchment.in_area_districts' => []]);
+    }
+
+    /** เขตจริงของหน่วย: เฉพาะ ม.1 และ ม.2 ต.นครสวรรค์ออก อ.เมือง จ.นครสวรรค์ */
+    private function realCatchment(): void
+    {
+        config(['catchment.in_area_rules' => [[
+            'sub_district' => 'นครสวรรค์ออก', 'district' => ['เมือง', 'เมืองนครสวรรค์'], 'province' => 'นครสวรรค์', 'moo' => [1, 2],
+        ]]]);
+    }
+
+    public function test_the_real_catchment_is_only_moo_1_and_2_of_nakhon_sawan_ok_not_the_whole_sub_district(): void
+    {
+        $this->realCatchment();
+        $resolver = app(ZoneResolver::class);
+        $detect = fn (string $address, ?string $sub = 'นครสวรรค์ออก', ?string $district = 'เมือง', ?string $province = 'นครสวรรค์') => $resolver->detect($sub, $district, $province, $address);
+
+        // ม.1 / ม.2 ในหลายรูปแบบการเขียน = ในเขต
+        foreach (['12/3 หมู่ 1 ถ.สายตัวอย่าง', '9 หมู่ที่ 2', '55 ม.1', '7 ม. 2 ซ.3', '8 หมู่ ๑', 'moo 2 Nakhon Sawan'] as $address) {
+            $this->assertSame('in_area', $detect($address)['zone'], $address);
+        }
+
+        // หมู่อื่นของตำบลเดียวกัน = นอกเขต (เหตุผลหลักที่ต้องดูหมู่)
+        foreach (['10 หมู่ 3', '1 ม.12', '5 หมู่ที่ 11'] as $address) {
+            $this->assertSame('out_area', $detect($address)['zone'], $address);
+            $this->assertStringContainsString('ม.1, ม.2', $detect($address)['reason']);
+        }
+
+        // "หมู่ 1" ไม่ใช่ "หมู่ 12" และ "12/1" ไม่ใช่หมู่
+        $this->assertSame('out_area', $detect('หมู่ 12')['zone']);
+        $this->assertNull($detect('บ้านเลขที่ 12/1 ถ.สายตัวอย่าง')['zone']);
+    }
+
+    public function test_real_catchment_cannot_decide_without_a_moo_or_with_two_different_moo(): void
+    {
+        $this->realCatchment();
+        $resolver = app(ZoneResolver::class);
+
+        $none = $resolver->detect('นครสวรรค์ออก', 'เมือง', 'นครสวรรค์', '99 ถ.สายตัวอย่าง');
+        $this->assertNull($none['zone']);
+        $this->assertStringContainsString('ไม่พบหมู่ในที่อยู่', $none['reason']);
+        $this->assertNull($resolver->detect('นครสวรรค์ออก', 'เมือง', 'นครสวรรค์', null)['zone']);
+
+        $many = $resolver->detect('นครสวรรค์ออก', 'เมือง', 'นครสวรรค์', 'หมู่ 1 ติดกับ ม.5');
+        $this->assertNull($many['zone']);
+        $this->assertStringContainsString('มากกว่า 1 หมู่', $many['reason']);
+    }
+
+    public function test_real_catchment_other_sub_district_district_or_province_is_out_even_with_moo_1(): void
+    {
+        $this->realCatchment();
+        $resolver = app(ZoneResolver::class);
+
+        $this->assertSame('out_area', $resolver->resolve('ตำบลอื่น', 'เมือง', 'นครสวรรค์', 'หมู่ 1'));
+        $this->assertSame('out_area', $resolver->resolve('นครสวรรค์ออก', 'เมือง', 'ขอนแก่น', 'หมู่ 1'));
+        $this->assertSame('out_area', $resolver->resolve('นครสวรรค์ออก', 'ลาดยาว', 'นครสวรรค์', 'หมู่ 1'));
+        // พิมพ์ด้วยคำนำหน้า/ชื่ออำเภอเต็ม = ยังในเขต
+        $this->assertSame('in_area', $resolver->resolve('ต.นครสวรรค์ออก', 'อ.เมืองนครสวรรค์', 'จ.นครสวรรค์', 'หมู่ 2'));
+        // ไม่ได้กรอกอำเภอ/จังหวัด = ตัดสินจากตำบลและหมู่
+        $this->assertSame('in_area', $resolver->resolve('นครสวรรค์ออก', null, null, 'หมู่ 1'));
+    }
+
+    public function test_intake_form_lookup_and_saving_use_the_moo_from_the_address(): void
+    {
+        $this->realCatchment();
+        $team = $this->team();
+
+        $this->actingAs($team)->getJson(route('referrals.zone-lookup', ['sub_district' => 'นครสวรรค์ออก', 'district' => 'เมือง', 'province' => 'นครสวรรค์', 'address' => '5 หมู่ 3']))
+            ->assertJson(['zone' => 'out_area']);
+        $this->actingAs($team)->getJson(route('referrals.zone-lookup', ['sub_district' => 'นครสวรรค์ออก', 'district' => 'เมือง', 'province' => 'นครสวรรค์', 'address' => '5 หมู่ 2']))
+            ->assertJson(['zone' => 'in_area']);
+
+        // บันทึก: ฟอร์มส่ง in_area มา (ค่าเริ่มต้นเดิม) แต่ที่อยู่เป็นหมู่ 3 → นอกเขต
+        $this->actingAs($team)->post(route('referrals.store'), $this->payload([
+            'patient_sub_district' => 'นครสวรรค์ออก', 'patient_district' => 'เมือง', 'patient_province' => 'นครสวรรค์', 'patient_address' => '5 หมู่ 3', 'zone' => 'in_area',
+        ]))->assertSessionHasNoErrors();
+        $this->assertSame('out_area', Referral::latest('id')->firstOrFail()->zone);
+
+        // ไม่ระบุหมู่ → ตัดสินไม่ได้ ต้องเลือกเอง (ไม่ส่ง zone = error)
+        $this->actingAs($team)->post(route('referrals.store'), $this->payload([
+            'patient_sub_district' => 'นครสวรรค์ออก', 'patient_district' => 'เมือง', 'patient_province' => 'นครสวรรค์', 'patient_address' => '5 ถ.สายตัวอย่าง',
+        ]))->assertSessionHasErrors('zone');
+    }
+
+    public function test_care_plan_page_uses_the_address_moo_when_checking_the_zone(): void
+    {
+        $this->realCatchment();
+        $referral = $this->pendingReferral(['diagnosis' => 'COPD', 'raw_notes' => 'หอบเหนื่อย', 'zone' => 'in_area'],
+            ['sub_district' => 'นครสวรรค์ออก', 'district' => 'เมือง', 'province' => 'นครสวรรค์', 'address' => '9 หมู่ 7']);
+
+        $this->actingAs($this->team())->get(route('referrals.care-plan', $referral))
+            ->assertOk()->assertSee('เขตไม่ตรงกับที่อยู่')->assertSee('หมู่ 7 ไม่อยู่ในเขต');
     }
 
     private function team(): User
