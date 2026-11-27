@@ -59,29 +59,10 @@ class DashboardController extends Controller
 
         // งานที่ต้องทำ: ทุกเคสที่ยังไม่ปิดโชว์ "นัดถัดไปนัดเดียว" (นัดที่ใกล้สุด) — fixed_count สร้างนัดไว้ล่วงหน้าหลายครั้ง ไม่ต้องโชว์ทุกนัด
         // ทีมเยี่ยมก่อนกำหนดบ่อย จึงไม่กรองตามวันครบกำหนด และเคสที่เยี่ยม/โทรไปแล้ววันนี้จะออกจากรายการทันที (เหมือนตัวเลข "รอเยี่ยม")
-        $nextPlans = FollowUpPlan::with(['referral.patient', 'referral.caseType'])
-            ->where('status', FollowUpPlan::STATUS_SCHEDULED)
-            ->whereNotIn('referral_id', $visitedTodayReferralIds)
-            ->whereHas('referral', fn ($q) => $q->where('status', '!=', Referral::STATUS_CLOSED))
-            ->orderBy('due_date')
-            ->orderBy('plan_number')
-            ->get()
-            ->groupBy('referral_id')
-            ->map(fn ($plans) => $plans->sortBy('plan_number')->first())
-            ->sortBy(fn ($plan) => $plan->due_date->timestamp)
-            ->values();
+        $nextPlans = $this->nextPlans($visitedTodayReferralIds);
 
         // ถังตามความเร่งด่วน: overdue = เกินกำหนด, today = ครบวันนี้, week = พรุ่งนี้ถึง 7 วันข้างหน้า, later = หลังจากนั้น
-        $bucketOf = function (FollowUpPlan $plan) use ($today): string {
-            $days = (int) $today->diffInDays($plan->due_date->copy()->startOfDay(), false);
-
-            return match (true) {
-                $days < 0 => 'overdue',
-                $days === 0 => 'today',
-                $days <= 7 => 'week',
-                default => 'later',
-            };
-        };
+        $bucketOf = $this->bucketResolver($today);
         $countBuckets = fn ($plans) => [
             'all' => $plans->count(),
             'overdue' => $plans->filter(fn ($p) => $bucketOf($p) === 'overdue')->count(),
@@ -94,14 +75,39 @@ class DashboardController extends Controller
         $visitCounts = $countBuckets($visitAll);
         $callCounts = $countBuckets($callAll);
 
-        $dueFilter = in_array($request->query('due'), ['overdue', 'today', 'week'], true) ? $request->query('due') : null;
+        // ค่าเริ่มต้น = "ต้องทำ" (เกินกำหนด + วันนี้ + 7 วันข้างหน้า) — นัดที่ไกลกว่านั้นซ่อนไว้ (บอกจำนวน) เพื่อไม่ให้งานด่วนจมในรายการ
+        $dueFilter = in_array($request->query('due'), ['overdue', 'today', 'all'], true) ? $request->query('due') : 'must';
         $groupBySubDistrict = $request->query('group') === 'subdistrict';
-        $applyFilter = fn ($plans) => ($dueFilter ? $plans->filter(fn ($p) => $bucketOf($p) === $dueFilter) : $plans)->values();
+        $matchesFilter = fn (FollowUpPlan $p) => match ($dueFilter) {
+            'all' => true,
+            'overdue' => $bucketOf($p) === 'overdue',
+            'today' => $bucketOf($p) === 'today',
+            default => $bucketOf($p) !== 'later',
+        };
+        $applyFilter = fn ($plans) => $plans->filter($matchesFilter)->values();
 
         $visitPlans = $applyFilter($visitAll)->take(200);
         $callPlans = $applyFilter($callAll)->take(200);
 
+        // ตัวกรองใช้ร่วมกันทั้งสองตาราง จึงนับรวมเยี่ยมบ้าน + โทรติดตาม; และจำนวนที่ซ่อนอยู่ (นัดเกิน 7 วัน) ของแต่ละตาราง
+        $bothAll = $visitAll->concat($callAll);
+        $workCounts = [
+            'must' => $bothAll->filter(fn ($p) => $bucketOf($p) !== 'later')->count(),
+            'overdue' => $bothAll->filter(fn ($p) => $bucketOf($p) === 'overdue')->count(),
+            'today' => $bothAll->filter(fn ($p) => $bucketOf($p) === 'today')->count(),
+            'all' => $bothAll->count(),
+        ];
+        $hiddenLater = $dueFilter === 'must'
+            ? ['visit' => $visitAll->filter(fn ($p) => $bucketOf($p) === 'later')->count(), 'call' => $callAll->filter(fn ($p) => $bucketOf($p) === 'later')->count()]
+            : ['visit' => 0, 'call' => 0];
+
+        // ล่าช้าสูงสุดกี่วัน — ใช้กำหนดสีช่องงาน (แดงเฉพาะล่าช้าชัดเจนตั้งแต่ 3 วัน)
+        $maxLate = fn ($plans) => (int) $plans->map(fn ($p) => max(0, (int) $p->due_date->copy()->startOfDay()->diffInDays($today, false)))->max();
+        $visitMaxLate = $maxLate($visitAll);
+        $callMaxLate = $maxLate($callAll);
+
         // ผลเยี่ยมรอพยาบาลยืนยัน + กี่รายที่ AI พบสัญญาณเสี่ยง + เก่าสุดรอมากี่วัน
+        $awaitingTop = FollowUpRecord::awaitingDecision()->with('plan.referral.patient')->orderBy('visited_at')->limit(5)->get();
         $awaiting = FollowUpRecord::awaitingDecision()->orderBy('visited_at')->get(['id', 'visited_at', 'ai_analysis']);
         $pendingDecisionCount = $awaiting->count();
         $pendingDecisionRisk = $awaiting->filter(fn ($r) => ($r->ai_analysis['risk_detected'] ?? false) === true)->count();
@@ -151,6 +157,11 @@ class DashboardController extends Controller
             'visitCounts',
             'callCounts',
             'dueFilter',
+            'workCounts',
+            'hiddenLater',
+            'visitMaxLate',
+            'callMaxLate',
+            'awaitingTop',
             'groupBySubDistrict',
             'pendingDecisionCount',
             'pendingDecisionRisk',
@@ -161,6 +172,69 @@ class DashboardController extends Controller
             'redContinuingReferrals',
             'recentRiskRecords',
         ));
+    }
+
+    /**
+     * ทุกเคสที่ยังไม่ปิดโชว์ "นัดถัดไปนัดเดียว" (นัดที่ใกล้สุด) เรียงตามกำหนด — เคสที่เยี่ยม/โทรไปแล้ววันนี้ออกจากรายการ
+     *
+     * @param  \Illuminate\Support\Collection<int, int>  $excludeReferralIds
+     * @return \Illuminate\Support\Collection<int, FollowUpPlan>
+     */
+    private function nextPlans($excludeReferralIds)
+    {
+        return FollowUpPlan::with(['referral.patient', 'referral.caseType'])
+            ->where('status', FollowUpPlan::STATUS_SCHEDULED)
+            ->whereNotIn('referral_id', $excludeReferralIds)
+            ->whereHas('referral', fn ($q) => $q->where('status', '!=', Referral::STATUS_CLOSED))
+            ->orderBy('due_date')
+            ->orderBy('plan_number')
+            ->get()
+            ->groupBy('referral_id')
+            ->map(fn ($plans) => $plans->sortBy('plan_number')->first())
+            ->sortBy(fn ($plan) => $plan->due_date->timestamp)
+            ->values();
+    }
+
+    private function bucketResolver(Carbon $today): \Closure
+    {
+        return function (FollowUpPlan $plan) use ($today): string {
+            $days = (int) $today->diffInDays($plan->due_date->copy()->startOfDay(), false);
+
+            return match (true) {
+                $days < 0 => 'overdue',
+                $days === 0 => 'today',
+                $days <= 7 => 'week',
+                default => 'later',
+            };
+        };
+    }
+
+    /**
+     * ใบนัดวันนี้ (พิมพ์): ลงพื้นที่เยี่ยมบ้านที่เกินกำหนด + ครบกำหนดวันนี้ เรียงตามตำบลแล้วกำหนด — ถือออกพื้นที่แทนการจดเอง
+     */
+    public function dailySheet(): View
+    {
+        $today = Carbon::today();
+
+        $visitedTodayReferralIds = FollowUpRecord::whereDate('visited_at', $today)
+            ->with('plan:id,referral_id')
+            ->get()
+            ->pluck('plan.referral_id')
+            ->unique()
+            ->values();
+
+        $bucketOf = $this->bucketResolver($today);
+
+        $plans = $this->nextPlans($visitedTodayReferralIds)
+            ->where('method', FollowUpPlan::METHOD_HOME_VISIT)
+            ->filter(fn (FollowUpPlan $p) => in_array($bucketOf($p), ['overdue', 'today'], true))
+            ->sortBy([
+                fn ($a, $b) => strcmp((string) ($a->referral->patient->sub_district ?: "\u{FFFF}"), (string) ($b->referral->patient->sub_district ?: "\u{FFFF}")),
+                fn ($a, $b) => $a->due_date->timestamp <=> $b->due_date->timestamp,
+            ])
+            ->values();
+
+        return view('dashboard-daily-sheet', ['plans' => $plans, 'today' => $today]);
     }
 
     /**

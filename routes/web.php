@@ -22,6 +22,8 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])->name('dashboard');
 Route::get('/dashboard/patients', [DashboardController::class, 'monthlyPatients'])
     ->middleware(['auth', 'verified', 'role:home_visit_team,admin'])->name('dashboard.patients');
+Route::get('/dashboard/daily-sheet', [DashboardController::class, 'dailySheet'])
+    ->middleware(['auth', 'verified', 'role:home_visit_team,admin'])->name('dashboard.daily-sheet');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

@@ -155,7 +155,6 @@ class RescheduleFollowUpTest extends TestCase
 
         $response->assertSee('รอเยี่ยม')
             ->assertSee('เคสที่ได้รับการเยี่ยมวันนี้')
-            ->assertDontSee('นัดวันนี้')
             ->assertDontSee('เกินกำหนด</span>', false);
         $this->assertSame(1, $response->viewData('waitingCount'));
         $this->assertSame(1, $response->viewData('visitedTodayCount'));

@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ภาพรวมทีมเยี่ยมบ้าน (work board) — Chira Continuity Care (Triple C)</title>
+<style>
+  :root{
+    /* Primary - Slate / Steel Blue */
+    --color-primary-900:#16232C;
+    --color-primary-800:#1E3644;
+    --color-primary-700:#2C5166;
+    --color-primary-600:#3D6B84;
+    --color-primary-500:#5586A0;
+    --color-primary-300:#A8C4D2;
+    --color-primary-100:#E1EBEF;
+    --color-primary-50:#F4F8FA;
+
+    /* Neutral - Warm Khaki */
+    --color-neutral-900:#22201A;
+    --color-neutral-700:#4A4739;
+    --color-neutral-500:#7C7863;
+    --color-neutral-300:#C9C4AD;
+    --color-neutral-200:#DEDAC6;
+    --color-neutral-100:#F1EEE0;
+    --color-surface:#FFFFFF;
+
+    /* Secondary accent */
+    --color-accent-blue:#3E7CA6;
+    --color-accent-gold:#C9932E;
+
+    /* Semantic */
+    --color-risk:#B23B2C;
+    --color-risk-tint:#F7E7E2;
+    --color-warning:#C2891F;
+    --color-warning-tint:#FBF0DC;
+    --color-success:#3E8E49;
+    --color-success-tint:#E5F2E4;
+
+    /* Spacing */
+    --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px;
+    --space-5:20px; --space-6:24px; --space-8:32px; --space-10:40px;
+    --space-12:48px; --space-16:64px;
+
+    /* Radius / Shadow */
+    --radius-sm:4px; --radius-md:8px; --radius-lg:12px; --radius-pill:999px;
+    --shadow-sm:0 1px 2px rgba(34,32,26,0.06);
+    --shadow-md:0 1px 2px rgba(34,32,26,0.06), 0 4px 14px rgba(34,32,26,0.08);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Sarabun','Noto Sans Thai','Leelawadee UI','Segoe UI',system-ui,sans-serif;
+    background:var(--color-primary-50);
+    color:var(--color-neutral-900);
+    font-size:14px;
+    line-height:22px;
+    overflow-x:hidden;
+  }
+  a{color:inherit;text-decoration:none;}
+  button{font-family:inherit;}
+  :focus-visible{outline:2px solid var(--color-primary-700);outline-offset:2px;border-radius:var(--radius-sm);}
+  h1,h2,h3{margin:0;}
+  .h1{font-size:24px;line-height:32px;font-weight:700;}
+  .h2{font-size:20px;line-height:28px;font-weight:700;}
+  .h3{font-size:16px;line-height:24px;font-weight:600;}
+  .caption{font-size:11.5px;line-height:16px;font-weight:500;color:var(--color-neutral-500);}
+  .num{font-variant-numeric:tabular-nums;}
+  .visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
+
+  /* ============ Layout ============ */
+  .app{display:flex;min-height:100vh;}
+
+  /* ============ Sidebar ============ */
+  .sidebar{
+    width:248px;flex-shrink:0;
+    background:linear-gradient(180deg,var(--color-primary-900) 0%,var(--color-primary-800) 100%);
+    color:#EFEEE2;display:flex;flex-direction:column;
+    padding:var(--space-5) var(--space-3);gap:var(--space-6);
+  }
+  .brand{display:flex;align-items:center;gap:var(--space-2);padding:0 var(--space-2);margin-bottom:var(--space-2);}
+  .brand-mark{width:34px;height:34px;flex-shrink:0;border-radius:var(--radius-sm);background:#F4F8FA;display:flex;align-items:center;justify-content:center;}
+  .brand-mark svg{width:24px;height:24px;}
+  .brand-text{display:flex;flex-direction:column;line-height:1.15;}
+  .brand-text .full{font-weight:700;font-size:14px;color:#F4F8FA;white-space:nowrap;}
+  .brand-text .sub{font-size:11px;color:var(--color-primary-300);}
+  .nav-section{display:flex;flex-direction:column;gap:2px;}
+  .nav-section + .nav-section{margin-top:var(--space-2);}
+  .nav-heading{padding:var(--space-2) var(--space-3) var(--space-1);font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--color-primary-300);}
+  .nav-item{
+    display:flex;align-items:center;gap:var(--space-3);
+    padding:var(--space-3);border-radius:var(--radius-md);
+    color:#E6E4D4;font-weight:600;font-size:14px;cursor:pointer;white-space:nowrap;
+    min-height:44px;
+  }
+  .nav-item svg{width:18px;height:18px;flex-shrink:0;opacity:.9;}
+  .nav-item:hover{background:rgba(168,196,210,0.14);}
+  .nav-item.active{background:rgba(168,196,210,0.22);color:#fff;box-shadow:inset 3px 0 0 var(--color-accent-gold);}
+  .nav-item.sub{padding-left:var(--space-8);font-weight:500;font-size:13.5px;}
+  .nav-item:focus-visible{outline-color:#fff;}
+  .nav-badge{
+    margin-left:auto;min-width:22px;height:22px;padding:0 6px;border-radius:var(--radius-pill);
+    background:var(--color-warning);color:var(--color-neutral-900);
+    font-size:12px;font-weight:800;line-height:22px;text-align:center;font-variant-numeric:tabular-nums;
+  }
+  .sidebar-footer{margin-top:auto;padding:var(--space-3);font-size:11px;color:var(--color-primary-300);}
+
+  /* ============ Main ============ */
+  .main{flex:1;min-width:0;display:flex;flex-direction:column;}
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);
+    padding:var(--space-4) var(--space-6);background:var(--color-surface);
+    border-bottom:1px solid var(--color-neutral-200);position:sticky;top:0;z-index:10;
+  }
+  .topbar-title{font-size:16px;font-weight:700;color:var(--color-neutral-900);}
+  .user-chip{display:flex;align-items:center;gap:var(--space-2);padding:var(--space-1) var(--space-3);border:1px solid var(--color-neutral-300);border-radius:var(--radius-pill);background:var(--color-neutral-100);}
+  .user-avatar{width:28px;height:28px;border-radius:50%;background:var(--color-primary-700);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;}
+  .user-chip .who{display:flex;flex-direction:column;line-height:1.2;}
+  .user-chip .who .name{font-weight:600;font-size:13px;}
+  .role-badge{display:inline-block;margin-top:1px;font-size:11px;font-weight:700;padding:1px var(--space-2);border-radius:var(--radius-pill);background:var(--color-primary-100);color:var(--color-primary-700);width:fit-content;}
+
+  /* ============ Demo control bar (prototype only) ============ */
+  .demo-bar{
+    background:var(--color-neutral-100);
+    border-bottom:1px dashed var(--color-neutral-300);
+    padding:0 var(--space-6);
+  }
+  .demo-strip{display:flex;flex-wrap:wrap;align-items:center;gap:0 var(--space-3);min-height:28px;}
+  .demo-label{font-size:11px;font-weight:600;color:var(--color-neutral-500);}
+  .demo-state{font-size:11px;color:var(--color-neutral-500);}
+  .demo-toggle{
+    margin-left:auto;background:none;border:none;cursor:pointer;color:var(--color-neutral-700);
+    font-size:11.5px;font-weight:600;text-decoration:underline;min-height:40px;padding:0 var(--space-1);
+  }
+  .demo-panel{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2) var(--space-6);padding:0 0 var(--space-3);}
+  .demo-panel[hidden]{display:none;}
+  .demo-group{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);}
+  .demo-group .glabel{font-size:12.5px;font-weight:600;color:var(--color-neutral-700);}
+  .demo-note{font-size:11.5px;color:var(--color-neutral-700);}
+
+  .content{padding:var(--space-6);display:flex;flex-direction:column;gap:var(--space-6);max-width:1280px;width:100%;}
+  .page-head{display:flex;flex-direction:column;gap:2px;order:-1;}
+  .page-head .sub{color:var(--color-neutral-700);font-size:14px;}
+  #sec-monthly{order:0;} #sec-alerts{order:1;} #sec-tiles{order:2;} #sec-tasks{order:3;} #sec-results{order:4;} #sec-watch{order:5;}
+  body.phase-full.view-nurse #sec-results{order:3;}
+  body.phase-full.view-nurse #sec-tasks{order:4;}
+  [id]{scroll-margin-top:84px;}
+
+  /* ============ Segmented toggles ============ */
+  .seg{display:flex;flex-wrap:wrap;gap:var(--space-1);}
+  .seg button{
+    min-height:40px;padding:0 var(--space-3);
+    background:var(--color-surface);color:var(--color-neutral-900);
+    border:1px solid var(--color-neutral-300);border-radius:var(--radius-md);
+    font-size:13.5px;font-weight:600;cursor:pointer;font-variant-numeric:tabular-nums;
+  }
+  .seg button:hover:not(:disabled){background:var(--color-primary-100);}
+  .seg button[aria-pressed="true"]{background:var(--color-primary-700);border-color:var(--color-primary-700);color:#fff;}
+  .seg button:disabled{color:var(--color-neutral-500);background:var(--color-neutral-100);cursor:not-allowed;}
+
+  /* ============ Buttons ============ */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    min-height:40px;border:1px solid transparent;border-radius:var(--radius-md);
+    padding:var(--space-2) var(--space-4);font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;
+  }
+  .btn svg{width:16px;height:16px;flex-shrink:0;}
+  .btn-primary{background:var(--color-primary-700);color:#fff;}
+  .btn-primary:hover:not(:disabled){background:var(--color-primary-600);}
+  .btn-primary:disabled{background:var(--color-neutral-300);color:var(--color-neutral-700);cursor:not-allowed;}
+  .btn-secondary{background:#fff;color:var(--color-neutral-900);border-color:var(--color-neutral-300);}
+  .btn-secondary:hover{background:var(--color-neutral-100);}
+  .btn-outline{background:#fff;color:var(--color-primary-700);border:1.5px solid var(--color-primary-700);}
+  .btn-outline:hover{background:var(--color-primary-100);}
+  .btn-sm{padding:6px var(--space-3);font-size:13px;}
+  .btn-link{background:none;border:none;color:var(--color-primary-700);font-weight:600;text-decoration:underline;cursor:pointer;min-height:40px;padding:0 var(--space-2);font-size:13px;}
+  .chev{
+    width:40px;height:40px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;
+    background:#fff;border:1px solid var(--color-neutral-300);border-radius:var(--radius-md);cursor:pointer;color:var(--color-neutral-700);
+  }
+  .chev:hover{background:var(--color-neutral-100);}
+  .chev svg{width:18px;height:18px;transition:transform .15s;}
+  .chev[aria-expanded="true"] svg{transform:rotate(180deg);}
+
+  /* ============ Chips ============ */
+  .chip{
+    display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;
+    padding:2px var(--space-2);border-radius:var(--radius-pill);white-space:nowrap;line-height:20px;
+  }
+  .chip::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
+  .chip-today{background:var(--color-warning-tint);color:var(--color-warning);}
+  .chip-overdue,.chip-risk{background:var(--color-risk-tint);color:var(--color-risk);}
+  .chip-done{background:var(--color-success-tint);color:var(--color-success);}
+  .chip-inzone{background:var(--color-primary-100);color:var(--color-primary-700);}
+  .chip-method{background:var(--color-neutral-100);color:var(--color-neutral-700);}
+  .chip-ai{border:1px dashed currentColor;}
+  /* กลุ่มสี: ทรงสี่เหลี่ยมมุมเล็ก จุดสี่เหลี่ยม เพื่อไม่สับสนกับ chip กำหนด (pill) */
+  .gchip{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;padding:2px var(--space-2);border-radius:var(--radius-sm);white-space:nowrap;line-height:20px;}
+  .gchip::before{content:"";width:7px;height:7px;background:currentColor;flex-shrink:0;}
+  .g-red{background:var(--color-risk-tint);color:var(--color-risk);}
+  .g-yellow{background:var(--color-warning-tint);color:var(--color-warning);}
+  .g-green{background:var(--color-success-tint);color:var(--color-success);}
+  .g-pall{background:var(--color-primary-100);color:var(--color-primary-700);}
+
+  /* db-tag: เฉพาะระยะภาพเต็ม */
+  .db-tag{display:none;font-size:11px;font-weight:500;line-height:16px;color:var(--color-neutral-500);border:1px solid var(--color-neutral-300);border-radius:var(--radius-sm);padding:0 5px;white-space:nowrap;background:var(--color-neutral-100);}
+  body.phase-full .db-tag{display:inline-block;}
+  body.phase-now .full-only{display:none !important;}
+  .dbm{border-bottom:1px dotted var(--color-neutral-500);}
+
+  /* ============ Cards ============ */
+  .card{background:var(--color-surface);border:1px solid var(--color-neutral-200);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);}
+  .card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-3);padding:var(--space-5) var(--space-5) var(--space-3);flex-wrap:wrap;}
+  .card-head .h2{font-size:18px;}
+  .card-head .sub{color:var(--color-neutral-700);font-size:12.5px;margin-top:2px;}
+  .head-actions{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;}
+  .section-title{margin-bottom:var(--space-3);display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;}
+
+  /* ============ Alert strips ============ */
+  .alerts{display:flex;flex-direction:column;gap:var(--space-2);}
+  .alert-row{
+    display:flex;align-items:center;gap:var(--space-3);
+    padding:var(--space-2) var(--space-3);border-radius:var(--radius-md);
+    border:1px solid;border-left-width:5px;font-size:14px;line-height:20px;
+  }
+  .alert-row.risk{background:var(--color-risk-tint);border-color:var(--color-risk);color:var(--color-neutral-900);}
+  .alert-row.warn{background:var(--color-warning-tint);border-color:var(--color-warning);color:var(--color-neutral-900);}
+  .alert-row .ico{width:20px;height:20px;flex-shrink:0;}
+  .alert-row.risk .ico{color:var(--color-risk);}
+  .alert-row.warn .ico{color:var(--color-warning);}
+  .alert-row .txt{flex:1;min-width:0;font-weight:600;}
+  .alert-row .btn{flex-shrink:0;}
+
+  /* ============ Tiles (ต้องทำตอนนี้) ============ */
+  .tile-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:var(--space-4);}
+  .tile{
+    grid-column:span 3;text-align:left;
+    background:var(--color-surface);border:1px solid var(--color-neutral-200);border-left-width:6px;
+    border-radius:var(--radius-lg);padding:var(--space-4);box-shadow:var(--shadow-sm);
+    display:flex;flex-direction:column;gap:var(--space-1);cursor:pointer;color:inherit;
+    min-height:44px;min-width:0;
+  }
+  button.tile:hover{box-shadow:var(--shadow-md);}
+  div.tile{cursor:default;}
+  .tile.tone-red{border-left-color:var(--color-risk);}
+  .tile.tone-orange{border-left-color:var(--color-warning);}
+  .tile.tone-green{border-left-color:var(--color-success);}
+  .tile.tone-grey{border-left-color:var(--color-neutral-300);}
+  .tile-top{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-2);flex-wrap:wrap;}
+  .tile-label{font-size:13px;font-weight:700;color:var(--color-neutral-700);line-height:19px;}
+  .tile-num{font-size:32px;line-height:40px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--color-neutral-900);}
+  .tile.tone-red .tile-num{color:var(--color-risk);}
+  .tile.tone-orange .tile-num{color:var(--color-warning);}
+  .tile-num small{font-size:14px;font-weight:600;color:var(--color-neutral-700);margin-left:4px;}
+  .tile-sub{font-size:12.5px;color:var(--color-neutral-700);line-height:18px;}
+  .tile.big{grid-column:span 6;padding:var(--space-5);}
+  .tile.big .tile-num{font-size:44px;line-height:52px;}
+  .tile.big .tile-label{font-size:15px;}
+  .tile.big .tile-sub{font-size:13.5px;}
+  .tile.compact{grid-column:span 6;flex-direction:row;align-items:center;flex-wrap:wrap;gap:var(--space-2) var(--space-4);padding:var(--space-3) var(--space-4);}
+  .tile.compact .tile-num{font-size:26px;line-height:32px;}
+  .tile.compact .tile-main{flex:1;min-width:140px;display:flex;flex-direction:column;}
+  .tile.mini{background:var(--color-neutral-100);}
+  .tile-extra{margin-top:var(--space-2);display:flex;flex-wrap:wrap;gap:var(--space-2);align-items:center;}
+  .team-line{font-size:13px;color:var(--color-neutral-700);display:flex;flex-wrap:wrap;gap:var(--space-2);align-items:center;margin-top:var(--space-3);}
+  .team-line strong{color:var(--color-neutral-900);}
+
+  /* ============ Filter bar ============ */
+  .filter-bar{padding:var(--space-4);display:flex;flex-direction:column;gap:var(--space-3);}
+  .filter-bar .ftitle{font-weight:700;font-size:14px;}
+  .filter-row{display:flex;flex-wrap:wrap;gap:var(--space-2) var(--space-5);align-items:center;}
+  .filter-row .glabel{font-size:12.5px;font-weight:600;color:var(--color-neutral-700);margin-right:var(--space-2);}
+  .filter-hint{font-size:12px;color:var(--color-neutral-500);}
+
+  /* switch */
+  .switch{display:inline-flex;align-items:center;gap:var(--space-2);min-height:40px;background:none;border:none;cursor:pointer;font-size:13.5px;font-weight:600;color:var(--color-neutral-900);padding:0;}
+  .switch .track{width:40px;height:22px;border-radius:var(--radius-pill);background:var(--color-neutral-300);position:relative;flex-shrink:0;transition:background .15s;}
+  .switch .track::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .15s;}
+  .switch[aria-checked="true"] .track{background:var(--color-primary-700);}
+  .switch[aria-checked="true"] .track::after{left:21px;}
+
+  /* ============ Work rows ============ */
+  .wlist{list-style:none;margin:0;padding:0;}
+  .wrow{border-top:1px solid var(--color-neutral-200);}
+  .wrow.is-overdue{background:rgba(178,59,44,0.04);}
+  .wmain{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--space-2) var(--space-3);padding:var(--space-3) var(--space-5);align-items:center;}
+  .wl1,.wl2{display:flex;flex-wrap:wrap;align-items:center;gap:2px var(--space-2);min-width:0;}
+  .wl2{font-size:12.5px;color:var(--color-neutral-700);margin-top:2px;}
+  .pname{font-weight:700;font-size:15px;overflow-wrap:anywhere;}
+  .phn{font-size:12.5px;color:var(--color-neutral-500);font-variant-numeric:tabular-nums;}
+  .vno{font-size:12.5px;font-weight:600;color:var(--color-neutral-700);}
+  .wright{display:flex;align-items:center;gap:var(--space-2);}
+  .tel{display:inline-flex;align-items:center;gap:4px;min-height:40px;color:var(--color-primary-700);font-weight:600;font-variant-numeric:tabular-nums;text-decoration:underline;}
+  .tel svg{width:14px;height:14px;}
+  .nophone{color:var(--color-neutral-500);}
+  .owner{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;color:var(--color-neutral-700);}
+  .av{width:22px;height:22px;border-radius:50%;background:var(--color-primary-100);color:var(--color-primary-700);display:inline-flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;flex-shrink:0;}
+  .group-head{padding:var(--space-2) var(--space-5);background:var(--color-neutral-100);font-weight:700;font-size:13px;color:var(--color-neutral-700);border-top:1px solid var(--color-neutral-200);}
+  .hidden-note{padding:var(--space-2) var(--space-5) var(--space-3);font-size:13px;color:var(--color-neutral-700);border-top:1px solid var(--color-neutral-200);display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-1);}
+  .empty{padding:var(--space-5);color:var(--color-neutral-700);font-size:13.5px;border-top:1px solid var(--color-neutral-200);}
+  .wdetail{padding:var(--space-3) var(--space-5) var(--space-4);background:var(--color-primary-50);border-top:1px solid var(--color-neutral-200);}
+  .ddl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3) var(--space-6);margin:0 0 var(--space-3);}
+  .ddl .full{grid-column:1/-1;}
+  .ddl dt{font-size:12px;font-weight:700;color:var(--color-neutral-500);}
+  .ddl dd{margin:2px 0 0;font-size:13.5px;overflow-wrap:anywhere;}
+  .ddl ul{margin:2px 0 0;padding-left:var(--space-5);}
+  .call-actions{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-2);}
+  .callbtn{
+    display:inline-flex;align-items:center;gap:var(--space-2);min-height:48px;padding:6px var(--space-4);
+    border-radius:var(--radius-md);background:var(--color-primary-100);color:var(--color-primary-700);
+    border:1px solid var(--color-primary-300);font-weight:700;font-size:14.5px;font-variant-numeric:tabular-nums;
+    text-align:left;line-height:18px;
+  }
+  .callbtn svg{width:18px;height:18px;flex-shrink:0;}
+  .callbtn small{display:block;font-size:11.5px;font-weight:500;color:var(--color-neutral-700);}
+  .callbtn:hover{background:#fff;}
+  .callbtn.none{background:var(--color-neutral-100);color:var(--color-neutral-500);border-style:dashed;border-color:var(--color-neutral-300);}
+
+  /* ============ Results ============ */
+  .rmain{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--space-2) var(--space-3);padding:var(--space-3) var(--space-5);align-items:center;}
+  .rmain.has-sel{grid-template-columns:40px minmax(0,1fr) auto;}
+  .sel-cell{width:40px;height:40px;display:flex;align-items:center;justify-content:center;}
+  .sel-cell input{width:22px;height:22px;accent-color:var(--color-primary-700);cursor:pointer;margin:0;}
+  .proposal{display:flex;flex-wrap:wrap;align-items:center;gap:4px var(--space-2);font-size:13px;margin-top:2px;}
+  .proposal .plabel{color:var(--color-neutral-700);}
+  .proposal strong{color:var(--color-neutral-900);}
+  .bulk-bar{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2) var(--space-3);padding:var(--space-3) var(--space-5);background:var(--color-primary-50);border-top:1px solid var(--color-neutral-200);}
+  .bulk-bar .info{font-size:13px;color:var(--color-neutral-700);flex:1;min-width:180px;}
+  .helper{padding:0 var(--space-5) var(--space-3);font-size:12.5px;color:var(--color-neutral-700);}
+  .card-foot{padding:var(--space-2) var(--space-5) var(--space-3);border-top:1px solid var(--color-neutral-200);}
+
+  /* ============ Watch list ============ */
+  .wrisk{padding:var(--space-3) var(--space-5);border-top:1px solid var(--color-neutral-200);display:flex;gap:var(--space-3);align-items:flex-start;flex-wrap:wrap;}
+  .wrisk .info{flex:1;min-width:200px;}
+  .wrisk .snippet{font-size:13px;color:var(--color-neutral-700);line-height:19px;margin-top:2px;}
+  .wrisk .meta{font-size:12px;color:var(--color-neutral-500);margin-top:4px;}
+
+  /* ============ Accordion ============ */
+  .acc-head{
+    width:100%;display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);
+    background:none;border:none;padding:var(--space-4) var(--space-5);cursor:pointer;text-align:left;min-height:56px;
+    border-radius:var(--radius-lg);color:inherit;
+  }
+  .acc-head .h2{font-size:18px;}
+  .acc-head .asub{font-size:12.5px;color:var(--color-neutral-700);}
+  .acc-head svg{width:20px;height:20px;flex-shrink:0;transition:transform .15s;color:var(--color-neutral-700);}
+  .acc-head[aria-expanded="true"] svg{transform:rotate(180deg);}
+  .acc-body{border-top:1px solid var(--color-neutral-200);}
+  .month-row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2) var(--space-3);padding:var(--space-3) var(--space-5);}
+  .month-row label{font-size:12.5px;font-weight:600;}
+  select{
+    min-height:40px;padding:0 var(--space-3);background:var(--color-neutral-100);border:1px solid var(--color-neutral-300);
+    border-radius:var(--radius-sm);font-family:inherit;font-size:14px;color:var(--color-neutral-900);
+  }
+  textarea{
+    width:100%;min-height:72px;padding:var(--space-2) var(--space-3);background:var(--color-neutral-100);border:1px solid var(--color-neutral-300);
+    border-radius:var(--radius-sm);font-family:inherit;font-size:14px;color:var(--color-neutral-900);resize:vertical;
+  }
+  .kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--space-4);padding:0 var(--space-5) var(--space-5);}
+  .kpi-link{background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;text-align:left;cursor:pointer;text-decoration:none;}
+  .kpi-link:hover,.kpi-link:focus-visible{text-decoration:underline;}
+  .kpi-link.kpi-value small{font-size:14px;font-weight:600;}
+  .kpi-split-sub{display:block;font-size:11.5px;color:var(--color-neutral-500);margin-top:-2px;}
+  .kpi-tile{background:var(--color-surface);border:1px solid var(--color-neutral-200);border-radius:var(--radius-lg);padding:var(--space-4);display:flex;flex-direction:column;gap:var(--space-2);}
+  .kpi-tile .caption{font-weight:600;}
+  .kpi-split-item{padding:var(--space-2) 0;display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-2);}
+  .kpi-split-item + .kpi-split-item{border-top:1px solid var(--color-neutral-200);}
+  .kpi-split-label{font-size:13px;font-weight:600;color:var(--color-neutral-700);}
+  .kpi-split-value{font-size:24px;line-height:30px;font-weight:800;font-variant-numeric:tabular-nums;}
+  .kpi-value{font-size:32px;line-height:40px;font-weight:800;font-variant-numeric:tabular-nums;}
+
+  /* ============ Modals ============ */
+  .modal-back{position:fixed;inset:0;background:rgba(22,35,44,0.6);z-index:100;display:flex;align-items:flex-start;justify-content:center;padding:var(--space-6) var(--space-4);overflow:auto;}
+  .modal-back[hidden]{display:none;}
+  .modal{background:var(--color-surface);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);width:100%;max-width:560px;margin:auto;padding:var(--space-5);display:flex;flex-direction:column;gap:var(--space-4);}
+  .modal h2{font-size:18px;line-height:26px;}
+  .modal-actions{display:flex;flex-wrap:wrap;gap:var(--space-2);}
+  .decision-box{border:3px solid var(--color-primary-700);border-radius:var(--radius-md);padding:var(--space-4);position:relative;margin-top:var(--space-2);display:flex;flex-direction:column;gap:var(--space-3);}
+  .decision-label{position:absolute;top:-13px;left:var(--space-3);background:var(--color-primary-700);color:#fff;font-size:12.5px;font-weight:700;padding:1px var(--space-3);border-radius:var(--radius-sm);}
+  .sel-list{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:var(--space-2);}
+  .sel-list li{font-size:13.5px;padding-bottom:var(--space-2);border-bottom:1px solid var(--color-neutral-200);}
+  .sel-list li:last-child{border-bottom:none;padding-bottom:0;}
+  .confirm-check{display:flex;gap:var(--space-3);align-items:flex-start;cursor:pointer;font-size:14px;font-weight:600;min-height:40px;}
+  .confirm-check input{width:22px;height:22px;margin:0;flex-shrink:0;accent-color:var(--color-primary-700);}
+  .radio-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--space-2);border:none;padding:0;margin:0;}
+  .radio-card{position:relative;}
+  .radio-card input{position:absolute;opacity:0;inset:0;width:100%;height:100%;margin:0;cursor:pointer;}
+  .radio-card span{display:flex;align-items:center;justify-content:center;text-align:center;min-height:48px;padding:var(--space-2);border:1.5px solid var(--color-neutral-300);border-radius:var(--radius-md);font-weight:700;font-size:14px;background:#fff;}
+  .radio-card input:checked + span{border-color:var(--color-primary-700);background:var(--color-primary-100);color:var(--color-primary-700);box-shadow:inset 0 0 0 1px var(--color-primary-700);}
+  .radio-card input:focus-visible + span{outline:2px solid var(--color-primary-700);outline-offset:2px;}
+  .field label,.field .flabel{display:block;font-size:12.5px;font-weight:600;margin-bottom:2px;}
+  .field .hint{font-size:11.5px;color:var(--color-neutral-500);margin-bottom:var(--space-1);}
+  .proposal-banner{background:var(--color-primary-50);border:1px solid var(--color-primary-300);border-radius:var(--radius-md);padding:var(--space-2) var(--space-3);font-size:12.5px;color:var(--color-primary-700);font-weight:600;}
+
+  /* print modal */
+  #printModal{padding:0;align-items:stretch;background:rgba(22,35,44,0.75);}
+  .print-wrap{display:flex;flex-direction:column;width:100%;max-width:900px;margin:0 auto;min-height:100%;}
+  .print-bar{position:sticky;top:0;z-index:2;display:flex;flex-wrap:wrap;gap:var(--space-2) var(--space-3);align-items:center;padding:var(--space-3) var(--space-4);background:var(--color-surface);border-bottom:1px solid var(--color-neutral-200);}
+  .print-bar .ptitle{font-weight:700;flex:1;min-width:160px;}
+  .print-scroll{overflow:auto;padding:var(--space-4);}
+  .paper{
+    background:#fff;color:#000;width:210mm;min-width:620px;max-width:100%;margin:0 auto;
+    padding:14mm 12mm;box-shadow:var(--shadow-md);min-height:297mm;display:flex;flex-direction:column;
+    font-size:12.5px;line-height:18px;
+  }
+  .paper h2{font-size:18px;line-height:26px;margin-bottom:2px;}
+  .paper .psub{font-size:12px;color:var(--color-neutral-700);margin-bottom:var(--space-3);}
+  .paper table{width:100%;border-collapse:collapse;table-layout:fixed;}
+  .paper th,.paper td{border:1px solid var(--color-neutral-900);padding:4px 6px;vertical-align:top;font-size:12px;line-height:17px;text-align:left;overflow-wrap:anywhere;}
+  .paper th{background:var(--color-neutral-100);font-weight:700;}
+  .paper td.blank{height:56px;}
+  .paper .pfoot{margin-top:auto;padding-top:var(--space-4);font-size:11.5px;border-top:1px solid var(--color-neutral-900);}
+
+  /* ============ Toast ============ */
+  .toast-wrap{position:fixed;left:0;right:0;bottom:var(--space-4);display:flex;justify-content:center;pointer-events:none;z-index:200;padding:0 var(--space-4);}
+  .toast{background:var(--color-neutral-900);color:#fff;padding:var(--space-3) var(--space-4);border-radius:var(--radius-md);box-shadow:var(--shadow-md);font-size:14px;font-weight:600;max-width:480px;}
+  .toast[hidden]{display:none;}
+
+  footer.credit{padding:0 var(--space-6) var(--space-8);color:var(--color-neutral-500);font-size:12px;}
+
+  /* ============ Responsive ============ */
+  @media (max-width:1100px){
+    .tile{grid-column:span 6;}
+    .kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  }
+  @media (max-width:860px){
+    .app{flex-direction:column;}
+    .sidebar{width:100%;flex-direction:row;align-items:center;overflow-x:auto;padding:var(--space-3);gap:var(--space-3);position:sticky;top:0;z-index:20;}
+    .brand{margin-bottom:0;}
+    .brand-text .sub{display:none;}
+    .nav-section{flex-direction:row;gap:var(--space-1);}
+    .nav-section + .nav-section{margin-top:0;}
+    .nav-heading{display:none;}
+    .nav-item.sub{padding-left:var(--space-3);}
+    .nav-badge{margin-left:var(--space-1);}
+    .sidebar-footer{display:none;}
+    .topbar{position:static;padding:var(--space-3) var(--space-4);}
+    .demo-bar{padding:0 var(--space-4);}
+    .content{padding:var(--space-4);gap:var(--space-5);}
+    .card-head{padding:var(--space-4) var(--space-4) var(--space-3);}
+    [id]{scroll-margin-top:72px;}
+  }
+  @media (max-width:700px){
+    .wmain{grid-template-columns:minmax(0,1fr);padding:var(--space-3) var(--space-4);}
+    .wright{flex-wrap:wrap;}
+    .wright .btn{flex:1;}
+    .rmain,.rmain.has-sel{padding:var(--space-3) var(--space-4);}
+    .rmain.has-sel{grid-template-columns:40px minmax(0,1fr);}
+    .rmain.has-sel .ractions{grid-column:1/-1;}
+    .rmain:not(.has-sel){grid-template-columns:minmax(0,1fr);}
+    .ractions .btn{width:100%;}
+    .ddl{grid-template-columns:minmax(0,1fr);}
+    .wdetail{padding:var(--space-3) var(--space-4) var(--space-4);}
+    .group-head,.hidden-note,.empty,.bulk-bar,.helper,.card-foot,.wrisk,.month-row{padding-left:var(--space-4);padding-right:var(--space-4);}
+    .kpi-grid{grid-template-columns:minmax(0,1fr);padding:0 var(--space-4) var(--space-4);}
+    .acc-head{padding:var(--space-3) var(--space-4);}
+    .radio-cards{grid-template-columns:minmax(0,1fr);}
+    .tile.big,.tile.compact{grid-column:span 12;}
+    .callbtn{flex:1 1 100%;}
+  }
+  @media (max-width:520px){
+    .topbar-title{font-size:15px;}
+    .user-chip .who .role-badge{display:none;}
+    .tile{grid-column:span 6;padding:var(--space-3);}
+    .tile-num{font-size:28px;line-height:34px;}
+    .tile-label{font-size:12.5px;}
+    .alert-row{flex-wrap:wrap;}
+    .alert-row .btn{width:100%;}
+  }
+
+  /* ============ Print ============ */
+  @media print{
+    @page{size:A4 portrait;margin:12mm;}
+    body{background:#fff;overflow:visible;}
+    .app,.toast-wrap{display:none !important;}
+    .modal-back:not(#printModal){display:none !important;}
+    #printModal{position:static;display:none;background:none;padding:0;overflow:visible;}
+    #printModal:not([hidden]){display:block !important;}
+    .print-wrap{max-width:none;display:block;}
+    .print-bar{display:none !important;}
+    .print-scroll{overflow:visible;padding:0;}
+    .paper{box-shadow:none;width:auto;min-width:0;min-height:0;padding:0;margin:0;}
+    .paper tr{break-inside:avoid;}
+  }
+</style>
+</head>
+<body class="phase-now view-nurse">
+<div class="app">
+
+  <!-- ============ Sidebar ============ -->
+  <aside class="sidebar" aria-label="เมนูหลัก">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#2C5166" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      </div>
+      <div class="brand-text">
+        <span class="full">Chira Continuity Care</span>
+        <span class="sub">Triple C</span>
+      </div>
+    </div>
+
+    <nav class="nav-section" aria-label="เมนูงานหลัก">
+      <a class="nav-item active" href="#" data-action="nav" aria-current="page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+        <span>แดชบอร์ด</span>
+      </a>
+      <a class="nav-item" href="#" data-action="nav">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 4h9a1 1 0 0 1 1 1v15l-4-3-4 3-4-3-4 3V8z"/><path d="M12 9h4M12 13h4"/></svg>
+        <span>รายการเคส</span>
+      </a>
+      <a class="nav-item" href="#" data-action="nav">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M9 3h6v3H9z"/><path d="M9 13l2 2 4-4"/></svg>
+        <span>วิเคราะห์แผนการพยาบาล</span>
+        <span class="nav-badge" id="navBadgePlan" aria-label="รอตรวจ 3 ราย">3</span>
+      </a>
+      <a class="nav-item" href="#" data-action="nav">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 4.5v-1M16 4.5v-1"/><path d="M7 13.5h3M7 16.5h6"/></svg>
+        <span>บันทึกการเยี่ยมบ้าน</span>
+      </a>
+      <a class="nav-item" href="#" data-action="nav">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21s7-7.5 7-12a7 7 0 1 0-14 0c0 4.5 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>
+        <span>ติดตามผลการเยี่ยม</span>
+      </a>
+      <a class="nav-item" href="#" data-action="nav">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+        <span>สรุปข้อมูลสำคัญงานเยี่ยมบ้าน</span>
+      </a>
+      <a class="nav-item" href="#" data-action="nav">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg>
+        <span>สรุปรายงานประจำเดือน</span>
+      </a>
+      <a class="nav-item" href="#" data-action="nav">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 12.5l2 2 4-4.5"/><circle cx="12" cy="12" r="9"/></svg>
+        <span>ประเมินความพึงพอใจ</span>
+      </a>
+    </nav>
+
+    <div class="nav-section" aria-label="จัดการระบบ">
+      <div class="nav-heading">จัดการระบบ</div>
+      <a class="nav-item sub" href="#" data-action="nav">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>
+        <span>ประเภทเคส</span>
+      </a>
+      <a class="nav-item sub" href="#" data-action="nav">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M16 21v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1"/><circle cx="9" cy="7" r="3.2"/><path d="M22 21v-1a4 4 0 0 0-3-3.87"/><path d="M16.5 3.3a3.2 3.2 0 0 1 0 6.2"/></svg>
+        <span>ผู้ใช้งาน</span>
+      </a>
+    </div>
+
+    <div class="sidebar-footer" id="sidebarWho">พว.กัญญา รักษ์ผู้ป่วย &middot; ทีมเยี่ยมบ้าน</div>
+  </aside>
+
+  <!-- ============ Main ============ -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-title">แดชบอร์ด</div>
+      <div class="user-chip">
+        <div class="user-avatar" id="userAvatar">กญ</div>
+        <div class="who">
+          <span class="name" id="userName">กัญญา รักษ์ผู้ป่วย</span>
+          <span class="role-badge" id="userRole">พยาบาลทีมเยี่ยมบ้าน</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ตัวควบคุมตัวอย่าง (เฉพาะ prototype) -->
+    <div class="demo-bar" role="group" aria-label="ตัวควบคุมตัวอย่าง (ไม่ใช่ส่วนของระบบ)">
+      <div class="demo-strip">
+        <span class="demo-label">ตัวควบคุมตัวอย่าง (ไม่ใช่ส่วนของระบบ)</span>
+        <span class="demo-state" id="demoState">ระยะ: ทำได้ทันที</span>
+        <button type="button" class="demo-toggle" id="demoToggle" data-action="demo-toggle" aria-expanded="false" aria-controls="demoPanel">เปลี่ยนมุมมองตัวอย่าง</button>
+      </div>
+      <div class="demo-panel" id="demoPanel" hidden>
+        <div class="demo-group">
+          <span class="glabel" id="lblPhase">ระยะ</span>
+          <div class="seg" role="group" aria-labelledby="lblPhase">
+            <button type="button" data-action="phase" data-val="now" aria-pressed="true">ทำได้ทันที</button>
+            <button type="button" data-action="phase" data-val="full" aria-pressed="false">ภาพเต็ม (ต้องแก้ฐานข้อมูลก่อน)</button>
+          </div>
+        </div>
+        <div class="demo-group">
+          <span class="glabel" id="lblView">มุมมอง</span>
+          <div class="seg" role="group" aria-labelledby="lblView">
+            <button type="button" data-action="view" data-val="nurse" aria-pressed="true" disabled>พยาบาล</button>
+            <button type="button" data-action="view" data-val="asst" aria-pressed="false" disabled>ผู้ช่วย</button>
+          </div>
+          <span class="demo-note" id="viewNote">ยังไม่แยกบทบาท — ทุกคนเห็นเหมือนกัน (เลือกได้ในระยะภาพเต็ม)</span>
+        </div>
+      </div>
+    </div>
+
+    <main class="content">
+
+      <div class="page-head">
+        <h1 class="h1">ภาพรวมทีมเยี่ยมบ้าน</h1>
+        <span class="sub">วันนี้ <span class="num">27/11/2569</span> &middot; เยี่ยม/โทรแล้ววันนี้ <span class="num">2</span> ราย</span>
+      </div>
+
+      <!-- 1) แถบเตือน -->
+      <section id="sec-alerts" class="alerts" aria-label="แจ้งเตือนสำคัญ"></section>
+
+      <!-- 2) ต้องทำตอนนี้ -->
+      <section id="sec-tiles" aria-labelledby="h-tiles">
+        <div class="section-title">
+          <h2 class="h2" id="h-tiles">ต้องทำตอนนี้</h2>
+          <span class="db-tag" id="tilesTag">ต้องแก้ฐานข้อมูล</span>
+        </div>
+        <div class="tile-grid" id="tileGrid"></div>
+        <div class="team-line full-only" id="teamLine"></div>
+      </section>
+
+      <!-- 3-4) งานติดตาม -->
+      <div id="sec-tasks" style="display:flex;flex-direction:column;gap:var(--space-4);">
+        <section class="card filter-bar" aria-labelledby="h-filter">
+          <div class="ftitle" id="h-filter">กรองรายการ <span style="font-weight:500;color:var(--color-neutral-700);">— ใช้กับทั้ง &quot;ลงพื้นที่เยี่ยมบ้าน&quot; และ &quot;โทรติดตาม&quot; ด้านล่าง</span></div>
+          <div class="filter-row">
+            <div class="seg" id="timeFilter" role="group" aria-label="กรองตามกำหนด"></div>
+            <div class="seg full-only" id="ownerFilter" role="group" aria-label="กรองตามผู้รับผิดชอบ"></div>
+            <span class="db-tag">ต้องแก้ฐานข้อมูล</span>
+          </div>
+          <div class="filter-hint">&quot;ต้องทำ&quot; = เกินกำหนด + วันนี้ + 7 วันข้างหน้า (นัดที่ยังอีกไกลจะถูกซ่อนไว้)</div>
+        </section>
+
+        <section class="card" id="visits" aria-labelledby="h-visits">
+          <div class="card-head">
+            <div>
+              <h2 class="h2" id="h-visits">ลงพื้นที่เยี่ยมบ้าน</h2>
+              <div class="sub"><span id="visitsCount"></span> <span class="full-only"><span class="db-tag">ต้องแก้ฐานข้อมูล</span> ผู้รับผิดชอบ · นัดญาติ · โทรไม่ติด</span></div>
+            </div>
+            <div class="head-actions">
+              <button type="button" class="switch" role="switch" aria-checked="false" data-action="group" id="groupSwitch"><span class="track" aria-hidden="true"></span>จัดกลุ่มตามตำบล</button>
+              <button type="button" class="btn btn-secondary btn-sm" data-action="print-open">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M7 14h10v7H7z"/></svg>
+                พิมพ์ใบนัดวันนี้
+              </button>
+            </div>
+          </div>
+          <ul class="wlist" id="visitsList"></ul>
+          <div id="visitsFoot"></div>
+        </section>
+
+        <section class="card" id="calls" aria-labelledby="h-calls">
+          <div class="card-head">
+            <div>
+              <h2 class="h2" id="h-calls">โทรติดตาม</h2>
+              <div class="sub"><span id="callsCount"></span> <span class="full-only"><span class="db-tag">ต้องแก้ฐานข้อมูล</span> ผู้รับผิดชอบ · โทรไม่ติด</span></div>
+            </div>
+          </div>
+          <ul class="wlist" id="callsList"></ul>
+          <div id="callsFoot"></div>
+        </section>
+      </div>
+
+      <!-- 5) ผลเยี่ยมรอพยาบาลยืนยัน -->
+      <section class="card" id="sec-results" aria-labelledby="h-results">
+        <div class="card-head">
+          <div>
+            <h2 class="h2" id="h-results">ผลเยี่ยมรอพยาบาลยืนยัน</h2>
+            <div class="sub" id="resultsSub"></div>
+          </div>
+          <span class="chip chip-method num" id="resultsCount"></span>
+        </div>
+        <div id="resultsBulk"></div>
+        <ul class="wlist" id="resultsList"></ul>
+        <div id="resultsFoot"></div>
+      </section>
+
+      <!-- 6) เฝ้าระวัง -->
+      <section class="card" id="sec-watch">
+        <button type="button" class="acc-head" aria-expanded="false" aria-controls="watchBody" data-action="acc" data-target="watchBody">
+          <span>
+            <span class="h2" style="display:block;">เฝ้าระวัง: สัญญาณเสี่ยงที่ยืนยันแล้วล่าสุด (3)</span>
+            <span class="asub">พยาบาลยืนยันแล้ว — กดเพื่อดูรายการ</span>
+          </span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="acc-body" id="watchBody" hidden>
+          <div class="wrisk">
+            <div class="info">
+              <div class="wl1"><span class="pname">นางสมหมาย ใจดี</span><span class="phn">HN 5900060</span><span class="chip chip-risk">พบความเสี่ยง</span></div>
+              <div class="snippet">แผลกดทับระดับ 2 ที่ก้นกบมีสัญญาณติดเชื้อ ผู้ดูแลรายงานไข้ต่ำๆ ต่อเนื่อง 2 วัน</div>
+              <div class="meta">ยืนยันโดย พว.กัญญา รักษ์ผู้ป่วย เมื่อ <span class="num">26/11/2569 14:20</span></div>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" data-action="toast" data-msg="หน้านี้อยู่นอกตัวอย่าง">ดูรายละเอียด</button>
+          </div>
+          <div class="wrisk">
+            <div class="info">
+              <div class="wl1"><span class="pname">นายสมชาย ใจเย็น</span><span class="phn">HN 5900112</span><span class="chip chip-risk">พบความเสี่ยง</span></div>
+              <div class="snippet">หอบเหนื่อยเพิ่มขึ้น PPS Score ลดจาก 60 เป็น 40 ภายใน 7 วัน พิจารณาส่งต่อประเมินซ้ำ</div>
+              <div class="meta">ยืนยันโดย พว.กัญญา รักษ์ผู้ป่วย เมื่อ <span class="num">25/11/2569 09:40</span></div>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" data-action="toast" data-msg="หน้านี้อยู่นอกตัวอย่าง">ดูรายละเอียด</button>
+          </div>
+          <div class="wrisk">
+            <div class="info">
+              <div class="wl1"><span class="pname">นางสุดา ใจงาม</span><span class="phn">HN 5900083</span><span class="chip chip-risk">พบความเสี่ยง</span></div>
+              <div class="snippet">ผู้ดูแลเหนื่อยล้า ให้ยาผิดเวลา 2 ครั้งในสัปดาห์นี้ ควรประเมินความพร้อมผู้ดูแล</div>
+              <div class="meta">ยืนยันโดย พว.กัญญา รักษ์ผู้ป่วย เมื่อ <span class="num">24/11/2569 16:05</span></div>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" data-action="toast" data-msg="หน้านี้อยู่นอกตัวอย่าง">ดูรายละเอียด</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7) ตัวเลขสรุปรายเดือน -->
+      <section class="card" id="sec-monthly">
+        <div class="card-head">
+          <div>
+            <h2 class="h2">ตัวเลขสรุป</h2>
+            <div class="sub">กดตัวเลขเพื่อดูรายชื่อผู้ป่วย · "รอเยี่ยม" และ "เยี่ยมวันนี้" เป็นตัวเลขปัจจุบัน ไม่เปลี่ยนตามเดือน</div>
+          </div>
+          <div class="month-row" style="padding:0;">
+            <label for="monthSel">ข้อมูลรายเดือน</label>
+            <select id="monthSel">
+              <option value="oct">ต.ค. 2569</option>
+              <option value="nov" selected>พ.ย. 2569</option>
+              <option value="sep">ก.ย. 2569</option>
+            </select>
+          </div>
+        </div>
+        <div class="kpi-grid" id="monthKpi"></div>
+      </section>
+
+    </main>
+
+    <footer class="credit">Chira Continuity Care (Triple C) — ต้นแบบใช้งานสำหรับสาธิตเท่านั้น ข้อมูลผู้ป่วยทั้งหมดเป็นข้อมูลจำลอง</footer>
+  </div>
+</div>
+
+<!-- ============ Modal: อนุมัติที่เลือก ============ -->
+<div class="modal-back" id="approveModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="approveTitle">
+    <h2 id="approveTitle">ยืนยันการตัดสินใจตามข้อเสนอผู้ช่วย</h2>
+    <div class="decision-box">
+      <span class="decision-label">การตัดสินใจของพยาบาล — ต้องยืนยันเสมอ</span>
+      <ul class="sel-list" id="approveList"></ul>
+      <label class="confirm-check">
+        <input type="checkbox" id="approveCheck">
+        <span>ข้าพเจ้าได้ตรวจสอบผลเยี่ยมและข้อเสนอของแต่ละรายแล้ว ยืนยันการตัดสินใจตามที่เลือก</span>
+      </label>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-primary" id="approveConfirm" data-action="approve-confirm" disabled>ยืนยันการตัดสินใจ</button>
+      <button type="button" class="btn btn-secondary" data-action="close-modal" data-target="approveModal">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Modal: เสนอการตัดสินใจ (ผู้ช่วย) ============ -->
+<div class="modal-back" id="proposeModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="proposeTitle">
+    <h2 id="proposeTitle">เสนอการตัดสินใจ</h2>
+    <div class="proposal-banner">ข้อเสนอนี้ยังไม่ใช่การตัดสินใจ — ผู้ช่วยเสนอได้ พยาบาลเป็นผู้ยืนยันเสมอ</div>
+    <div id="proposeWho" class="caption" style="color:var(--color-neutral-700);font-size:13px;"></div>
+    <fieldset class="radio-cards" aria-label="ข้อเสนอการตัดสินใจ">
+      <label class="radio-card"><input type="radio" name="propose" value="repeat"><span>ติดตามซ้ำ</span></label>
+      <label class="radio-card"><input type="radio" name="propose" value="refer"><span>ส่งต่อ</span></label>
+      <label class="radio-card"><input type="radio" name="propose" value="close"><span>ปิดเคส</span></label>
+    </fieldset>
+    <div class="field">
+      <label for="proposeNote">หมายเหตุสั้นๆ ถึงพยาบาล</label>
+      <div class="hint">ไม่บังคับ — เช่น อาการคงที่ ผู้ดูแลทำได้เอง</div>
+      <textarea id="proposeNote" maxlength="200"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-primary" id="proposeSubmit" data-action="propose-submit" disabled>ส่งข้อเสนอให้พยาบาล</button>
+      <button type="button" class="btn btn-secondary" data-action="close-modal" data-target="proposeModal">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Modal: ใบนัดวันนี้ (พิมพ์) ============ -->
+<div class="modal-back" id="printModal" hidden>
+  <div class="print-wrap" role="dialog" aria-modal="true" aria-labelledby="printTitle">
+    <div class="print-bar">
+      <span class="ptitle" id="printTitle">ตัวอย่างใบนัด (A4 แนวตั้ง)</span>
+      <button type="button" class="btn btn-primary" data-action="print-do">พิมพ์</button>
+      <button type="button" class="btn btn-secondary" data-action="close-modal" data-target="printModal">ปิด</button>
+    </div>
+    <div class="print-scroll">
+      <div class="paper" id="paper"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap"><div class="toast" id="toast" role="status" aria-live="polite" hidden></div></div>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ---------- helpers ---------- */
+  var TODAY = Date.UTC(2026,10,27);
+  function pad(n){return (n<10?'0':'')+n;}
+  function fmtOff(o){var d=new Date(TODAY+o*86400000);return pad(d.getUTCDate())+'/'+pad(d.getUTCMonth()+1)+'/'+(d.getUTCFullYear()+543);}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function $(s,r){return (r||document).querySelector(s);}
+  function $$(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));}
+  function digits(p){return String(p).replace(/[^0-9]/g,'');}
+  var ICON_PHONE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>';
+  var ICON_CHEV='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+  var ICON_ALERT='<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h.01"/></svg>';
+
+  /* ---------- ข้อมูลสมมติ ---------- */
+  var ME='มานี';
+  var SUB1='ต.ตัวอย่างหนึ่ง', SUB2='ต.ตัวอย่างสอง', SUB3='ต.ตัวอย่างสาม';
+  var ADDR='อ.ตัวอย่าง จ.ตัวอย่าง';
+
+  var visits=[
+    {id:'v1',name:'นายสมชาย ใจเย็น',hn:'5900112',g:3,no:3,sub:SUB1,addr:'88/4 หมู่ 2 '+SUB1+' '+ADDR,phone:'081-000-0112',cg:{name:'นางสมใจ ใจเย็น',rel:'ภรรยา',phone:'081-000-0113'},allergy:'Penicillin',consent:'all',eq:['Oxygen','NG-Tube'],concerns:['ประเมินอาการหอบเหนื่อยและวัดระดับออกซิเจน','ตรวจการให้อาหารทางสายและความสะอาดของสาย','สอนผู้ดูแลพลิกตัวป้องกันแผลกดทับ'],type:'ผู้ป่วยติดเตียงที่ใช้อุปกรณ์การแพทย์',due:-4,owner:'มานี',rel:'นัดญาติแล้ว พรุ่งนี้ 10:00',fail:0},
+    {id:'v2',name:'นางบุญเลี้ยง แก้วมณี',hn:'5900127',g:4,no:5,sub:SUB2,addr:'12 หมู่ 5 '+SUB2+' '+ADDR,phone:null,cg:{name:'น.ส.มณี แก้วมณี',rel:'บุตรสาว',phone:'081-000-0128'},allergy:null,consent:'all',eq:['เตียงปรับระดับ','Syringe driver'],concerns:['ประเมินอาการปวดและปรับยา','ประเมิน PPS Score','ให้ข้อมูลและให้กำลังใจผู้ดูแล'],type:'Palliative Care',due:-1,owner:'สมศรี',rel:'ยังไม่ได้นัดญาติ',fail:0},
+    {id:'v3',name:'นายประสิทธิ์ วงศ์ทอง',hn:'5900133',g:2,no:0,sub:SUB1,addr:'205 หมู่ 1 '+SUB1+' '+ADDR,phone:'081-000-0133',cg:{name:'นายธนา วงศ์ทอง',rel:'บุตรชาย',phone:'081-000-0134'},allergy:null,consent:'novisit',eq:['ไม้เท้า 3 ขา'],concerns:['ติดตามอาการหลังผ่าตัดเปลี่ยนข้อเข่า (TKA)','ตรวจแผลผ่าตัดและอาการบวม'],type:'ผ่าตัดเปลี่ยนข้อเข่า (TKA)',due:0,owner:'วิภา',rel:'นัดญาติแล้ว วันนี้ 13:30',fail:0},
+    {id:'v4',name:'น.ส.รัตนา สุขใจ',hn:'5900140',g:1,no:2,sub:SUB3,addr:'47/2 หมู่ 7 '+SUB3+' '+ADDR,phone:'081-000-0140',cg:{name:'นางสุข สุขใจ',rel:'มารดา',phone:'081-000-0141'},allergy:null,consent:'call',eq:['ไม่มี'],concerns:['ติดตามการควบคุมระดับน้ำตาล','ทบทวนการฉีดอินซูลิน'],type:'โรคเรื้อรัง (เบาหวาน)',due:0,owner:'มานี',rel:'ยังไม่ได้นัดญาติ',fail:0},
+    {id:'v5',name:'นายวิชัย พูลผล',hn:'5900148',g:3,no:0,sub:SUB1,addr:'301 หมู่ 3 '+SUB1+' '+ADDR,phone:'081-000-0148',cg:{name:'นางสมร พูลผล',rel:'ภรรยา',phone:'081-000-0149'},allergy:null,consent:'all',eq:['Tracheostomy tube','เครื่องดูดเสมหะ'],concerns:['ประเมินการดูแลท่อหายใจ','สอนผู้ดูแลดูดเสมหะ','ตรวจแผลกดทับที่ก้นกบ','ประเมินภาวะโภชนาการ'],type:'ผู้ป่วยใส่ท่อช่วยหายใจที่บ้าน',due:2,owner:null,rel:'ยังไม่ได้นัดญาติ',fail:2},
+    {id:'v6',name:'นางทองดี มีสุข',hn:'5900155',g:2,no:2,sub:null,addr:'ยังไม่ระบุตำบล — ตรวจสอบที่อยู่จากใบส่งต่อ',phone:'081-000-0155',cg:null,allergy:null,consent:'all',eq:['Walker'],concerns:['ติดตามอาการหลังผ่าตัดกระดูกสะโพก','ประเมินความเสี่ยงหกล้มในบ้าน'],type:'ผ่าตัดกระดูกสะโพก',due:5,owner:'สมศรี',rel:'นัดญาติแล้ว 29/11 14:00',fail:0},
+    {id:'v7',name:'นายสุรศักดิ์ เพชรดี',hn:'5900161',g:4,no:4,sub:SUB3,addr:'9/9 หมู่ 4 '+SUB3+' '+ADDR,phone:'081-000-0161',cg:{name:'นางเพ็ญ เพชรดี',rel:'ภรรยา',phone:'081-000-0162'},allergy:null,consent:'all',eq:['Oxygen concentrator'],concerns:['ประเมินอาการปวดและการให้ยาตามเวลา','ประเมินอาการท้องผูก','พูดคุยเป้าหมายการดูแลกับครอบครัว'],type:'Palliative Care',due:6,owner:null,rel:'ยังไม่ได้นัดญาติ',fail:0},
+    {id:'v8',name:'นางพิมพ์ใจ ศรีนวล',hn:'5900170',g:1,no:2,sub:SUB2,addr:'66 หมู่ 6 '+SUB2+' '+ADDR,phone:'081-000-0170',cg:{name:'นายชัย ศรีนวล',rel:'บุตรชาย',phone:'081-000-0171'},allergy:null,consent:'all',eq:['ไม่มี'],concerns:['ติดตามความดันโลหิตและการกินยา'],type:'โรคเรื้อรัง (ความดันโลหิตสูง)',due:12,owner:'มานี',rel:'ยังไม่ได้นัดญาติ',fail:0},
+    {id:'v9',name:'นายอนันต์ ทองคำ',hn:'5900176',g:2,no:3,sub:SUB1,addr:'150 หมู่ 2 '+SUB1+' '+ADDR,phone:'081-000-0176',cg:{name:'นางสาย ทองคำ',rel:'ภรรยา',phone:'081-000-0177'},allergy:null,consent:'all',eq:['อุปกรณ์ทำแผล'],concerns:['ติดตามแผลเบาหวานที่เท้า','ตรวจระดับน้ำตาล'],type:'แผลเรื้อรัง',due:9,owner:'สมศรี',rel:'ยังไม่ได้นัดญาติ',fail:0}
+  ];
+  var calls=[
+    {id:'c1',name:'นางบุญมา แสงทอง',hn:'5900188',g:3,no:4,sub:SUB2,addr:'30 หมู่ 5 '+SUB2+' '+ADDR,phone:'081-000-0188',cg:{name:'นายสมพงษ์ แสงทอง',rel:'บุตรชาย',phone:'081-000-0189'},allergy:null,consent:'all',eq:['NG-Tube'],concerns:['ติดตามอาการหลังปรับยา','สอบถามการให้อาหารทางสาย'],type:'ผู้ป่วยติดเตียง',due:-2,owner:'มานี',fail:3},
+    {id:'c2',name:'นายสมศักดิ์ รักดี',hn:'5900192',g:1,no:2,sub:SUB1,addr:'71 หมู่ 1 '+SUB1+' '+ADDR,phone:'081-000-0192',cg:null,allergy:null,consent:'all',eq:['ไม่มี'],concerns:['สอบถามอาการหลังจำหน่าย','ทบทวนการใช้ยา'],type:'โรคเรื้อรัง (หัวใจล้มเหลว)',due:0,owner:'สมศรี',fail:0},
+    {id:'c3',name:'น.ส.พรทิพย์ จันทร์เพ็ญ',hn:'5900199',g:2,no:3,sub:SUB3,addr:'18/5 หมู่ 8 '+SUB3+' '+ADDR,phone:null,cg:{name:'นางจันทร์ จันทร์เพ็ญ',rel:'มารดา',phone:'081-000-0200'},allergy:null,consent:'all',eq:['ไม้เท้า'],concerns:['ติดตามการทำกายภาพบำบัด'],type:'ผ่าตัดเปลี่ยนข้อเข่า (TKA)',due:3,owner:'มานี',fail:0},
+    {id:'c4',name:'นายเกรียงไกร ศรีสุข',hn:'5900205',g:4,no:6,sub:SUB1,addr:'5 หมู่ 3 '+SUB1+' '+ADDR,phone:'081-000-0205',cg:{name:'นางศรี ศรีสุข',rel:'ภรรยา',phone:'081-000-0206'},allergy:null,consent:'all',eq:['Oxygen concentrator'],concerns:['สอบถามอาการหอบเหนื่อย','ตรวจสอบปริมาณยาที่เหลือ'],type:'Palliative Care',due:10,owner:'วิภา',fail:0}
+  ];
+  var results=[
+    {id:'r1',name:'นางสมหมาย ใจดี',hn:'5900060',visited:-3,ai:'none',by:'สมศรี',proposal:'repeat',note:'อาการคงที่ ผู้ดูแลทำแผลเองได้'},
+    {id:'r2',name:'นายสุเทพ มั่นคง',hn:'5900071',visited:-2,ai:'risk',by:'มานี',proposal:'refer',note:'แผลมีน้ำเหลือง ไข้ต่ำต่อเนื่อง'},
+    {id:'r3',name:'นางสุดา ใจงาม',hn:'5900083',visited:-1,ai:'none',by:'มานี',proposal:'repeat',note:''},
+    {id:'r4',name:'นายประเสริฐ สุขสม',hn:'5900094',visited:0,ai:'analyzing',by:'มานี',proposal:null,note:''}
+  ];
+  var NEWCASES={count:3,red:1,oldest:5};
+  var RED_NO_NEXT=2;
+  var PROPOSAL_LABEL={repeat:'ติดตามซ้ำ',refer:'ส่งต่อ',close:'ปิดเคส'};
+  var MONTHS={
+    nov:{a:[18,42],t:[5,11],p:92},
+    oct:{a:[21,38],t:[6,9],p:88},
+    sep:{a:[16,35],t:[4,10],p:94}
+  };
+
+  /* ---------- state ---------- */
+  var S={phase:'now',view:'nurse',filter:'must',owner:'all',group:false,expanded:{},selected:{},proposeId:null,lastFocus:null};
+  function isFull(){return S.phase==='full';}
+  function isAsst(){return isFull()&&S.view==='asst';}
+  function isNurseFull(){return isFull()&&S.view==='nurse';}
+  function ownerMode(){return isFull()?S.owner:'all';}
+
+  function cls(d){return d<0?'overdue':d===0?'today':d<=7?'soon':'far';}
+  function ownerOk(p){
+    var m=ownerMode();
+    if(m==='all')return true;
+    if(m==='none')return !p.owner;
+    if(m==='mine')return S.view==='asst'&&p.owner===ME;
+    return true;
+  }
+  function filterOk(p){
+    var f=S.filter;
+    if(f==='all')return true;
+    if(f==='must')return p.due<=7;
+    if(f==='overdue')return p.due<0;
+    if(f==='today')return p.due===0;
+    return true;
+  }
+
+  /* ---------- small renderers ---------- */
+  function groupChip(g){
+    var m={3:['g-red','กลุ่ม 3 · บ้านสีแดง'],2:['g-yellow','กลุ่ม 2 · บ้านสีเหลือง'],1:['g-green','กลุ่ม 1 · บ้านสีเขียว'],4:['g-pall','กลุ่ม 4 · Palliative']}[g];
+    return '<span class="gchip '+m[0]+'">'+m[1]+'</span>';
+  }
+  function dueChip(d){
+    if(d<0)return '<span class="chip chip-overdue num">เกินกำหนด '+(-d)+' วัน</span>';
+    if(d===0)return '<span class="chip chip-today">ครบวันนี้</span>';
+    return '<span class="chip chip-method num">อีก '+d+' วัน</span>';
+  }
+  function visitNo(n){return '<span class="vno">'+(n===0?'ครั้งแรก':'ครั้งที่ '+n)+'</span>';}
+  function warnChips(p){
+    var h='';
+    if(p.allergy)h+='<span class="chip chip-risk">แพ้ยา: '+esc(p.allergy)+'</span>';
+    if(p.consent==='call')h+='<span class="chip chip-today">ยินยอมเฉพาะโทร</span>';
+    if(p.consent==='novisit')h+='<span class="chip chip-risk">ไม่ยินยอมให้เยี่ยม</span>';
+    return h;
+  }
+  function ownerEl(p){
+    if(!p.owner)return '<span class="owner dbm" title="ต้องแก้ฐานข้อมูล"><span class="chip chip-method">ยังไม่มีผู้รับผิดชอบ</span></span>';
+    return '<span class="owner dbm" title="ต้องแก้ฐานข้อมูล"><span class="av" aria-hidden="true">'+esc(p.owner.charAt(0))+'</span>คุณ'+esc(p.owner)+'</span>';
+  }
+  function phoneEl(p){
+    if(p.phone)return '<a class="tel" href="tel:'+digits(p.phone)+'">'+ICON_PHONE+esc(p.phone)+'</a>';
+    return '<span class="nophone">ไม่มีเบอร์ผู้ป่วย'+(p.cg?' (มีเบอร์ผู้ดูแล)':'')+'</span>';
+  }
+  function consentText(p){
+    return {all:'ยินยอมให้เยี่ยมบ้านและโทรติดตาม',call:'ยินยอมเฉพาะโทรติดตาม (ยังไม่ยินยอมให้เยี่ยมบ้าน)',novisit:'ผู้ป่วยแจ้งไม่ยินยอมให้เยี่ยมบ้าน'}[p.consent];
+  }
+  function detailHTML(p,id){
+    var h='<div class="wdetail" id="det-'+id+'"><dl class="ddl">';
+    h+='<div class="full"><dt>ประเด็นที่หอฝากติดตาม</dt><dd><ul>'+p.concerns.map(function(c){return '<li>'+esc(c)+'</li>';}).join('')+'</ul></dd></div>';
+    h+='<div><dt>อุปกรณ์ที่ผู้ป่วยใช้</dt><dd>'+esc(p.eq.join(', '))+'</dd></div>';
+    h+='<div><dt>ประเภทเคส</dt><dd>'+esc(p.type)+'</dd></div>';
+    h+='<div class="full"><dt>ที่อยู่</dt><dd>'+esc(p.addr)+'</dd></div>';
+    h+='<div><dt>เบอร์ผู้ป่วย</dt><dd>'+(p.phone?'<a class="tel" href="tel:'+digits(p.phone)+'">'+ICON_PHONE+esc(p.phone)+'</a>':'<span class="nophone">ไม่มีเบอร์ผู้ป่วย</span>')+'</dd></div>';
+    h+='<div><dt>เบอร์ผู้ดูแล</dt><dd>'+(p.cg?esc(p.cg.name)+' ('+esc(p.cg.rel)+') <a class="tel" href="tel:'+digits(p.cg.phone)+'">'+ICON_PHONE+esc(p.cg.phone)+'</a>':'<span class="nophone">ไม่มีข้อมูลผู้ดูแล</span>')+'</dd></div>';
+    h+='<div><dt>ความยินยอม</dt><dd>'+esc(consentText(p))+'</dd></div>';
+    h+='<div><dt>ประวัติแพ้ยา</dt><dd>'+(p.allergy?'แพ้ '+esc(p.allergy):'ไม่มีประวัติแพ้ยา')+'</dd></div>';
+    h+='<div><dt>กำหนดนัด</dt><dd class="num">'+fmtOff(p.due)+'</dd></div>';
+    h+='</dl><button type="button" class="btn btn-secondary btn-sm" data-action="toast" data-msg="หน้านี้อยู่นอกตัวอย่าง">เปิดใบส่งต่อ</button></div>';
+    return h;
+  }
+  function startBtn(p){return '<button type="button" class="btn btn-outline" data-action="start" data-name="'+esc(p.name)+'">เริ่มติดตาม</button>';}
+  function chevBtn(id,open){return '<button type="button" class="chev" data-action="expand" data-id="'+id+'" aria-expanded="'+(open?'true':'false')+'" aria-controls="det-'+id+'" aria-label="ดูรายละเอียด">'+ICON_CHEV+'</button>';}
+
+  function visitRow(p){
+    var open=!!S.expanded[p.id];
+    var l2='';
+    l2+=(p.sub?'<span>'+esc(p.sub)+'</span>':'<span class="chip chip-method">ไม่ระบุตำบล</span>');
+    l2+=phoneEl(p);
+    l2+=warnChips(p);
+    if(isFull()){
+      l2+=ownerEl(p);
+      l2+='<span class="dbm" title="ต้องแก้ฐานข้อมูล">'+(p.rel.indexOf('นัดญาติแล้ว')===0?'<span class="chip chip-done">'+esc(p.rel)+'</span>':'<span class="chip chip-method">'+esc(p.rel)+'</span>')+'</span>';
+      if(p.fail>0)l2+='<span class="chip chip-today dbm" title="ต้องแก้ฐานข้อมูล">โทรไม่ติด '+p.fail+' ครั้ง</span>';
+    }
+    return '<li class="wrow'+(p.due<0?' is-overdue':'')+'"><div class="wmain"><div>'+
+      '<div class="wl1"><span class="pname">'+esc(p.name)+'</span><span class="phn">HN '+p.hn+'</span>'+groupChip(p.g)+visitNo(p.no)+'</div>'+
+      '<div class="wl2">'+l2+'</div></div>'+
+      '<div class="wright">'+dueChip(p.due)+startBtn(p)+chevBtn(p.id,open)+'</div></div>'+(open?detailHTML(p,p.id):'')+'</li>';
+  }
+  function callRow(p){
+    var open=!!S.expanded[p.id];
+    var btns='';
+    if(p.phone)btns+='<a class="callbtn" href="tel:'+digits(p.phone)+'">'+ICON_PHONE+'<span><small>โทรผู้ป่วย</small>'+esc(p.phone)+'</span></a>';
+    else btns+='<span class="callbtn none"><span><small>ผู้ป่วย</small>ไม่มีเบอร์</span></span>';
+    if(p.cg)btns+='<a class="callbtn" href="tel:'+digits(p.cg.phone)+'">'+ICON_PHONE+'<span><small>โทรผู้ดูแล · '+esc(p.cg.name)+' ('+esc(p.cg.rel)+')</small>'+esc(p.cg.phone)+'</span></a>';
+    var extra='';
+    if(isFull()){
+      extra+='<div class="wl2" style="margin-top:6px;">'+ownerEl(p)+(p.fail>0?'<span class="chip chip-today dbm" title="ต้องแก้ฐานข้อมูล">โทรไม่ติด '+p.fail+' ครั้ง</span>':'')+'</div>';
+    }
+    return '<li class="wrow'+(p.due<0?' is-overdue':'')+'"><div class="wmain"><div>'+
+      '<div class="wl1"><span class="pname">'+esc(p.name)+'</span><span class="phn">HN '+p.hn+'</span>'+groupChip(p.g)+visitNo(p.no)+dueChip(p.due)+'</div>'+
+      '<div class="call-actions">'+btns+'</div>'+extra+'</div>'+
+      '<div class="wright">'+startBtn(p)+chevBtn(p.id,open)+'</div></div>'+(open?detailHTML(p,p.id):'')+'</li>';
+  }
+
+  function sortDue(a,b){return a.due-b.due;}
+
+  function renderList(items,rowFn,listEl,footEl,countEl,groupable,kind){
+    var base=items.filter(ownerOk);
+    var shown=base.filter(filterOk).sort(sortDue);
+    var hidden=(S.filter==='must')?base.filter(function(p){return p.due>7;}).length:0;
+    var html='';
+    if(!shown.length){
+      html='<li class="empty">ไม่มีรายการในตัวกรองนี้'+(ownerMode()==='mine'&&S.view!=='asst'?' (พยาบาลไม่ได้รับมอบงาน'+(kind==='visit'?'ลงพื้นที่':'โทร')+' — เลือก &quot;ทุกคน&quot; เพื่อดูงานของทั้งทีม)':'')+'</li>';
+    }else if(groupable&&S.group){
+      var groups={};var order=[];
+      shown.forEach(function(p){var k=p.sub||'ไม่ระบุตำบล';if(!groups[k]){groups[k]=[];order.push(k);}groups[k].push(p);});
+      order.sort(function(a,b){if(a==='ไม่ระบุตำบล')return 1;if(b==='ไม่ระบุตำบล')return -1;return a<b?-1:a>b?1:0;});
+      order.forEach(function(k){
+        html+='<li class="group-head" role="presentation">'+esc(k)+' · '+groups[k].length+' ราย</li>';
+        groups[k].forEach(function(p){html+=rowFn(p);});
+      });
+    }else{
+      shown.forEach(function(p){html+=rowFn(p);});
+    }
+    listEl.innerHTML=html;
+    footEl.innerHTML=hidden>0?'<div class="hidden-note">ซ่อนอีก <span class="num">'+hidden+'</span> ราย (นัดเกิน 7 วัน) — <button type="button" class="btn-link" data-action="filter" data-val="all">ดูทั้งหมด</button></div>':'';
+    countEl.textContent='แสดง '+shown.length+' จาก '+base.length+' ราย';
+  }
+
+  /* ---------- filter bar ---------- */
+  function renderFilter(){
+    var all=visits.concat(calls).filter(ownerOk);
+    var c={must:all.filter(function(p){return p.due<=7;}).length,overdue:all.filter(function(p){return p.due<0;}).length,today:all.filter(function(p){return p.due===0;}).length,all:all.length};
+    var defs=[['must','ต้องทำ'],['overdue','เกินกำหนด'],['today','วันนี้'],['all','ทั้งหมด']];
+    $('#timeFilter').innerHTML=defs.map(function(d){return '<button type="button" data-action="filter" data-val="'+d[0]+'" aria-pressed="'+(S.filter===d[0])+'">'+d[1]+' ('+c[d[0]]+')</button>';}).join('');
+    var od=[['all','ทุกคน'],['mine','ของฉัน'],['none','ยังไม่มีผู้รับผิดชอบ']];
+    $('#ownerFilter').innerHTML=od.map(function(d){return '<button type="button" data-action="owner" data-val="'+d[0]+'" aria-pressed="'+(S.owner===d[0])+'">'+d[1]+'</button>';}).join('');
+    var gs=$('#groupSwitch');gs.setAttribute('aria-checked',S.group?'true':'false');
+  }
+
+  /* ---------- alerts ---------- */
+  function renderAlerts(){
+    var h='';
+    // ส่งเยี่ยมรายใหม่ที่รอพยาบาลยืนยันแผน — เริ่มต้นของงานทั้งหมด จึงขึ้นเป็นอันแรก (แดงถ้ามีบ้านสีแดงรออยู่ ซึ่งมีเส้นตายเยี่ยมครั้งแรก 5 วัน)
+    if(NEWCASES.count>0){
+      var nTone=NEWCASES.red>0?'risk':'warn';
+      h+='<div class="alert-row '+nTone+'" role="alert">'+ICON_ALERT+'<span class="txt">ส่งเยี่ยมรายใหม่ <span class="num">'+NEWCASES.count+'</span> ราย รอยืนยันแผน'+(NEWCASES.red>0?' — บ้านสีแดง <span class="num">'+NEWCASES.red+'</span> ราย':'')+' · รอมานานสุด <span class="num">'+NEWCASES.oldest+'</span> วัน</span><button type="button" class="btn btn-secondary btn-sm" data-action="toast" data-msg="หน้านี้อยู่นอกตัวอย่าง">'+(isAsst()?'ดู':'ตรวจสอบแผน')+'</button></div>';
+    }
+    if(RED_NO_NEXT>0)h+='<div class="alert-row risk" role="alert">'+ICON_ALERT+'<span class="txt">บ้านสีแดง <span class="num">'+RED_NO_NEXT+'</span> ราย ยังไม่มีนัดถัดไป — ผู้ป่วยอาจหลุดจากการติดตาม</span><button type="button" class="btn btn-secondary btn-sm" data-action="toast" data-msg="หน้านี้อยู่นอกตัวอย่าง">ดูรายชื่อ</button></div>';
+    var risk=results.filter(function(r){return r.ai==='risk';}).length;
+    if(risk>0)h+='<div class="alert-row risk" role="alert">'+ICON_ALERT+'<span class="txt">ผลเยี่ยมที่ AI พบสัญญาณเสี่ยง <span class="num">'+risk+'</span> ราย รอพยาบาลยืนยัน</span><button type="button" class="btn btn-secondary btn-sm" data-action="goto" data-target="sec-results">'+(isAsst()?'ดู':'ตรวจสอบ')+'</button></div>';
+    var fail=visits.concat(calls).filter(function(p){return p.fail>=3;}).length;
+    if(isFull()&&fail>0)h+='<div class="alert-row warn" role="alert">'+ICON_ALERT+'<span class="txt">โทรไม่ติดซ้ำ 3 ครั้งขึ้นไป <span class="num">'+fail+'</span> ราย <span class="db-tag">ต้องแก้ฐานข้อมูล</span></span><button type="button" class="btn btn-secondary btn-sm" data-action="goto" data-target="calls">ดู</button></div>';
+    $('#sec-alerts').innerHTML=h;
+    $('#sec-alerts').style.display=h?'':'none';
+  }
+
+  /* ---------- tiles ---------- */
+  function tone(t){return t==='red'?['tone-red','เร่งด่วน']:t==='orange'?['tone-orange','มีค้าง']:['tone-green','ไม่มีค้าง'];}
+  function toneChip(t){
+    var m=tone(t);
+    var c=t==='red'?'chip-risk':t==='orange'?'chip-today':'chip-done';
+    return '<span class="chip '+c+'">'+m[1]+'</span>';
+  }
+  function tileBtn(o){
+    var m=tone(o.tone);
+    return '<button type="button" class="tile '+m[0]+(o.cls?' '+o.cls:'')+'" data-action="'+o.action+'" '+(o.target?'data-target="'+o.target+'" ':'')+(o.filter?'data-filter="'+o.filter+'" ':'')+(o.msg?'data-msg="'+o.msg+'" ':'')+'>'+
+      (o.cls==='compact'
+        ? '<span class="tile-main"><span class="tile-label">'+o.label+'</span><span class="tile-sub">'+o.sub+'</span></span><span class="tile-num">'+o.num+'<small>ราย</small></span>'+toneChip(o.tone)
+        : '<span class="tile-top"><span class="tile-label">'+o.label+'</span>'+toneChip(o.tone)+'</span><span class="tile-num">'+o.num+'<small>ราย</small></span><span class="tile-sub">'+o.sub+'</span>')+
+      '</button>';
+  }
+  function breakdown(items){
+    var o=items.filter(function(p){return p.due<0;}).length,t=items.filter(function(p){return p.due===0;}).length,s=items.filter(function(p){return p.due>0&&p.due<=7;}).length;
+    // แดง = มีนัดเกินกำหนดตั้งแต่ 3 วันขึ้นไป (ล่าช้าชัดเจน) · ส้ม = มีงานค้าง (เกินกำหนด 1-2 วัน/วันนี้/7 วันข้างหน้า) · เขียว = ไม่มีค้าง
+    var late=items.filter(function(p){return p.due<0;}).map(function(p){return -p.due;});
+    var maxLate=late.length?Math.max.apply(null,late):0;
+    return {o:o,t:t,s:s,total:items.length,text:'เกินกำหนด '+o+' · วันนี้ '+t+' · 7 วันข้างหน้า '+s,tone:maxLate>=3?'red':(o+t+s>0?'orange':'green')};
+  }
+  function renderTiles(){
+    var g=$('#tileGrid'),h='';
+    var tag=$('#tilesTag');
+    if(isAsst()){
+      var mv=visits.filter(function(p){return p.owner===ME;}),mc=calls.filter(function(p){return p.owner===ME;});
+      var bv=breakdown(mv),bc=breakdown(mc);
+      var sent=results.filter(function(r){return r.by===ME&&r.proposal;}).length;
+      var unass=visits.concat(calls).filter(function(p){return !p.owner;}).length;
+      h+=tileBtn({tone:bv.tone,action:'goto',target:'visits',filter:'must',label:'งานของฉัน — ลงพื้นที่',num:bv.total,sub:bv.text});
+      h+=tileBtn({tone:bc.tone,action:'goto',target:'calls',filter:'must',label:'งานของฉัน — โทร',num:bc.total,sub:bc.text});
+      h+=tileBtn({tone:sent>0?'orange':'green',action:'goto',target:'sec-results',label:'ที่ฉันส่งให้พยาบาลแล้ว รอยืนยัน',num:sent,sub:'รอพยาบาลยืนยัน — ผู้ช่วยเสนอได้ พยาบาลเป็นผู้ยืนยัน'});
+      h+='<div class="tile mini tone-grey"><span class="tile-top"><span class="tile-label">ยังไม่มีผู้รับผิดชอบ <span class="db-tag">ต้องแก้ฐานข้อมูล</span></span></span><span class="tile-num">'+unass+'<small>ราย</small></span>'+(unass>0?'<div class="tile-extra"><button type="button" class="btn btn-secondary btn-sm" data-action="claim">รับเคส</button></div>':'<span class="tile-sub">ไม่มีเคสค้างรับ</span>')+'</div>';
+      $('#teamLine').innerHTML='';
+    }else{
+      var nr=results.length,risk=results.filter(function(r){return r.ai==='risk';}).length;
+      var oldest=nr?Math.max.apply(null,results.map(function(r){return -r.visited;})):0;
+      var t1tone=NEWCASES.red>0?'red':(NEWCASES.count>0?'orange':'green');
+      // AI พบเสี่ยงมีแถบเตือนด้านบนแล้ว ช่องนี้จึงเป็นแดงเฉพาะเมื่อมีผลเยี่ยมค้างยืนยันนาน (5 วันขึ้นไป) เพื่อไม่ให้แดงซ้ำซ้อน
+      var t2tone=oldest>=5?'red':(nr>0?'orange':'green');
+      var bv2=breakdown(visits),bc2=breakdown(calls);
+      var big=isNurseFull()?'big':'';
+      var small=isNurseFull()?'compact':'';
+      h+=tileBtn({cls:big,tone:t1tone,action:'toast',msg:'หน้านี้อยู่นอกตัวอย่าง',label:'เคสใหม่รอตรวจแผน',num:NEWCASES.count,sub:'บ้านแดง '+NEWCASES.red+' · รอมานานสุด '+NEWCASES.oldest+' วัน'});
+      h+=tileBtn({cls:big,tone:t2tone,action:'goto',target:'sec-results',label:'ผลเยี่ยมรอยืนยัน',num:nr,sub:nr?('AI พบเสี่ยง '+risk+' · เก่าสุด '+oldest+' วัน'):'ไม่มีผลเยี่ยมค้างยืนยัน'});
+      h+=tileBtn({cls:small,tone:bv2.tone,action:'goto',target:'visits',filter:'must',label:'ลงพื้นที่'+(isNurseFull()?' (ทั้งทีม)':''),num:bv2.total,sub:bv2.text});
+      h+=tileBtn({cls:small,tone:bc2.tone,action:'goto',target:'calls',filter:'must',label:'โทรติดตาม'+(isNurseFull()?' (ทั้งทีม)':''),num:bc2.total,sub:bc2.text});
+      if(isNurseFull()){
+        var names=['มานี','สมศรี','วิภา'];
+        var cnt=names.map(function(n){return {n:n,c:visits.concat(calls).filter(function(p){return p.owner===n;}).length};}).sort(function(a,b){return b.c-a.c;});
+        var un=visits.concat(calls).filter(function(p){return !p.owner;}).length;
+        $('#teamLine').innerHTML='<span class="db-tag">ต้องแก้ฐานข้อมูล</span><span>ผู้ช่วยค้าง: '+cnt.map(function(x){return 'คุณ'+x.n+' <strong class="num">'+x.c+'</strong>';}).join(' · ')+' · ยังไม่มีผู้รับผิดชอบ <strong class="num">'+un+'</strong></span>';
+      }else{$('#teamLine').innerHTML='';}
+    }
+    g.innerHTML=h;
+  }
+
+  /* ---------- results ---------- */
+  function aiChip(a){
+    if(a==='risk')return '<span class="chip chip-risk chip-ai">AI พบสัญญาณเสี่ยง</span>';
+    if(a==='none')return '<span class="chip chip-done chip-ai">AI ไม่พบสัญญาณเสี่ยง</span>';
+    return '<span class="chip chip-method chip-ai">AI กำลังวิเคราะห์…</span>';
+  }
+  function waitText(r){var w=-r.visited;return w===0?'เพิ่งบันทึกวันนี้':'รอมา '+w+' วัน';}
+  function eligible(r){return r.ai==='none'&&r.proposal==='repeat';}
+  function reviewReason(r){
+    if(r.ai==='risk')return 'AI พบสัญญาณเสี่ยง';
+    if(r.ai==='analyzing')return 'รอ AI วิเคราะห์เสร็จ';
+    if(!r.proposal)return 'ผู้ช่วยยังไม่เสนอ';
+    return 'ผู้ช่วยเสนอ'+PROPOSAL_LABEL[r.proposal];
+  }
+  function renderResults(){
+    var list=results.slice().sort(function(a,b){return a.visited-b.visited;});
+    if(isAsst())list=list.filter(function(r){return r.by===ME;});
+    var h='',bulk='',foot='';
+    var sub=$('#resultsSub');
+    $('#resultsCount').textContent=list.length+' ราย';
+    if(isAsst()){
+      sub.innerHTML='ผลที่คุณบันทึกไว้ — เรียงเก่าสุดก่อน (อ่านอย่างเดียว) <span class="db-tag">ต้องแก้ฐานข้อมูล</span>';
+    }else if(isNurseFull()){
+      sub.innerHTML='เรียงเก่าสุดก่อน · ผลวิเคราะห์ของ AI เป็นร่างเท่านั้น พยาบาลต้องยืนยันเสมอ';
+    }else{
+      sub.innerHTML='เรียงเก่าสุดก่อน · ผลวิเคราะห์ของ AI เป็นร่างเท่านั้น พยาบาลต้องยืนยันเสมอ';
+    }
+    var selCount=Object.keys(S.selected).filter(function(k){return S.selected[k];}).length;
+    if(isNurseFull()&&list.length){
+      var nElig=list.filter(eligible).length;
+      bulk='<div class="bulk-bar"><button type="button" class="btn btn-primary" data-action="approve" '+(selCount?'':'disabled')+'>อนุมัติที่เลือก ('+selCount+') ตามข้อเสนอผู้ช่วย</button>'+
+        '<button type="button" class="btn-link" data-action="selall"'+(nElig?'':' disabled')+'>เลือกทั้งหมดที่ทำได้ ('+nElig+')</button>'+
+        '<span class="info">ติ๊กได้เฉพาะรายที่ AI ไม่พบสัญญาณเสี่ยง และผู้ช่วยเสนอ &quot;ติดตามซ้ำ&quot; — รายอื่นต้องเปิดตรวจรายละเอียด <span class="db-tag">ต้องแก้ฐานข้อมูล</span></span></div>';
+    }
+    if(isAsst()&&list.length){
+      bulk='<div class="helper">ผู้ช่วยเสนอการตัดสินใจได้ แต่พยาบาลเป็นผู้ยืนยันเสมอ — ผู้ช่วยไม่มีปุ่มยืนยันหรือปิดเคส</div>';
+    }
+    if(!list.length){
+      h='<li class="empty">ไม่มีผลเยี่ยมที่รอพยาบาลยืนยัน</li>';
+    }
+    list.forEach(function(r){
+      var hasSel=isNurseFull();
+      var line1='<div class="wl1"><span class="pname">'+esc(r.name)+'</span><span class="phn">HN '+r.hn+'</span>'+aiChip(r.ai)+'</div>';
+      var line2='<div class="wl2"><span>เยี่ยมเมื่อ <span class="num">'+fmtOff(r.visited)+'</span></span><span class="chip chip-method num">'+waitText(r)+'</span></div>';
+      var extra='',act='',sel='';
+      if(isNurseFull()){
+        extra='<div class="proposal dbm" title="ต้องแก้ฐานข้อมูล"><span class="plabel">ผู้ช่วยเสนอ:</span>'+(r.proposal?'<strong>'+PROPOSAL_LABEL[r.proposal]+'</strong> <span class="plabel">(โดยคุณ'+esc(r.by)+')</span>':'<span class="plabel">ยังไม่เสนอ (บันทึกโดยคุณ'+esc(r.by)+')</span>')+(r.note?'<span class="plabel">— &quot;'+esc(r.note)+'&quot;</span>':'')+'</div>';
+        if(eligible(r)){
+          sel='<div class="sel-cell"><input type="checkbox" data-action="sel" data-id="'+r.id+'" aria-label="เลือก '+esc(r.name)+'"'+(S.selected[r.id]?' checked':'')+'></div>';
+        }else{
+          sel='<div class="sel-cell" aria-hidden="true"></div>';
+          extra+='<div class="proposal"><span class="chip chip-today">ต้องตรวจรายละเอียด</span><span class="plabel">'+reviewReason(r)+'</span></div>';
+        }
+        act='<button type="button" class="btn btn-outline" data-action="review" data-name="'+esc(r.name)+'">ตรวจสอบและยืนยัน</button>';
+      }else if(isAsst()){
+        extra='<div class="proposal dbm" title="ต้องแก้ฐานข้อมูล">'+(r.proposal?'<span class="plabel">ข้อเสนอของฉัน:</span><strong>'+PROPOSAL_LABEL[r.proposal]+'</strong>'+(r.note?'<span class="plabel">— &quot;'+esc(r.note)+'&quot;</span>':'')+'<span class="chip chip-today">รอพยาบาลยืนยัน</span>':'<span class="chip chip-method">ยังไม่ได้เสนอ</span><span class="plabel">เสนอได้ พยาบาลเป็นผู้ยืนยัน</span>')+'</div>';
+        act='<button type="button" class="btn btn-outline" data-action="propose-open" data-id="'+r.id+'">'+(r.proposal?'แก้ไขข้อเสนอ':'เสนอการตัดสินใจ')+'</button>';
+      }else{
+        act='<button type="button" class="btn btn-outline" data-action="review" data-name="'+esc(r.name)+'">ตรวจสอบและยืนยัน</button>';
+      }
+      h+='<li class="wrow"><div class="rmain'+(hasSel?' has-sel':'')+'">'+sel+'<div>'+line1+line2+extra+'</div><div class="ractions">'+act+'</div></div></li>';
+    });
+    if(list.length)foot='<div class="card-foot"><button type="button" class="btn-link" data-action="toast" data-msg="หน้านี้อยู่นอกตัวอย่าง" style="padding-left:0;">ดูทั้งหมด ('+list.length+')</button></div>';
+    $('#resultsBulk').innerHTML=bulk;
+    $('#resultsList').innerHTML=h;
+    $('#resultsFoot').innerHTML=foot;
+  }
+
+  /* ---------- monthly ---------- */
+  function renderMonth(){
+    var sel=$('#monthSel'),m=MONTHS[sel.value],label=sel.options[sel.selectedIndex].text;
+    var isNow=sel.value==='nov',newLabel=isNow?'ส่งเยี่ยมเดือนนี้':'ส่งเยี่ยมในเดือนนั้น';
+    // รอเยี่ยม/เยี่ยมวันนี้ คิดจากข้อมูลงานปัจจุบันบนหน้า (ตรงกับช่องงานด้านบน) — เยี่ยมบ้านแยกในเขต/นอกเขตตามเขตของเคส
+    var home=visits.length,inArea=visits.filter(function(p){return p.zone!=='out';}).length,call=calls.length;
+    var link=function(txt,cls){return '<button type="button" class="kpi-link '+(cls||'')+'" data-action="toast" data-msg="ในระบบจริงกดเพื่อดูรายชื่อผู้ป่วยกลุ่มนี้ได้ (หน้านี้อยู่นอกตัวอย่าง)">'+txt+'</button>';};
+    var split=function(l,v){return '<div class="kpi-split-item">'+link(l,'kpi-split-label')+'<span class="kpi-split-value">'+v+'</span></div>';};
+    $('#monthKpi').innerHTML=
+      '<div class="kpi-tile"><span class="caption">ผู้ป่วยในการดูแล · '+label+'</span>'+link((m.a[0]+m.a[1])+' <small>ราย</small>','kpi-value')+'<div>'+split(newLabel,m.a[0])+split('เยี่ยมต่อเนื่อง',m.a[1])+'</div></div>'+
+      '<div class="kpi-tile"><span class="caption">รอเยี่ยม · '+(home+call)+' ราย</span><div><div class="kpi-split-item"><span class="kpi-split-label">เยี่ยมบ้าน</span><span class="kpi-split-value">'+home+'</span></div><span class="kpi-split-sub">ในเขต '+inArea+' · นอกเขต '+(home-inArea)+'</span><div class="kpi-split-item"><span class="kpi-split-label">โทรติดตาม</span><span class="kpi-split-value">'+call+'</span></div></div></div>'+
+      '<div class="kpi-tile"><span class="caption">เคสที่ได้รับการเยี่ยมวันนี้</span><span class="kpi-value">2</span><span class="caption" style="font-weight:400;">บันทึกผลเยี่ยม/โทรติดตามแล้ววันนี้</span></div>'+
+      '<div class="kpi-tile"><span class="caption">ผู้ป่วย TKA · '+label+'</span>'+link((m.t[0]+m.t[1])+' <small>ราย</small>','kpi-value')+'<div>'+split(newLabel,m.t[0])+split('เยี่ยมต่อเนื่อง',m.t[1])+'</div></div>';
+  }
+
+  /* ---------- shell ---------- */
+  function renderShell(){
+    var b=document.body;
+    b.classList.toggle('phase-full',isFull());b.classList.toggle('phase-now',!isFull());
+    b.classList.toggle('view-nurse',S.view==='nurse');b.classList.toggle('view-asst',S.view==='asst');
+    $$('[data-action="phase"]').forEach(function(x){x.setAttribute('aria-pressed',x.dataset.val===S.phase?'true':'false');});
+    $$('[data-action="view"]').forEach(function(x){x.disabled=!isFull();x.setAttribute('aria-pressed',(isFull()&&x.dataset.val===S.view)?'true':'false');});
+    $('#viewNote').textContent=isFull()?(S.view==='nurse'?'มุมมองพยาบาล: ยืนยันการตัดสินใจ/ปิดเคส':'มุมมองผู้ช่วย (คุณมานี): ลงพื้นที่/โทร/บันทึกผล — ไม่ยืนยันการตัดสินใจ'):'ยังไม่แยกบทบาท — ทุกคนเห็นเหมือนกัน (เลือกได้ในระยะภาพเต็ม)';
+    $('#demoState').textContent=isFull()?('ระยะ: ภาพเต็ม · มุมมอง'+(S.view==='asst'?'ผู้ช่วย (คุณมานี)':'พยาบาล')):'ระยะ: ทำได้ทันที';
+    if(isAsst()){
+      $('#userAvatar').textContent='มา';$('#userName').textContent='มานี ใจเย็น';$('#userRole').textContent='ผู้ช่วยทีมเยี่ยมบ้าน';$('#sidebarWho').textContent='คุณมานี ใจเย็น · ผู้ช่วยทีมเยี่ยมบ้าน';
+    }else{
+      $('#userAvatar').textContent='กญ';$('#userName').textContent='กัญญา รักษ์ผู้ป่วย';$('#userRole').textContent='พยาบาลทีมเยี่ยมบ้าน';$('#sidebarWho').textContent='พว.กัญญา รักษ์ผู้ป่วย · ทีมเยี่ยมบ้าน';
+    }
+  }
+
+  function renderAll(){
+    var a=document.activeElement,key=null;
+    if(a&&a.dataset&&a.dataset.action&&a!==document.body){key={action:a.dataset.action,id:a.dataset.id,val:a.dataset.val};}
+    renderShell();renderAlerts();renderTiles();renderFilter();renderMonth();
+    renderList(visits,visitRow,$('#visitsList'),$('#visitsFoot'),$('#visitsCount'),true,'visit');
+    renderList(calls,callRow,$('#callsList'),$('#callsFoot'),$('#callsCount'),false,'call');
+    renderResults();
+    $('#navBadgePlan').textContent=NEWCASES.count;
+    if(key){
+      var cand=$$('[data-action="'+key.action+'"]').filter(function(x){return x.dataset.id===key.id&&x.dataset.val===key.val;})[0];
+      if(cand&&!cand.disabled)cand.focus();
+    }
+  }
+
+  /* ---------- toast / modal ---------- */
+  var toastTimer=null;
+  function toast(msg){
+    var t=$('#toast');t.textContent=msg;t.hidden=false;
+    clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.hidden=true;},2800);
+  }
+  function openModal(id,focusSel){
+    S.lastFocus=document.activeElement;
+    var m=$('#'+id);m.hidden=false;
+    var f=focusSel?$(focusSel,m):$('button,input,textarea',m);
+    if(f)f.focus();
+  }
+  function closeModal(id){
+    $('#'+id).hidden=true;
+    if(S.lastFocus&&document.body.contains(S.lastFocus)&&!S.lastFocus.disabled){S.lastFocus.focus();}
+  }
+
+  function openApprove(){
+    var sel=results.filter(function(r){return S.selected[r.id];});
+    if(!sel.length)return;
+    $('#approveList').innerHTML=sel.map(function(r){return '<li><strong>'+esc(r.name)+'</strong> <span class="phn">HN '+r.hn+'</span><br>การตัดสินใจ: <strong>'+PROPOSAL_LABEL[r.proposal]+'</strong> <span class="caption" style="color:var(--color-neutral-700);">(ข้อเสนอของคุณ'+esc(r.by)+' · AI ไม่พบสัญญาณเสี่ยง)</span></li>';}).join('');
+    $('#approveCheck').checked=false;
+    var b=$('#approveConfirm');b.disabled=true;b.textContent='ยืนยันการตัดสินใจ '+sel.length+' ราย';
+    openModal('approveModal','#approveCheck');
+  }
+
+  function buildPaper(){
+    var rows=visits.filter(function(p){return p.due<=0;});
+    rows.sort(function(a,b){
+      var sa=a.sub||'ฮ',sb=b.sub||'ฮ';
+      if(sa!==sb)return sa<sb?-1:1;
+      return a.due-b.due;
+    });
+    var h='<h2>ใบนัดเยี่ยมบ้าน/โทรติดตาม วันที่ 27/11/2569</h2>'+
+      '<div class="psub">ทีมเยี่ยมบ้าน · เฉพาะรายเกินกำหนดและครบกำหนดวันนี้ ('+rows.length+' ราย) · เรียงตามตำบลแล้วกำหนด</div>'+
+      '<table><colgroup><col style="width:7%"><col style="width:19%"><col style="width:22%"><col style="width:15%"><col style="width:22%"><col style="width:15%"></colgroup>'+
+      '<thead><tr><th>ลำดับ</th><th>ชื่อ-สกุล / HN</th><th>ที่อยู่ / ตำบล</th><th>เบอร์โทร</th><th>ประเด็นที่ฝาก</th><th>จดผลสั้นๆ</th></tr></thead><tbody>';
+    rows.forEach(function(p,i){
+      h+='<tr><td>'+(i+1)+'</td><td><strong>'+esc(p.name)+'</strong><br>HN '+p.hn+'<br>'+(p.due<0?'เกินกำหนด '+(-p.due)+' วัน':'ครบวันนี้')+'</td>'+
+        '<td>'+esc(p.addr)+'</td>'+
+        '<td>'+(p.phone?'ผู้ป่วย '+esc(p.phone):'ไม่มีเบอร์ผู้ป่วย')+(p.cg?'<br>ผู้ดูแล ('+esc(p.cg.rel)+') '+esc(p.cg.phone):'')+'</td>'+
+        '<td>'+p.concerns.slice(0,2).map(function(c,k){return (k+1)+'. '+esc(c);}).join('<br>')+(p.allergy?'<br><strong>แพ้ยา: '+esc(p.allergy)+'</strong>':'')+'</td><td class="blank"></td></tr>';
+    });
+    h+='</tbody></table><div class="pfoot">เอกสารนี้มีข้อมูลผู้ป่วย เก็บรักษาและทำลายตามระเบียบ</div>';
+    $('#paper').innerHTML=h;
+  }
+
+  /* ---------- events ---------- */
+  document.addEventListener('click',function(e){
+    var el=e.target.closest('[data-action]');
+    if(!el)return;
+    var a=el.dataset.action;
+    if(el.tagName==='A'&&(a==='nav'))e.preventDefault();
+    switch(a){
+      case 'nav':toast('หน้านี้อยู่นอกตัวอย่าง');break;
+      case 'toast':toast(el.dataset.msg||'หน้านี้อยู่นอกตัวอย่าง');break;
+      case 'phase':
+        S.phase=el.dataset.val;
+        if(S.phase==='full'){S.owner=S.view==='asst'?'mine':'all';}else{S.owner='all';}
+        S.selected={};renderAll();break;
+      case 'view':
+        if(!isFull())break;
+        S.view=el.dataset.val;S.owner=S.view==='asst'?'mine':'all';S.selected={};renderAll();break;
+      case 'filter':S.filter=el.dataset.val;renderAll();break;
+      case 'owner':S.owner=el.dataset.val;renderAll();break;
+      case 'group':S.group=!S.group;renderAll();break;
+      case 'expand':S.expanded[el.dataset.id]=!S.expanded[el.dataset.id];renderAll();break;
+      case 'start':toast('เริ่มติดตาม '+el.dataset.name+' — หน้าบันทึกผลอยู่นอกตัวอย่าง');break;
+      case 'review':toast('ตรวจสอบและยืนยัน '+el.dataset.name+' — หน้านี้อยู่นอกตัวอย่าง');break;
+      case 'goto':
+        if(el.dataset.filter){S.filter=el.dataset.filter;renderAll();}
+        var t=document.getElementById(el.dataset.target);if(t)t.scrollIntoView({behavior:'smooth',block:'start'});
+        break;
+      case 'claim':
+        var n=0;visits.concat(calls).forEach(function(p){if(!p.owner){p.owner=ME;n++;}});
+        renderAll();toast('รับเคสแล้ว '+n+' ราย — เพิ่มในงานของฉัน (ตัวอย่าง)');break;
+      case 'selall':
+        results.forEach(function(r){if(eligible(r))S.selected[r.id]=true;});renderAll();break;
+      case 'approve':openApprove();break;
+      case 'approve-confirm':
+        if($('#approveConfirm').disabled)break;
+        var ids=Object.keys(S.selected).filter(function(k){return S.selected[k];});
+        for(var i=results.length-1;i>=0;i--){if(ids.indexOf(results[i].id)>-1)results.splice(i,1);}
+        S.selected={};
+        closeModal('approveModal');
+        S.lastFocus=null;
+        renderAll();
+        toast('พยาบาลยืนยันการตัดสินใจแล้ว '+ids.length+' ราย — สร้างกำหนดการถัดไปแล้ว (ตัวอย่าง)');
+        break;
+      case 'propose-open':
+        var r=results.filter(function(x){return x.id===el.dataset.id;})[0];if(!r)break;
+        S.proposeId=r.id;
+        $('#proposeWho').textContent=r.name+' · HN '+r.hn+' · เยี่ยมเมื่อ '+fmtOff(r.visited);
+        $$('input[name="propose"]').forEach(function(x){x.checked=(x.value===r.proposal);});
+        $('#proposeNote').value=r.note||'';
+        $('#proposeSubmit').disabled=!r.proposal;
+        openModal('proposeModal','input[name="propose"]');break;
+      case 'propose-submit':
+        var rr=results.filter(function(x){return x.id===S.proposeId;})[0];
+        var chosen=$('input[name="propose"]:checked');
+        if(!rr||!chosen)break;
+        rr.proposal=chosen.value;rr.note=$('#proposeNote').value.trim();
+        closeModal('proposeModal');renderAll();
+        toast('ส่งข้อเสนอ "'+PROPOSAL_LABEL[rr.proposal]+'" ให้พยาบาลแล้ว — รอพยาบาลยืนยัน');break;
+      case 'close-modal':closeModal(el.dataset.target);break;
+      case 'print-open':buildPaper();openModal('printModal','[data-action="print-do"]');break;
+      case 'print-do':try{window.print();}catch(err){toast('ไม่สามารถเปิดหน้าพิมพ์ได้ในสภาพแวดล้อมนี้');}break;
+      case 'demo-toggle':
+        var dp=$('#demoPanel'),dopen=el.getAttribute('aria-expanded')==='true';
+        el.setAttribute('aria-expanded',dopen?'false':'true');dp.hidden=dopen;
+        el.textContent=dopen?'เปลี่ยนมุมมองตัวอย่าง':'ซ่อนตัวควบคุม';
+        break;
+      case 'acc':
+        var body=document.getElementById(el.dataset.target);
+        var open=el.getAttribute('aria-expanded')==='true';
+        el.setAttribute('aria-expanded',open?'false':'true');body.hidden=open;
+        if(!open&&el.dataset.target==='monthlyBody')renderMonth();
+        break;
+    }
+  });
+  document.addEventListener('change',function(e){
+    var t=e.target;
+    if(t.id==='monthSel'){renderMonth();return;}
+    if(t.id==='approveCheck'){$('#approveConfirm').disabled=!t.checked;return;}
+    if(t.name==='propose'){$('#proposeSubmit').disabled=false;return;}
+    if(t.dataset&&t.dataset.action==='sel'){S.selected[t.dataset.id]=t.checked;renderAll();}
+  });
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){
+      ['approveModal','proposeModal','printModal'].forEach(function(id){if(!$('#'+id).hidden)closeModal(id);});
+    }
+  });
+  $$('.modal-back').forEach(function(m){
+    m.addEventListener('mousedown',function(e){if(e.target===m)closeModal(m.id);});
+  });
+
+  renderMonth();
+  renderAll();
+})();
+</script>
+</body>
+</html>

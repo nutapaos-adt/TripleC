@@ -248,7 +248,8 @@ class VoidRecordAndMilestoneTest extends TestCase
         $closed = $this->referral($med, ['status' => Referral::STATUS_CLOSED]);
         $this->plan($closed, 1, '2026-10-25');
 
-        $response = $this->actingAs($this->team())->get(route('dashboard'))->assertOk();
+        // นัดในตัวอย่างอยู่เกิน 7 วันจากวันนี้ — ดูแบบ "ทั้งหมด" (ค่าเริ่มต้น "ต้องทำ" จะซ่อนนัดที่ไกลกว่า 7 วัน)
+        $response = $this->actingAs($this->team())->get(route('dashboard', ['due' => 'all']))->assertOk();
 
         // เรียงตามกำหนดใกล้สุดก่อน: ครั้งแรก (15/11) แล้วครั้งที่ 2 ของ cont (20/11) — ครั้งที่ 3 ไม่โผล่
         $this->assertSame([$first->id, $cont->id], $response->viewData('visitPlans')->pluck('referral_id')->all());
