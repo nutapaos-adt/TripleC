@@ -300,7 +300,7 @@ class AutoAnalysisAndFlowTest extends TestCase
 
         $this->actingAs($team)->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('มี 2 ผลเยี่ยมรอพยาบาลยืนยันการตัดสินใจ')
+            ->assertSee('ผลเยี่ยมรอยืนยันการตัดสินใจ')
             ->assertSee('title="งานที่รอพยาบาลตรวจสอบ/ยืนยัน">3</span>', false);
 
         $ward = User::factory()->create(['role' => User::ROLE_WARD_STAFF]);

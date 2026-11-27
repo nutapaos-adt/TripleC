@@ -221,7 +221,7 @@ class VoidRecordAndMilestoneTest extends TestCase
 
     // ---------- 1. แดชบอร์ด: รอเยี่ยมครั้งแรก / ติดตามต่อเนื่อง ----------
 
-    public function test_dashboard_splits_first_visit_and_continuing_lists_and_flags_red_in_area_cases(): void
+    public function test_dashboard_shows_one_next_plan_per_case_splits_home_visits_from_calls_and_flags_red_in_area_cases(): void
     {
         $med = CaseType::create(['name' => 'อายุรกรรม', 'slug' => 'med']);
 
@@ -229,10 +229,16 @@ class VoidRecordAndMilestoneTest extends TestCase
         $first = $this->referral($med);
         $this->plan($first, 1, '2026-11-15');
 
-        // ติดตามต่อเนื่อง: เยี่ยมครั้งที่ 1 แล้ว รอครั้งที่ 2
+        // ติดตามต่อเนื่อง: เยี่ยมครั้งที่ 1 แล้ว รอครั้งที่ 2 และมีนัดล่วงหน้าครั้งที่ 3 ด้วย — ต้องโชว์แค่นัดที่ใกล้สุด (ครั้งที่ 2)
         $cont = $this->referral($med, ['status' => Referral::STATUS_IN_PROGRESS]);
         $this->record($this->plan($cont, 1, '2026-10-01'), '2026-10-05 09:00');
-        $this->plan($cont, 2, '2026-11-20');
+        $plan2 = $this->plan($cont, 2, '2026-11-20');
+        $this->plan($cont, 3, '2026-12-20');
+
+        // นอกเขต/โทรติดตาม — อยู่ในตารางโทรติดตาม ไม่ปนกับตารางลงพื้นที่
+        $call = $this->referral($med, ['zone' => 'out_area']);
+        $callPlan = $this->plan($call, 1, '2026-11-12');
+        $callPlan->update(['method' => 'phone_call']);
 
         // บ้านสีแดงในเขต เยี่ยมแล้วแต่ไม่มีนัดถัดไป
         $red = $this->referral($med, ['status' => Referral::STATUS_IN_PROGRESS, 'severity_group' => 'red']);
@@ -244,10 +250,13 @@ class VoidRecordAndMilestoneTest extends TestCase
 
         $response = $this->actingAs($this->team())->get(route('dashboard'))->assertOk();
 
-        $this->assertSame([$first->id], $response->viewData('firstVisitPlans')->pluck('referral_id')->all());
-        $this->assertSame([$cont->id], $response->viewData('continuingPlans')->pluck('referral_id')->all());
+        // เรียงตามกำหนดใกล้สุดก่อน: ครั้งแรก (15/11) แล้วครั้งที่ 2 ของ cont (20/11) — ครั้งที่ 3 ไม่โผล่
+        $this->assertSame([$first->id, $cont->id], $response->viewData('visitPlans')->pluck('referral_id')->all());
+        $this->assertSame([$plan2->id], $response->viewData('visitPlans')->where('referral_id', $cont->id)->pluck('id')->all());
+        $this->assertSame([$call->id], $response->viewData('callPlans')->pluck('referral_id')->all());
         $this->assertSame([$red->id], $response->viewData('redContinuingReferrals')->pluck('id')->all());
-        $response->assertSee('รายการรอเยี่ยมครั้งแรก')->assertSee('รายการติดตามต่อเนื่อง')->assertSee('ควรเยี่ยมต่อเนื่อง');
+        $this->assertSame(2, $response->viewData('visitCounts')['all']);
+        $response->assertSee('ลงพื้นที่เยี่ยมบ้าน')->assertSee('โทรติดตาม')->assertSee('ควรเยี่ยมต่อเนื่อง');
     }
 
     public function test_voiding_a_duplicate_tka_record_also_cancels_the_milestone_plan_it_generated(): void

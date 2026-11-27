@@ -1,9 +1,162 @@
 <x-app-layout>
     <x-slot name="header">ภาพรวมทีมเยี่ยมบ้าน</x-slot>
 
+    @php
+        // ลิงก์กรอง/จัดกลุ่มของส่วนงาน — คงตัวกรองเดือนไว้ และกระโดดกลับมาที่ตารางที่กำลังดู
+        $workLink = fn (array $params, string $anchor = 'work') => route('dashboard', array_filter(array_merge(request()->only('month'), ['due' => $dueFilter, 'group' => $groupBySubDistrict ? 'subdistrict' : null], $params), fn ($v) => $v !== null)).'#'.$anchor;
+        $dueChips = [null => 'ทั้งหมด', 'overdue' => 'เกินกำหนด', 'today' => 'ครบวันนี้', 'week' => 'ภายใน 7 วัน'];
+        $tileStyle = fn (string $tone) => 'display:flex;flex-direction:column;gap:2px;padding:var(--space-4) var(--space-5);border:1px solid var(--color-neutral-200);border-left:6px solid var(--color-'.$tone.');border-radius:var(--radius-lg);background:var(--color-surface);text-decoration:none;color:inherit;';
+        $newTone = $newReferralRed > 0 ? 'risk' : ($newReferralCount > 0 ? 'warning' : 'success');
+        $decisionTone = $pendingDecisionRisk > 0 ? 'risk' : ($pendingDecisionCount > 0 ? 'warning' : 'success');
+        $visitTone = $visitCounts['overdue'] > 0 ? 'risk' : (($visitCounts['today'] + $visitCounts['week']) > 0 ? 'warning' : 'success');
+        $callTone = $callCounts['overdue'] > 0 ? 'risk' : (($callCounts['today'] + $callCounts['week']) > 0 ? 'warning' : 'success');
+    @endphp
+
     <div class="page-head" style="flex-direction:row;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:var(--space-3);">
-        <h1 class="h1">ภาพรวมทีมเยี่ยมบ้าน</h1>
+        <div>
+            <h1 class="h1">ภาพรวมทีมเยี่ยมบ้าน</h1>
+            <p class="sub">วันนี้ {{ \App\Support\ThaiDate::date(today()) }} · เยี่ยม/โทรแล้ววันนี้ {{ $visitedTodayCount }} ราย</p>
+        </div>
+    </div>
+
+    {{-- ต้องทำตอนนี้: 4 งานหลัก กดไปทำต่อได้ทันที (สีแดง = มีเรื่องด่วน/เกินกำหนด, ส้ม = มีงานค้าง, เขียว = ไม่มีค้าง) --}}
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:var(--space-4);margin-bottom:var(--space-5);">
+        <a href="{{ route('care-plan.pending') }}" style="{{ $tileStyle($newTone) }}">
+            <span class="caption">1 · เคสใหม่รอตรวจสอบแผน</span>
+            <span style="font-size:32px;line-height:38px;font-weight:800;">{{ $newReferralCount }} <span style="font-size:14px;font-weight:600;">ราย</span></span>
+            <span class="caption">
+                @if ($newReferralCount > 0)
+                    บ้านสีแดง {{ $newReferralRed }} · รอมานานสุด {{ $oldestNewReferralDays <= 0 ? 'วันนี้' : $oldestNewReferralDays.' วัน' }}
+                @else
+                    ไม่มีค้าง ✓
+                @endif
+            </span>
+        </a>
+        <a href="{{ route('care-plan.pending', ['tab' => 'after']) }}" style="{{ $tileStyle($decisionTone) }}">
+            <span class="caption">2 · ผลเยี่ยมรอยืนยันการตัดสินใจ</span>
+            <span style="font-size:32px;line-height:38px;font-weight:800;">{{ $pendingDecisionCount }} <span style="font-size:14px;font-weight:600;">ราย</span></span>
+            <span class="caption">
+                @if ($pendingDecisionCount > 0)
+                    AI พบสัญญาณเสี่ยง {{ $pendingDecisionRisk }} · เก่าสุด {{ $oldestPendingDecisionDays <= 0 ? 'วันนี้' : $oldestPendingDecisionDays.' วัน' }}
+                @else
+                    ไม่มีค้าง ✓
+                @endif
+            </span>
+        </a>
+        <a href="{{ $workLink([], 'visits') }}" style="{{ $tileStyle($visitTone) }}">
+            <span class="caption">3 · ลงพื้นที่เยี่ยมบ้าน</span>
+            <span style="font-size:32px;line-height:38px;font-weight:800;">{{ $visitCounts['all'] }} <span style="font-size:14px;font-weight:600;">ราย</span></span>
+            <span class="caption">เกินกำหนด {{ $visitCounts['overdue'] }} · วันนี้ {{ $visitCounts['today'] }} · 7 วันข้างหน้า {{ $visitCounts['week'] }}</span>
+        </a>
+        <a href="{{ $workLink([], 'calls') }}" style="{{ $tileStyle($callTone) }}">
+            <span class="caption">4 · โทรติดตาม</span>
+            <span style="font-size:32px;line-height:38px;font-weight:800;">{{ $callCounts['all'] }} <span style="font-size:14px;font-weight:600;">ราย</span></span>
+            <span class="caption">เกินกำหนด {{ $callCounts['overdue'] }} · วันนี้ {{ $callCounts['today'] }} · 7 วันข้างหน้า {{ $callCounts['week'] }}</span>
+        </a>
+    </div>
+
+    <div id="work" class="btn-row" style="align-items:center;">
+        <span class="label" style="align-self:center;">แสดงงาน:</span>
+        @foreach ($dueChips as $value => $label)
+            <a href="{{ $workLink(['due' => $value === '' ? null : $value]) }}" class="btn btn-sm {{ $dueFilter === $value ? 'btn-primary' : 'btn-secondary' }}">{{ $label }}</a>
+        @endforeach
+        <span style="margin-left:auto;"></span>
+        <a href="{{ $workLink(['group' => $groupBySubDistrict ? null : 'subdistrict']) }}" class="btn btn-sm {{ $groupBySubDistrict ? 'btn-primary' : 'btn-secondary' }}">{{ $groupBySubDistrict ? '✓ ' : '' }}จัดกลุ่มตามตำบล</a>
+    </div>
+
+    <div class="card" id="visits">
+        <div class="card-head">
+            <div>
+                <div class="h2">ลงพื้นที่เยี่ยมบ้าน <span class="caption">({{ $visitPlans->count() }}{{ $dueFilter ? ' จาก '.$visitCounts['all'] : '' }} ราย)</span></div>
+                <div class="sub">นัดถัดไปของแต่ละเคสที่ต้องไปที่บ้าน เรียงตามกำหนด — เยี่ยมก่อนกำหนดได้ · ป้ายแพ้ยา/ความยินยอมเป็นข้อเตือน ไม่ได้บล็อกการเยี่ยม</div>
+            </div>
+            <a class="btn btn-secondary btn-sm" href="{{ route('referrals.index') }}">ดูรายการเคสทั้งหมด</a>
+        </div>
+        <div class="card-body">
+            @include('partials.dashboard-work-table', ['plans' => $visitPlans, 'empty' => $dueFilter ? 'ไม่มีงานเยี่ยมบ้านในหมวดนี้' : 'ไม่มีเคสที่รอลงพื้นที่เยี่ยม', 'groupBySubDistrict' => $groupBySubDistrict])
+        </div>
+    </div>
+
+    <div class="card" id="calls">
+        <div class="card-head">
+            <div>
+                <div class="h2">โทรติดตาม <span class="caption">({{ $callPlans->count() }}{{ $dueFilter ? ' จาก '.$callCounts['all'] : '' }} ราย)</span></div>
+                <div class="sub">นัดถัดไปของแต่ละเคสที่ติดตามทางโทรศัพท์ (เช่น นอกเขต) — กดเบอร์เพื่อโทรได้เลย</div>
+            </div>
+        </div>
+        <div class="card-body">
+            @include('partials.dashboard-work-table', ['plans' => $callPlans, 'empty' => $dueFilter ? 'ไม่มีงานโทรติดตามในหมวดนี้' : 'ไม่มีเคสที่รอโทรติดตาม', 'groupBySubDistrict' => $groupBySubDistrict])
+        </div>
+    </div>
+
+    @if ($redContinuingReferrals->isNotEmpty())
+        <div class="card">
+            <div class="card-head">
+                <div>
+                    <div class="h2">บ้านสีแดงในเขต — ควรเยี่ยมต่อเนื่อง แต่ยังไม่มีนัดถัดไป <span class="caption">({{ $redContinuingReferrals->count() }} ราย)</span></div>
+                    <div class="sub">เคยได้รับการเยี่ยมแล้ว แต่ยังไม่มีนัดครั้งถัดไป — เปิดผลเยี่ยมล่าสุดเพื่อให้พยาบาลยืนยันการตัดสินใจ (ติดตามซ้ำ ระบบจะนัดต่อเดือนละครั้ง) หรือเลือกวันนัดเอง</div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr><th>ผู้ป่วย</th><th>เยี่ยมล่าสุด</th><th></th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($redContinuingReferrals as $referral)
+                                @php $last = $referral->last_visited_plan; @endphp
+                                <tr>
+                                    <td>
+                                        <div class="patient-name">{{ $referral->patient->name }}</div>
+                                        <div class="patient-hn">HN {{ $referral->patient->hn }} <span class="chip chip-severity-red" style="margin-left:4px;">บ้านสีแดง</span></div>
+                                    </td>
+                                    <td class="due-date">ครั้งที่ {{ $last->plan_number }} — {{ \App\Support\ThaiDate::date($last->record->visited_at) }}</td>
+                                    <td><a href="{{ route('follow-up-plans.review', $last) }}" class="btn btn-secondary btn-sm">ดูผลล่าสุด / ตัดสินใจ</a></td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <div class="card">
+        <div class="card-head">
+            <div>
+                <div class="h2">สัญญาณความเสี่ยงที่ยืนยันแล้วล่าสุด</div>
+                <div class="sub">พยาบาลยืนยันความเสี่ยงจากการวิเคราะห์ของ AI แล้ว — ต้องพิจารณาดำเนินการต่อ</div>
+            </div>
+        </div>
+        <div class="risk-list">
+            @forelse ($recentRiskRecords as $record)
+                <div class="risk-item">
+                    <div class="info">
+                        <div class="row1">
+                            <span class="name">{{ $record->plan->referral->patient->name }}</span>
+                            <span class="patient-hn">HN {{ $record->plan->referral->patient->hn }}</span>
+                            <span class="chip chip-risk">พบความเสี่ยง</span>
+                        </div>
+                        <div class="snippet">{{ Str::limit($record->decision_notes ?: $record->raw_notes, 120) }}</div>
+                        <div class="meta">ยืนยันความเสี่ยงโดย {{ $record->confirmer?->name }} เมื่อ {{ \App\Support\ThaiDate::dateTime($record->confirmed_at) }}</div>
+                    </div>
+                    <div class="actions">
+                        <a class="btn btn-secondary btn-sm" href="{{ route('follow-up-plans.review', $record->plan) }}">ดูรายละเอียด</a>
+                    </div>
+                </div>
+            @empty
+                <div class="caption" style="padding:0 var(--space-5) var(--space-5);">ยังไม่มีสัญญาณเสี่ยงที่ยืนยันแล้ว</div>
+            @endforelse
+        </div>
+    </div>
+
+    {{-- ตัวเลขสรุป (ไว้ล่างสุด — ไม่ใช่งานที่ต้องลงมือทำ) --}}
+    <div class="page-head" style="flex-direction:row;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:var(--space-3);margin-top:var(--space-6);">
+        <h2 class="h2">ตัวเลขสรุป</h2>
         <form method="GET" action="{{ route('dashboard') }}" style="display:flex;align-items:center;gap:var(--space-2);">
+            @if ($dueFilter)<input type="hidden" name="due" value="{{ $dueFilter }}">@endif
+            @if ($groupBySubDistrict)<input type="hidden" name="group" value="subdistrict">@endif
             <label for="month" class="caption" style="margin:0;">ข้อมูลรายเดือน:</label>
             <select id="month" name="month" onchange="this.form.submit()" style="width:auto;">
                 @foreach ($monthOptions as $value => $label)
@@ -72,123 +225,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-
-    @if ($pendingReviewCount > 0)
-        <div class="banner">
-            <div class="banner-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/><circle cx="12" cy="12" r="3"/></svg>
-            </div>
-            <div class="banner-text">
-                <div class="h3">มี {{ $pendingReviewCount }} เคสรอการยืนยันแผนจาก AI</div>
-                <p>ระบบสร้างร่างคู่มือติดตาม/สรุปความเสี่ยงไว้แล้ว — พยาบาลต้องตรวจสอบและกดยืนยันก่อนใช้งานจริงทุกครั้ง</p>
-            </div>
-            <a class="btn btn-primary" href="{{ route('referrals.index', ['status' => \App\Models\Referral::STATUS_PENDING_REVIEW]) }}">ตรวจสอบเคสรอยืนยัน</a>
-        </div>
-    @endif
-
-    @if ($pendingDecisionCount > 0)
-        <div class="banner">
-            <div class="banner-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 14 2 2 4-4"/></svg>
-            </div>
-            <div class="banner-text">
-                <div class="h3">มี {{ $pendingDecisionCount }} ผลเยี่ยมรอพยาบาลยืนยันการตัดสินใจ</div>
-                <p>
-                    ผู้ช่วยบันทึกผลแล้ว AI วิเคราะห์ให้แล้วหรือกำลังวิเคราะห์ — รอพยาบาลตรวจสอบและยืนยัน (ติดตามซ้ำ/ส่งต่อ/ปิดเคส)
-                    @if ($oldestPendingDecision)
-                        · เก่าสุดเยี่ยมเมื่อ {{ \App\Support\ThaiDate::date($oldestPendingDecision->visited_at) }}
-                    @endif
-                    — เคสที่ไม่มีนัดล่วงหน้าจะยังไม่มีนัดครั้งถัดไปจนกว่าจะยืนยัน
-                </p>
-            </div>
-            <a class="btn btn-primary" href="{{ route('care-plan.pending', ['tab' => 'after']) }}">ตรวจสอบและยืนยัน</a>
-        </div>
-    @endif
-
-    <div class="card">
-        <div class="card-head">
-            <div>
-                <div class="h2">รายการรอเยี่ยมครั้งแรก <span class="caption">({{ $firstVisitTotal }} ราย)</span></div>
-                <div class="sub">ผู้ป่วยที่ยังไม่เคยได้รับการเยี่ยม/โทรติดตาม เรียงตามกำหนดนัด — เยี่ยมก่อนกำหนดได้</div>
-            </div>
-            <a class="btn btn-secondary btn-sm" href="{{ route('referrals.index') }}">ดูรายการเคสทั้งหมด</a>
-        </div>
-        <div class="card-body">
-            @include('partials.dashboard-plan-table', ['plans' => $firstVisitPlans, 'empty' => 'ไม่มีเคสที่รอเยี่ยมครั้งแรก'])
-            @if ($firstVisitTotal > $firstVisitPlans->count())
-                <p class="caption" style="margin:var(--space-3) 0 0;">แสดง {{ $firstVisitPlans->count() }} รายแรกจากทั้งหมด {{ $firstVisitTotal }} ราย</p>
-            @endif
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-head">
-            <div>
-                <div class="h2">รายการติดตามต่อเนื่อง <span class="caption">({{ $continuingTotal }} ราย)</span></div>
-                <div class="sub">นัดครั้งที่ 2 เป็นต้นไป และบ้านสีแดงในเขตที่ควรเยี่ยมต่อเนื่อง</div>
-            </div>
-        </div>
-        <div class="card-body">
-            @include('partials.dashboard-plan-table', ['plans' => $continuingPlans, 'empty' => 'ไม่มีเคสที่รอติดตามต่อเนื่อง', 'showPlanNumber' => true])
-            @if ($continuingTotal > $continuingPlans->count())
-                <p class="caption" style="margin:var(--space-3) 0 0;">แสดง {{ $continuingPlans->count() }} รายแรกจากทั้งหมด {{ $continuingTotal }} ราย</p>
-            @endif
-
-            @if ($redContinuingReferrals->isNotEmpty())
-                <div class="section-title" style="margin-top:var(--space-6);"><span class="h3">บ้านสีแดงในเขต — ควรเยี่ยมต่อเนื่อง แต่ยังไม่มีนัดถัดไป ({{ $redContinuingReferrals->count() }} ราย)</span></div>
-                <p class="caption" style="margin:0 0 var(--space-3);">เคยได้รับการเยี่ยมแล้ว แต่ยังไม่มีนัดครั้งถัดไป — เปิดผลเยี่ยมล่าสุดเพื่อให้พยาบาลยืนยันการตัดสินใจ (ติดตามซ้ำ ระบบจะนัดต่อเดือนละครั้ง) หรือเลือกวันนัดเอง</p>
-                <div class="table-wrap">
-                    <table>
-                        <thead>
-                            <tr><th>ผู้ป่วย</th><th>เยี่ยมล่าสุด</th><th></th></tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($redContinuingReferrals as $referral)
-                                @php $last = $referral->last_visited_plan; @endphp
-                                <tr>
-                                    <td>
-                                        <div class="patient-name">{{ $referral->patient->name }}</div>
-                                        <div class="patient-hn">HN {{ $referral->patient->hn }} <span class="chip chip-severity-red" style="margin-left:4px;">บ้านสีแดง</span></div>
-                                    </td>
-                                    <td class="due-date">ครั้งที่ {{ $last->plan_number }} — {{ \App\Support\ThaiDate::date($last->record->visited_at) }}</td>
-                                    <td><a href="{{ route('follow-up-plans.review', $last) }}" class="btn btn-secondary btn-sm">ดูผลล่าสุด / ตัดสินใจ</a></td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            @endif
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-head">
-            <div>
-                <div class="h2">สัญญาณความเสี่ยงที่ยืนยันแล้วล่าสุด</div>
-                <div class="sub">พยาบาลยืนยันความเสี่ยงจากการวิเคราะห์ของ AI แล้ว — ต้องพิจารณาดำเนินการต่อ</div>
-            </div>
-        </div>
-        <div class="risk-list">
-            @forelse ($recentRiskRecords as $record)
-                <div class="risk-item">
-                    <div class="info">
-                        <div class="row1">
-                            <span class="name">{{ $record->plan->referral->patient->name }}</span>
-                            <span class="patient-hn">HN {{ $record->plan->referral->patient->hn }}</span>
-                            <span class="chip chip-risk">พบความเสี่ยง</span>
-                        </div>
-                        <div class="snippet">{{ Str::limit($record->decision_notes ?: $record->raw_notes, 120) }}</div>
-                        <div class="meta">ยืนยันความเสี่ยงโดย {{ $record->confirmer?->name }} เมื่อ {{ \App\Support\ThaiDate::dateTime($record->confirmed_at) }}</div>
-                    </div>
-                    <div class="actions">
-                        <a class="btn btn-secondary btn-sm" href="{{ route('follow-up-plans.review', $record->plan) }}">ดูรายละเอียด</a>
-                    </div>
-                </div>
-            @empty
-                <div class="caption" style="padding:0 var(--space-5) var(--space-5);">ยังไม่มีสัญญาณเสี่ยงที่ยืนยันแล้ว</div>
-            @endforelse
         </div>
     </div>
 </x-app-layout>

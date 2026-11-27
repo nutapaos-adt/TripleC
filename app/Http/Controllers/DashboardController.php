@@ -57,18 +57,61 @@ class DashboardController extends Controller
             ->filter(fn ($plan) => $plan->referral->zone === 'in_area')->count();
         $waitingOutAreaCount = $waitingHomeVisitCount - $waitingInAreaCount;
 
-        // ทีมเยี่ยมก่อนกำหนดบ่อย จึงไม่กรองตามวันครบกำหนด — แยกเป็น "รอเยี่ยมครั้งแรก" กับ "ติดตามต่อเนื่อง (ครั้งที่ 2 เป็นต้นไป)"
-        $openPlans = fn () => FollowUpPlan::with(['referral.patient', 'referral.caseType'])
+        // งานที่ต้องทำ: ทุกเคสที่ยังไม่ปิดโชว์ "นัดถัดไปนัดเดียว" (นัดที่ใกล้สุด) — fixed_count สร้างนัดไว้ล่วงหน้าหลายครั้ง ไม่ต้องโชว์ทุกนัด
+        // ทีมเยี่ยมก่อนกำหนดบ่อย จึงไม่กรองตามวันครบกำหนด และเคสที่เยี่ยม/โทรไปแล้ววันนี้จะออกจากรายการทันที (เหมือนตัวเลข "รอเยี่ยม")
+        $nextPlans = FollowUpPlan::with(['referral.patient', 'referral.caseType'])
             ->where('status', FollowUpPlan::STATUS_SCHEDULED)
+            ->whereNotIn('referral_id', $visitedTodayReferralIds)
             ->whereHas('referral', fn ($q) => $q->where('status', '!=', Referral::STATUS_CLOSED))
             ->orderBy('due_date')
-            ->orderBy('plan_number');
+            ->orderBy('plan_number')
+            ->get()
+            ->groupBy('referral_id')
+            ->map(fn ($plans) => $plans->sortBy('plan_number')->first())
+            ->sortBy(fn ($plan) => $plan->due_date->timestamp)
+            ->values();
 
-        $firstVisitPlans = $openPlans()->where('plan_number', 1)->limit(100)->get();
-        $firstVisitTotal = $openPlans()->where('plan_number', 1)->count();
+        // ถังตามความเร่งด่วน: overdue = เกินกำหนด, today = ครบวันนี้, week = พรุ่งนี้ถึง 7 วันข้างหน้า, later = หลังจากนั้น
+        $bucketOf = function (FollowUpPlan $plan) use ($today): string {
+            $days = (int) $today->diffInDays($plan->due_date->copy()->startOfDay(), false);
 
-        $continuingPlans = $openPlans()->where('plan_number', '>=', 2)->limit(100)->get();
-        $continuingTotal = $openPlans()->where('plan_number', '>=', 2)->count();
+            return match (true) {
+                $days < 0 => 'overdue',
+                $days === 0 => 'today',
+                $days <= 7 => 'week',
+                default => 'later',
+            };
+        };
+        $countBuckets = fn ($plans) => [
+            'all' => $plans->count(),
+            'overdue' => $plans->filter(fn ($p) => $bucketOf($p) === 'overdue')->count(),
+            'today' => $plans->filter(fn ($p) => $bucketOf($p) === 'today')->count(),
+            'week' => $plans->filter(fn ($p) => $bucketOf($p) === 'week')->count(),
+        ];
+
+        $visitAll = $nextPlans->where('method', FollowUpPlan::METHOD_HOME_VISIT)->values();
+        $callAll = $nextPlans->where('method', FollowUpPlan::METHOD_PHONE_CALL)->values();
+        $visitCounts = $countBuckets($visitAll);
+        $callCounts = $countBuckets($callAll);
+
+        $dueFilter = in_array($request->query('due'), ['overdue', 'today', 'week'], true) ? $request->query('due') : null;
+        $groupBySubDistrict = $request->query('group') === 'subdistrict';
+        $applyFilter = fn ($plans) => ($dueFilter ? $plans->filter(fn ($p) => $bucketOf($p) === $dueFilter) : $plans)->values();
+
+        $visitPlans = $applyFilter($visitAll)->take(200);
+        $callPlans = $applyFilter($callAll)->take(200);
+
+        // ผลเยี่ยมรอพยาบาลยืนยัน + กี่รายที่ AI พบสัญญาณเสี่ยง + เก่าสุดรอมากี่วัน
+        $awaiting = FollowUpRecord::awaitingDecision()->orderBy('visited_at')->get(['id', 'visited_at', 'ai_analysis']);
+        $pendingDecisionCount = $awaiting->count();
+        $pendingDecisionRisk = $awaiting->filter(fn ($r) => ($r->ai_analysis['risk_detected'] ?? false) === true)->count();
+        $oldestPendingDecisionDays = $awaiting->first() ? (int) floor($awaiting->first()->visited_at->diffInDays(now())) : null;
+
+        // ใบส่งต่อใหม่รอพยาบาลตรวจสอบแผน + กี่รายเป็นบ้านสีแดง + เก่าสุดรอมากี่วัน
+        $newReferrals = Referral::whereNull('confirmed_at')->get(['id', 'severity_group', 'created_at']);
+        $newReferralCount = $newReferrals->count();
+        $newReferralRed = $newReferrals->where('severity_group', Referral::SEVERITY_RED)->count();
+        $oldestNewReferralDays = $newReferrals->isNotEmpty() ? (int) floor($newReferrals->sortBy('created_at')->first()->created_at->diffInDays(now())) : null;
 
         // บ้านสีแดงในเขตที่ควรเยี่ยมต่อเนื่อง (เดือนละครั้ง) แต่ยังไม่มีนัดถัดไป — เคยเยี่ยมแล้ว เคสยังไม่ปิด และไม่มีนัดค้างอยู่
         $redContinuingReferrals = Referral::with(['patient', 'followUpPlans.record'])
@@ -91,17 +134,7 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        $pendingReviewCount = Referral::where('status', Referral::STATUS_PENDING_REVIEW)->count();
-
-        // ผลเยี่ยมที่บันทึกแล้วแต่ยังรอพยาบาลยืนยันการตัดสินใจ (เคสที่ไม่มีนัดล่วงหน้าจะไม่มีนัดถัดไปจนกว่าจะยืนยัน) และเก่าสุดรอมากี่วัน
-        $pendingDecisionCount = FollowUpRecord::awaitingDecision()->count();
-        $oldestPendingDecision = $pendingDecisionCount > 0
-            ? FollowUpRecord::awaitingDecision()->orderBy('visited_at')->first()
-            : null;
-
         return view('dashboard', compact(
-            'pendingDecisionCount',
-            'oldestPendingDecision',
             'monthValue',
             'monthOptions',
             'monthLabel',
@@ -113,13 +146,20 @@ class DashboardController extends Controller
             'waitingInAreaCount',
             'waitingOutAreaCount',
             'visitedTodayCount',
-            'firstVisitPlans',
-            'firstVisitTotal',
-            'continuingPlans',
-            'continuingTotal',
+            'visitPlans',
+            'callPlans',
+            'visitCounts',
+            'callCounts',
+            'dueFilter',
+            'groupBySubDistrict',
+            'pendingDecisionCount',
+            'pendingDecisionRisk',
+            'oldestPendingDecisionDays',
+            'newReferralCount',
+            'newReferralRed',
+            'oldestNewReferralDays',
             'redContinuingReferrals',
             'recentRiskRecords',
-            'pendingReviewCount',
         ));
     }
 
